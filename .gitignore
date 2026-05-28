@@ -38,4 +38,4 @@ next-env.d.ts
 =======
 .next
 .node_modules/
->>>>>>> 43dbc4e (teste)
+.env

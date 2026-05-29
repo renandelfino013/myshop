@@ -12,12 +12,20 @@ export default async function handler(req, res) {
         [decoded.id],
       );
       const id = decoded.id;
-      for (const item of itens) {
-        await pool.query(
-          "INSERT INTO itens_pedido (pedido_id, produto_id, quantidade) VALUES ($1, $2, $3)",
-          [bg.rows[0].id, item.produto_id, item.quantidade],
-        );
-      }
+
+      //await pool.query(
+      //  "INSERT INTO itens_pedido (pedido_id, produto_id, quantidade) VALUES ($1, $2, $3)",
+      //   [bg.rows[0].id, item.produto_id, item.quantidade],
+      // );
+      await Promise.all(
+        itens.map((item) =>
+          pool.query(
+            "INSERT INTO itens_pedido (pedido_id, produto_id, quantidade) VALUES ($1, $2, $3)",
+            [bg.rows[0].id, item.produto_id, item.quantidade],
+          ),
+        ),
+      );
+
       res.status(201).json({ message: "Order created successfully" });
     } catch (error) {
       console.error("Error creating order:", error);
@@ -25,23 +33,32 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "GET") {
     try {
+      if (!req.headers.authorization) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const token = req.headers.authorization.split(" ")[1];
       if (!token) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log(decoded.role);
       if (decoded.role === "USER") {
         let result = await pool.query(
-          "SELECT  u.nome AS usuario_nome,u.id AS usuario_id,pr.nome AS produto_nome,p.id, p.data_pedido, i.produto_id, i.quantidade  FROM pedidos p JOIN itens_pedido i ON p.id = i.pedido_id JOIN usuarios u ON p.usuarios_id = u.id JOIN produtos pr ON i.produto_id = pr.id WHERE p.usuarios_id = $1",
+          "SELECT u.nome as usuario_nome,u.id as usuario_id,u.email as usuario_email,u.role as usuario_role,pr.nome as produto_nome,pr.preco as produto_preco,p.id as pedido_id, p.data_pedido, i.produto_id, i.quantidade, (i.quantidade * pr.preco) as totalprice  FROM pedidos p JOIN itens_pedido i ON p.id = i.pedido_id JOIN usuarios u ON p.usuarios_id = u.id JOIN produtos pr ON i.produto_id = pr.id = pr.id WHERE p.usuarios_id = $1",
           [decoded.id],
         );
+
+        console.log(result.rows);
         res.status(200).json(result.rows);
       } else if (decoded.role === "ADMIN") {
         let result = await pool.query(
-          "SELECT  u.nome AS usuario_nome,u.id AS usuario_id,pr.nome AS produto_nome,p.id, p.data_pedido, i.produto_id, i.quantidade  FROM pedidos p JOIN itens_pedido i ON p.id = i.pedido_id JOIN usuarios u ON p.usuarios_id = u.id JOIN produtos pr ON i.produto_id = pr.id ",
+          "SELECT u.nome as usuario_nome,u.id as usuario_id,u.email as usuario_email,u.role as usuario_role,pr.nome as produto_nome,pr.preco as produto_preco,p.id as pedido_id, p.data_pedido, i.produto_id, i.quantidade, (i.quantidade * pr.preco) as totalprice  FROM pedidos p JOIN itens_pedido i ON p.id = i.pedido_id JOIN usuarios u ON p.usuarios_id = u.id JOIN produtos pr ON i.produto_id = pr.id",
         );
+        console.log(result.rows);
         res.status(200).json(result.rows);
+      } else {
+        return res.status(403).json({ error: "Role not permitted" });
       }
     } catch (error) {
       console.error("Error fetching orders:", error);

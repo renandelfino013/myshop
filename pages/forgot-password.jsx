@@ -5,3 +5,5 @@ function forgotPassword() {
     </div>
   );
 }
+
+export default forgotPassword;

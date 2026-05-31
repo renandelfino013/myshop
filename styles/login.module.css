@@ -23,6 +23,7 @@
   align-items: center;
   justify-content: center;
   gap: 20px;
+  margin-top: 20px;
 }
 .cinput1 {
   display: inline-flex;
@@ -63,4 +64,11 @@
   width: 100%;
   color: #2148c0;
   text-transform: uppercase;
+}
+.forgotPassword {
+  color: #ffffff;
+  text-decoration: none;
+  text-align: end;
+  margin-left: 39.7%;
+  text-indent: 10px;
 }

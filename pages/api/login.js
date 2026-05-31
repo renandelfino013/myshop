@@ -6,6 +6,7 @@ export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const { email, senha } = req.body;
+      console.log(email, senha);
 
       const result = await pool.query(
         "SELECT id, nome, email,role ,senha FROM usuarios WHERE email = $1 ",
@@ -13,6 +14,7 @@ export default async function handler(req, res) {
       );
       if (result.rows.length > 0) {
         const user = result.rows[0];
+        console.log("User found:", user);
         const passwordMatch = await bcrypt.compare(senha, user.senha);
         if (passwordMatch) {
           const token = jwt.sign(

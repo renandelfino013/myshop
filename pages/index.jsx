@@ -7,7 +7,7 @@ function login() {
     const senha = event.target.senha.value;
     console.log("Email:", email);
     console.log("Senha:", senha);
-    fetch("/api/login", {
+    fetch("/api/index", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

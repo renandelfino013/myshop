@@ -42,6 +42,10 @@
   border: none;
   color: #ffffff;
 }
+.input:focus {
+  outline: none;
+}
+
 .input::placeholder {
   color: #ffffffbd;
 }

@@ -2,6 +2,9 @@ import bcrypt from "bcryptjs";
 import pool from "../../utils/db";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+import { sendLoginNotification } from "../../utils/sendEmail";
+dotenv.config();
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
@@ -15,7 +18,6 @@ export default async function handler(req, res) {
       );
       if (result.rows.length > 0) {
         const user = result.rows[0];
-        console.log("User found:", user);
         const passwordMatch = await bcrypt.compare(senha, user.senha);
         if (passwordMatch) {
           const token = jwt.sign(
@@ -23,31 +25,20 @@ export default async function handler(req, res) {
             process.env.JWT_SECRET,
             { expiresIn: "1h" },
           );
-          async function sendLoginNotification() {
-            let transporter = nodemailer.createTransport({
-              service: "gmail",
-              auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-              },
-            });
 
-            let mailOptions = {
-              from: process.env.EMAIL_USER,
-              to: user.email,
-              subject: "notificação de login",
-              text: `olá, ${user.nome},\n\nvocê fez login em sua conta.\n\nse não foi você, por favor, altere sua senha imediatamente.\n\natenciosamente,\nmyshop`,
-            };
-
-            transporter.sendMail(mailOptions, (error, info) => {
-              if (error) {
-                console.error("Error sending email:", error);
-              } else {
-                console.log("Email sent: " + info.response);
-              }
-            });
-          }
-          sendLoginNotification();
+          sendLoginNotification(
+            user.email,
+            "Notificação de Login - MyShop",
+            `
+            <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
+              <div style="text-align:center; margin-bottom:20px;">
+                <img src="https://img.icons8.com/ios-filled/50/ffffff/shopping-cart.png" alt="MyShop" />
+              </div>
+              <h2 style="margin:0; color:#fff;">Olá, ${user.nome} 👋</h2>
+              <p style="color:#e3f2fd;">Você acabou de fazer login na sua conta <b>MyShop</b>.</p>
+            </div>
+          `,
+          );
           res.status(200).json({
             message: "Login successful",
             token,
@@ -66,5 +57,37 @@ export default async function handler(req, res) {
       console.error("Error fetching users:", error);
       res.status(500).json({ error: "Failed to fetch users" });
     }
+  } else if (req.method === "PATCH") {
+    try {
+      const { email, newPassword } = req.body;
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const result = await pool.query(
+        "UPDATE usuarios SET senha = $1 WHERE email = $2 RETURNING id",
+        [hashedPassword, email],
+      );
+      if (result.rows.length > 0) {
+        res.status(200).json({ message: "Password updated successfully" });
+        sendLoginNotification(
+          email,
+          "Notificação de Alteração de Senha - MyShop",
+          `
+          <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
+            <div style="text-align:center; margin-bottom:20px;">
+              <img src="https://img.icons8.com/ios-filled/50/ffffff/shopping-cart.png" alt="MyShop" />
+            </div>
+            <h2 style="margin:0; color:#fff;">Olá,</h2>
+            <p style="color:#e3f2fd;">Sua senha da conta <b>MyShop</b> foi alterada com sucesso.</p>
+          </div>
+        `,
+        );
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error updating password:", error);
+      res.status(500).json({ error: "Failed to update password" });
+    }
+  } else {
+    res.status(405).json({ error: "Method not allowed" });
   }
 }

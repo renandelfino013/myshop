@@ -23,16 +23,6 @@ export default async function handler(req, res) {
             process.env.JWT_SECRET,
             { expiresIn: "1h" },
           );
-          res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-              id: user.id,
-              nome: user.nome,
-              email: user.email,
-              role: user.role,
-            },
-          });
           async function sendLoginNotification() {
             let transporter = nodemailer.createTransport({
               service: "gmail",
@@ -57,6 +47,16 @@ export default async function handler(req, res) {
               }
             });
           }
+          res.status(200).json({
+            message: "Login successful",
+            token,
+            user: {
+              id: user.id,
+              nome: user.nome,
+              email: user.email,
+              role: user.role,
+            },
+          });
         } else {
           res.status(401).json({ error: "Invalid credentials" });
         }

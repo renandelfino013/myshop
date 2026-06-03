@@ -58,7 +58,6 @@ export default async function handler(req, res) {
             } else {
               console.log("Email sent: " + info.response);
               res.status(200).json({ message: "Password reset email sent" });
-              res.status(200).json({ message: "Password reset email sent" });
             }
           });
         }
@@ -95,18 +94,19 @@ export default async function handler(req, res) {
             [userId],
           );
           if (emailResult.rows.length > 0) {
-            const transporter = nodemailer.createTransport({
-              service: "gmail",
-              auth: {
-                user: process.env.EMAIL_USE,
-                pass: process.env.EMAIL_PASS,
-              },
-            });
-            transporter.sendMail({
-              from: process.env.EMAIL_USE,
-              to: emailResult.rows[0].email,
-              subject: "Senha Redefinida - MyShop",
-              html: `
+            try {
+              const transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                  user: process.env.EMAIL_USE,
+                  pass: process.env.EMAIL_PASS,
+                },
+              });
+              transporter.sendMail({
+                from: process.env.EMAIL_USE,
+                to: emailResult.rows[0].email,
+                subject: "Senha Redefinida - MyShop",
+                html: `
             <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
               <div style="text-align:center; margin-bottom:20px;">
                 <img src="https://img.icons8.com/ios-filled/50/ffffff/shopping-cart.png" alt="MyShop" />
@@ -115,7 +115,10 @@ export default async function handler(req, res) {
               <p style="color:#e3f2fd;">Sua senha para a conta <b>MyShop</b> foi redefinida com sucesso.</p>
             </div>
           `,
-            });
+              });
+            } catch (error) {
+              console.error("Error sending password change email:", error);
+            }
           }
 
           res.status(200).json({ message: "Password updated successfully" });

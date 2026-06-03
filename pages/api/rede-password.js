@@ -8,7 +8,7 @@ dotenv.config();
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
-      const { email } = req.body;
+      let { email } = req.body;
       email = email.toLowerCase();
 
       let consulta = await pool.query(

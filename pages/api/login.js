@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 import pool from "../../utils/db";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { sendLoginNotification } from "../../utils/sendEmail";
 dotenv.config();
@@ -13,12 +12,14 @@ export default async function handler(req, res) {
       console.log(email, senha);
 
       const result = await pool.query(
-        "SELECT id, nome, email,role ,senha FROM usuarios WHERE email = $1 ",
+        "SELECT id, nome, email, role, senha FROM usuarios WHERE email = $1",
         [email],
       );
+
       if (result.rows.length > 0) {
         const user = result.rows[0];
         const passwordMatch = await bcrypt.compare(senha, user.senha);
+
         if (passwordMatch) {
           const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
@@ -26,7 +27,7 @@ export default async function handler(req, res) {
             { expiresIn: "1h" },
           );
 
-          sendLoginNotification(
+          let ok = await sendLoginNotification(
             user.email,
             "Notificação de Login - MyShop",
             `
@@ -39,7 +40,8 @@ export default async function handler(req, res) {
             </div>
           `,
           );
-          if (sendLoginNotification === true) {
+
+          if (ok) {
             res.status(200).json({
               message: "Login successful",
               token,
@@ -67,25 +69,41 @@ export default async function handler(req, res) {
     try {
       const { email, newPassword } = req.body;
       const hashedPassword = await bcrypt.hash(newPassword, 10);
+
       const result = await pool.query(
         "UPDATE usuarios SET senha = $1 WHERE email = $2 RETURNING id",
         [hashedPassword, email],
       );
+
       if (result.rows.length > 0) {
-        res.status(200).json({ message: "Password updated successfully" });
-        sendLoginNotification(
-          email,
-          "Notificação de Alteração de Senha - MyShop",
-          `
-          <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
-            <div style="text-align:center; margin-bottom:20px;">
-              <img src="https://img.icons8.com/ios-filled/50/ffffff/shopping-cart.png" alt="MyShop" />
+        try {
+          let ok = await sendLoginNotification(
+            email,
+            "Notificação de Alteração de Senha - MyShop",
+            `
+            <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
+              <div style="text-align:center; margin-bottom:20px;">
+                <img src="https://img.icons8.com/ios-filled/50/ffffff/shopping-cart.png" alt="MyShop" />
+              </div>
+              <h2 style="margin:0; color:#fff;">Olá,</h2>
+              <p style="color:#e3f2fd;">Sua senha da conta <b>MyShop</b> foi alterada com sucesso.</p>
             </div>
-            <h2 style="margin:0; color:#fff;">Olá,</h2>
-            <p style="color:#e3f2fd;">Sua senha da conta <b>MyShop</b> foi alterada com sucesso.</p>
-          </div>
-        `,
-        );
+          `,
+          );
+
+          if (ok) {
+            res.status(200).json({ message: "Password updated successfully" });
+          } else {
+            res.status(500).json({
+              error: "Failed to send password change notification email",
+            });
+          }
+        } catch (error) {
+          console.error("Error sending password change email:", error);
+          res.status(500).json({
+            error: "Failed to send password change notification email",
+          });
+        }
       } else {
         res.status(404).json({ error: "User not found" });
       }

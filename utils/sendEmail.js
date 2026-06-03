@@ -20,8 +20,10 @@ async function sendLoginNotification(to, subject, html) {
   await transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error("Error sending email:", error);
+      return false;
     } else {
       console.log("Email sent: " + info.response);
+      return true;
     }
   });
 }

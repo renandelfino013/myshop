@@ -9,6 +9,7 @@ export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const { email, senha } = req.body;
+      email = email.toLowerCase();
       console.log(email, senha);
 
       const result = await pool.query(

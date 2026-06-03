@@ -119,6 +119,8 @@ export default async function handler(req, res) {
             } catch (error) {
               console.error("Error sending password change email:", error);
             }
+          } else {
+            console.error("Error fetching user email:", error);
           }
 
           res.status(200).json({ message: "Password updated successfully" });

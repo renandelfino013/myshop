@@ -39,7 +39,7 @@ export default async function handler(req, res) {
             </div>
           `,
           );
-          if (sendLoginNotification) {
+          if (sendLoginNotification === true) {
             res.status(200).json({
               message: "Login successful",
               token,
@@ -50,6 +50,10 @@ export default async function handler(req, res) {
                 role: user.role,
               },
             });
+          } else {
+            res
+              .status(500)
+              .json({ error: "Failed to send login notification email" });
           }
         } else {
           res.status(401).json({ error: "Invalid credentials" });

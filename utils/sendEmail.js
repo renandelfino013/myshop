@@ -1,31 +1,30 @@
 import nodemailer from "nodemailer";
+
 async function sendLoginNotification(to, subject, html) {
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
     secure: true,
     auth: {
-      user: process.env.EMAIL_USER,
+      user: process.env.EMAIL_USE,
       pass: process.env.EMAIL_PASS,
     },
   });
 
-  let mailOptions = {
-    from: process.env.EMAIL_USE,
-    to: to,
-    subject: subject,
-    html: html,
-  };
+  try {
+    let info = await transporter.sendMail({
+      from: process.env.EMAIL_USE,
+      to,
+      subject,
+      html,
+    });
 
-  await transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error("Error sending email:", error);
-      return console.log({ error }, false);
-    } else {
-      console.log("Email sent: " + info.response);
-      return true;
-    }
-  });
+    console.log("Email enviado:", info.response);
+    return true;
+  } catch (error) {
+    console.error("Erro ao enviar email:", error);
+    return false;
+  }
 }
 
 export { sendLoginNotification };

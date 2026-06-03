@@ -78,6 +78,9 @@ function ResetPassword() {
               Redefinir Senha
             </button>
           </form>
+          <p className={styles.errorsenha}>
+            As senhas não coincidem. Por favor, tente novamente.
+          </p>
         </div>
       </div>
       <footer className={styles.footer}>

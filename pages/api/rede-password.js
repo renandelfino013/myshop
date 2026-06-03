@@ -9,11 +9,11 @@ export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       let { email } = req.body;
-      email = email.toLowerCase();
+      let emailtolower = email.toLowerCase();
 
       let consulta = await pool.query(
         "SELECT id , email , nome FROM usuarios WHERE email = $1 ",
-        [email],
+        [emailtolower],
       );
       if (consulta.rows.length > 0) {
         const user = consulta.rows[0];

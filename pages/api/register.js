@@ -5,11 +5,11 @@ export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const { nome, email, senha } = req.body;
-      email = email.toLowerCase();
+      let emailtolower = email.toLowerCase();
       const hashedPassword = await bcrypt.hash(senha, 10);
       const result = await pool.query(
         "INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3) RETURNING id",
-        [nome, email, hashedPassword],
+        [nome, emailtolower, hashedPassword],
       );
       const token = jwt.sign(
         { email, nome, role: "USER", id: result.rows[0].id },

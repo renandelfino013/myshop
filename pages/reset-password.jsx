@@ -34,7 +34,7 @@ function ResetPassword() {
         body: JSON.stringify({ key, newPassword }),
       });
       if (response.ok) {
-        router.push("/");
+        router.push("https://myshop-murex-iota.vercel.app");
       }
       const data = await response.json();
     } catch (error) {

@@ -1,6 +1,9 @@
 import nodemailer from "nodemailer";
 async function sendLoginNotification(to, subject, html) {
   let transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USE,

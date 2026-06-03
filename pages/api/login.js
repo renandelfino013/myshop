@@ -39,16 +39,18 @@ export default async function handler(req, res) {
             </div>
           `,
           );
-          res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-              id: user.id,
-              nome: user.nome,
-              email: user.email,
-              role: user.role,
-            },
-          });
+          if (sendLoginNotification) {
+            res.status(200).json({
+              message: "Login successful",
+              token,
+              user: {
+                id: user.id,
+                nome: user.nome,
+                email: user.email,
+                role: user.role,
+              },
+            });
+          }
         } else {
           res.status(401).json({ error: "Invalid credentials" });
         }

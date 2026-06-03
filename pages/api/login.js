@@ -9,12 +9,12 @@ export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const { email, senha } = req.body;
-      email = email.toLowerCase();
-      console.log(email, senha);
+      let emailtolower = email.toLowerCase();
+      console.log(emailtolower, senha);
 
       const result = await pool.query(
         "SELECT id, nome, email, role, senha FROM usuarios WHERE email = $1",
-        [email],
+        [emailtolower],
       );
 
       if (result.rows.length > 0) {

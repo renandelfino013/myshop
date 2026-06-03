@@ -7,6 +7,8 @@ function ResetPassword() {
   const searchParams = useSearchParams();
   const key = searchParams.get("key");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
   if (!key) {
     return (
       <main className={styles.container}>
@@ -25,6 +27,10 @@ function ResetPassword() {
   }
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      alert("As senhas não coincidem. Por favor, tente novamente.");
+      return;
+    }
     try {
       const response = await fetch("/api/rede-password", {
         method: "PATCH",
@@ -65,6 +71,8 @@ function ResetPassword() {
               name="confirmPassword"
               placeholder="Confirme sua nova senha"
               className={styles.input}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
             <button type="submit" className={styles.button}>
               Redefinir Senha

@@ -90,18 +90,23 @@ export default async function handler(req, res) {
             "UPDATE password_reset_keys SET expirado = TRUE WHERE usuariosid = $1",
             [userId],
           );
-          const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user: process.env.EMAIL_USE,
-              pass: process.env.EMAIL_PASS,
-            },
-          });
-          transporter.sendMail({
-            from: process.env.EMAIL_USE,
-            to: result.rows[0].email,
-            subject: "Senha Redefinida - MyShop",
-            html: `
+          let emailResult = await pool.query(
+            "SELECT email FROM usuarios WHERE id = $1",
+            [userId],
+          );
+          if (emailResult.rows.length > 0) {
+            const transporter = nodemailer.createTransport({
+              service: "gmail",
+              auth: {
+                user: process.env.EMAIL_USE,
+                pass: process.env.EMAIL_PASS,
+              },
+            });
+            transporter.sendMail({
+              from: process.env.EMAIL_USE,
+              to: emailResult.rows[0].email,
+              subject: "Senha Redefinida - MyShop",
+              html: `
             <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
               <div style="text-align:center; margin-bottom:20px;">
                 <img src="https://img.icons8.com/ios-filled/50/ffffff/shopping-cart.png" alt="MyShop" />
@@ -110,7 +115,9 @@ export default async function handler(req, res) {
               <p style="color:#e3f2fd;">Sua senha para a conta <b>MyShop</b> foi redefinida com sucesso.</p>
             </div>
           `,
-          });
+            });
+          }
+
           res.status(200).json({ message: "Password updated successfully" });
         } else {
           res.status(500).json({ error: "Failed to update password" });

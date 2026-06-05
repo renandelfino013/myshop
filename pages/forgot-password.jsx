@@ -1,8 +1,13 @@
 import styles from "../styles/forgotpassword.module.css";
+import { useState } from "react";
+import SuccessCheckmark from "../utils/checkmarck";
 
 function forgotPassword() {
+  let [estado, setEstado] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    setEstado(true);
     const email = e.target.email.value;
     try {
       const response = await fetch("/api/rede-password", {
@@ -17,6 +22,22 @@ function forgotPassword() {
       console.error("Error sending password reset email:", error);
     }
   };
+  {
+    if (estado) {
+      return (
+        <main className={styles.container_estado}>
+          <div className={styles.divtext_estado}>
+            <h1>Email enviado</h1>
+            <p>
+              Se o email fornecido estiver registrado, você receberá um email
+              com as instruções para redefinir sua senha.
+            </p>
+          </div>
+          <SuccessCheckmark />
+        </main>
+      );
+    }
+  }
 
   return (
     <main className={styles.container}>

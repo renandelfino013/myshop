@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import pool from "../../utils/db";
 import jwt from "jsonwebtoken";
+
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {

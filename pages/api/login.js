@@ -61,6 +61,8 @@ export default async function handler(req, res) {
         } else {
           res.status(401).json({ error: "Invalid credentials" });
         }
+      } else {
+        res.status(404).json({ error: "User not found" });
       }
     } catch (error) {
       console.error("Error fetching users:", error);

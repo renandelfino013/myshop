@@ -10,7 +10,7 @@ function forgotPassword() {
     setEstado(true);
     const email = e.target.email.value;
     try {
-      const response = await fetch("/api/rede-password", {
+      const response = await fetch("/api/v1/rede-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

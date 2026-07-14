@@ -1,0 +1,10 @@
+services:
+  database:
+    container_name: my_database
+    image: postgres:16.0-alpine3.18
+    env_file:
+      - ../.env
+    ports:
+      - "5433:5432"
+    #volumes:
+    #- ../init.sql:/docker-entrypoint-initdb.d/init.sql

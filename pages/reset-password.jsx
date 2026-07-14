@@ -32,7 +32,7 @@ function ResetPassword() {
       return;
     }
     try {
-      const response = await fetch("/api/rede-password", {
+      const response = await fetch("/api/v1/rede-password", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

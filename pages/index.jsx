@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styles from "../styles/login.module.css";
+import styles from "/styles/login.module.css";
 
 function Login() {
   const [estado, setEstado] = useState(false);
@@ -13,27 +13,21 @@ function Login() {
 
     if (register) {
       try {
-        const response = await fetch("/api/register", {
+        const response = await fetch("api/v1/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nome, email, senha }),
         });
 
-        if (!response.ok) {
-          alert("Erro ao registrar. Tente novamente.");
-          return;
-        }
-
         const data = await response.json();
-        console.log("Registro bem-sucedido:", data);
+        console.log(data);
         localStorage.setItem("token", data.token);
       } catch (error) {
         console.error("Erro de rede:", error);
-        alert("Erro de rede. Tente novamente mais tarde.");
       }
     } else {
       try {
-        const response = await fetch("/api/login", {
+        const response = await fetch("/api/v1/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, senha }),

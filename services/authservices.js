@@ -17,7 +17,7 @@ import {
 import regexsenha from "/utils/regexsenha";
 import { sendLoginNotification } from "/utils/sendEmail";
 import { validationresettoken } from "/models/users/resetpassword";
-import { registerUserInDB } from "/models/users/resetpassword";
+import { registerUserInDB } from "/models/users/users";
 
 export async function login(email, senha) {
   let emailtolower = email.toLowerCase();

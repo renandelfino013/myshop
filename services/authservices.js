@@ -10,14 +10,14 @@ import regexemail from "/utils/regexemail"
 import jwt from "jsonwebtoken";
 import { findEmailUserbyId, finduserbyemail } from "/models/users/users";
 import bcrypt from "bcryptjs";
+import {updatepassindb} from "/models/users/resetpassword"
 import {
-  updatepassindb,
-  expiringResetToken,
+  expiringResetToken
 } from "/models/users/resetpassword";
 import regexsenha from "/utils/regexsenha";
 import { sendLoginNotification } from "/utils/sendEmail";
 import { validationresettoken } from "/models/users/resetpassword";
-import { registerUserInDB } from "/models/users/users";
+import { registerUserInDB } from "/models/users/resetpassword";
 
 export async function login(email, senha) {
   let emailtolower = email.toLowerCase();
@@ -37,6 +37,7 @@ export async function login(email, senha) {
     if (result.length > 0) {
       const user = result[0];
       const passwordMatch = await bcrypt.compare(senha, user.senha);
+      console.log(passwordMatch)
 
       if (passwordMatch) {
         const token = jwt.sign(
@@ -62,10 +63,10 @@ export async function login(email, senha) {
         if (ok == true) {
           return { user, token };
         } else {
-          throw new SendEmailError("Failed to send login notification email");
+          throw new SendEmailError("Failed to send login notification email1");
         }
       } else {
-        throw new AuthError("Failed to send login notification email");
+        throw new AuthError("email or password invalid");
       }
     } else {
       throw new NotFoundError("User not found");
@@ -77,20 +78,25 @@ export async function login(email, senha) {
   }
 }
 export async function updatepassword(key, newpassword) {
+  console.log("teste da funçao updatepassword")
   try {
     const result = await validationresettoken(key);
+    console.log("teste de result",result.rows)
+    console.log("teste de result")
     if (result.length > 0) {
-      const userId = result.rows[0].usuariosid;
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const userId = result[0].usuariosid;
+      const hashedPassword = await bcrypt.hash(newpassword, 10);
       const UpdatePassInDB = await updatepassindb(hashedPassword, userId);
+      console.log("teste de updatepassindb",UpdatePassInDB)
 
       if (UpdatePassInDB.length > 0) {
         const expiringretoken = await expiringResetToken(userId);
         const emailResult = await findEmailUserbyId(userId);
+        console.log("teste de emailresult",emailResult[0])
         if (emailResult.length > 0) {
           try {
             let ok = await sendLoginNotification(
-              emailResult,
+              emailResult[0].email,
               "Notificação de Alteração de Senha - MyShop",
               `
             <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
@@ -109,15 +115,15 @@ export async function updatepassword(key, newpassword) {
             }
             return true;
           } catch (error) {
-            console.error("Error sending password change email:", error);
+            console.log("Error sending password change email:", error);
           }
         } else {
-          console.error("Error fetching user email:", error);
+          console.log("Error fetching user email:", error);
         }
 
         return true;
       } else {
-        throw new Error("Failed to update password");
+        throw new AuthError("Failed to update password");
       }
     } else {
       throw new Error("Invalid or expired reset key");

@@ -5,11 +5,13 @@ import dotenv from "dotenv";
 import { login } from "/services/authservices";
 import { sendLoginNotification } from "/utils/sendEmail";
 import { resetpassword } from "/models/users/resetpassword";
+import teste from "../../../models/teste.";
 dotenv.config();
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
+      teste()
       const { email, senha } = req.body;
       const { user, token } = await login(email, senha);
       res.status(200).json({

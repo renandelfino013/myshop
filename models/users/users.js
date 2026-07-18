@@ -22,7 +22,7 @@ export async function findEmailUserbyId(userid) {
 
       [userid],
     );
-    return emailuser.rows.length;
+    return emailuser.rows;
   } catch (error) {
     throw new ValidationError("error on find email user");
   }

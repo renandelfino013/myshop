@@ -1,12 +1,27 @@
 import { Pool } from "pg";
+import dotenv from "dotenv";
+import dotenvExpand from "dotenv-expand";
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT, 10) || 5432,
-  ssl: { rejectUnauthorized: false },
-});
+const isProd = process.env.NODE_ENV === "production";
+
+const pool = new Pool(
+  isProd
+    ? {
+        user: process.env.POSTGRES_USER,        
+        host: process.env.POSTGRES_HOST,        
+        database: process.env.POSTGRES_DB,
+        password: process.env.POSTGRES_PASSWORD,
+        port: 5432,                             
+        ssl: { rejectUnauthorized: false }      
+      }
+    : {
+        user: process.env.POSTGRES_USER,        
+        host: "localhost",
+        database: process.env.POSTGRES_DB,      
+        password: process.env.POSTGRES_PASSWORD,
+        port: parseInt(process.env.DB_PORT, 10) || 5433,
+        ssl: false
+      }
+);
 
 export default pool;

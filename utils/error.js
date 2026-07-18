@@ -13,6 +13,13 @@ class ValidationError extends Error {
     this.statusCode = 400;
   }
 }
+class RegisterError {
+  constructor(field, message) {
+    this.message = message;
+    this.field = field;
+    this.StatusCode = 401;
+  }
+}
 
 class AuthError extends Error {
   constructor(message) {
@@ -42,4 +49,5 @@ export {
   AuthError,
   SendEmailError,
   NetworkError,
+  RegisterError,
 };

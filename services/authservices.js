@@ -4,22 +4,34 @@ import {
   SendEmailError,
   ValidationError,
   NetworkError,
-} from "../utils/error";
+  RegisterError,
+} from "/utils/error";
+import regexemail from "/utils/regexemail"
 import jwt from "jsonwebtoken";
-import { findEmailUserbyId, finduserbyemail } from "../models/users/users";
+import { findEmailUserbyId, finduserbyemail } from "/models/users/users";
 import bcrypt from "bcryptjs";
 import {
   updatepassindb,
   expiringResetToken,
-} from "../models/users/resetpassword";
-
-import { sendLoginNotification } from "../utils/sendEmail";
-import { validationresettoken } from "../models/users/resetpassword";
+} from "/models/users/resetpassword";
+import regexsenha from "/utils/regexsenha";
+import { sendLoginNotification } from "/utils/sendEmail";
+import { validationresettoken } from "/models/users/resetpassword";
+import { registerUserInDB } from "/models/users/users";
 
 export async function login(email, senha) {
   let emailtolower = email.toLowerCase();
   console.log(emailtolower, senha);
   try {
+    let sml = regexsenha(senha)
+    if(!sml){
+      throw new ValidationError("invalid password, min 4 carac and with 1 uppercase")
+    }
+    let eml= regexemail(email)
+    console.log(eml)
+    if(!eml){
+      throw new ValidationError("invalid email")
+    } else{
     const result = await finduserbyemail(emailtolower);
 
     if (result.length > 0) {
@@ -47,7 +59,7 @@ export async function login(email, senha) {
           `,
         );
 
-        if ((await ok) == true) {
+        if (ok == true) {
           return { user, token };
         } else {
           throw new SendEmailError("Failed to send login notification email");
@@ -58,7 +70,7 @@ export async function login(email, senha) {
     } else {
       throw new NotFoundError("User not found");
       return;
-    }
+    }}
   } catch (error) {
     console.error("Error fetching users:", error);
     throw new NetworkError(error);
@@ -113,5 +125,66 @@ export async function updatepassword(key, newpassword) {
   } catch (error) {
     console.error("Error resetting password:", error);
     throw new Error("Failed to reset password");
+  }
+}
+async function validation_user(nome, email, senha) {
+  let error = [];
+
+  if (nome.length < 4) {
+    error.push(
+      new RegisterError("nome", "username they have must 4 lengths a more"),
+    );
+  }
+  if (senha.length < 6) {
+    error.push(
+      new RegisterError("senha", "Password invalid email 6 lengths a more"),
+    );
+  }
+  let allowed_emails = [
+    "@",
+    "hotmail.com",
+    "hotmail.com.br",
+    "gmail.com.br",
+    "gmail.com",
+    "outlook.com",
+    "outlook.com.br",
+  ];
+  let regexEmail = new RegExp(
+  `^[a-zA-Z0-9._%+-]+@(${allowed_emails.map(domain => domain.replace('.', '\\.')).join('|')})$`
+);
+  if (!regexEmail.test(email)) {
+    error.push(new RegisterError("email", "invalid email"));
+  }
+  if (error.length > 0) {
+    return { success: false, error };
+  } else {
+    return { success: true };
+  }
+}
+
+export async function registeruser(nome, email, senha) {
+  try {
+    let emailtolower = email.toLowerCase().trim();
+    console.log(emailtolower);
+
+    let errors = await validation_user(nome, emailtolower, senha);
+    if (errors.success == false) {
+      return errors;
+    } else {
+      const hashedPassword = await bcrypt.hash(senha, 10);
+      const result = await registerUserInDB(nome, emailtolower, hashedPassword);
+      if (result) {
+        const token = await jwt.sign(
+          { email, nome, role: "USER", id: result.id },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "1h",
+          },
+        );
+        return token;
+      }
+    }
+  } catch (error) {
+    throw error;
   }
 }

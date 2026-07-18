@@ -38,3 +38,16 @@ export async function insertkey(userid, resetkey) {
     throw new ValidationError("key n setada no banco");
   }
 }
+export async function registerUserInDB(nome, email, hashedpassword) {
+  try {
+    let result = await pool.query(
+      "INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3) RETURNING id",
+      [nome, email, hashedpassword],
+    );
+    console.log(result.rows[0]);
+    return result.rows[0];
+  } catch (error) {
+    console.log("erro no db ", error);
+    throw error;
+  }
+}

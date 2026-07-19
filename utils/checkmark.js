@@ -1,8 +1,11 @@
 import { useState } from "react";
 import Lottie from "lottie-react";
-import checkAnimationd from "../public/assets/CHECKJSON.json";
+import checkAnimationd from "/public/assets/CHECKJSON.json";
 
-function SuccessCheckmark() {
+
+
+
+export default function SuccessCheckmark() {
   const [visible, setVisible] = useState(true);
 
   const restartAnimation = () => {
@@ -12,11 +15,10 @@ function SuccessCheckmark() {
     }, 10);
   };
 
-  return (
+
+   return (
     <div style={{ width: 200, margin: "0 auto" }}>
-      {visible && <Lottie animationData={checkAnimationd} loop={false} />}
+      <Lottie path="/assets/CHECKJSON.json" loop={false} />
     </div>
   );
 }
-
-export default SuccessCheckmark;

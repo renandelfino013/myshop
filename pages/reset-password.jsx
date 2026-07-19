@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 function ResetPassword() {
   const searchParams = useSearchParams();
   const key = searchParams.get("key");
-  const [newPassword, setNewPassword] = useState("");
+  const [newpassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
   if (!key) {
@@ -27,7 +27,7 @@ function ResetPassword() {
   }
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
+    if (newpassword !== confirmPassword) {
       alert("As senhas não coincidem. Por favor, tente novamente.");
       return;
     }
@@ -37,7 +37,7 @@ function ResetPassword() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ key, newPassword }),
+        body: JSON.stringify({ key, newpassword }),
       });
       if (response.ok) {
         router.push("https://myshop-murex-iota.vercel.app");
@@ -62,7 +62,7 @@ function ResetPassword() {
               name="newPassword"
               placeholder="Digite sua nova senha"
               className={styles.input}
-              value={newPassword}
+              value={newpassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
             <p className={styles.p}>Confirmar senha</p>
@@ -78,7 +78,7 @@ function ResetPassword() {
               Redefinir Senha
             </button>
           </form>
-          {confirmPassword && newPassword !== confirmPassword && (
+          {confirmPassword && newpassword !== confirmPassword && (
             <p className={styles.errorsenha}>
               As senhas não coincidem. Por favor, tente novamente.
             </p>

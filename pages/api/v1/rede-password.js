@@ -18,9 +18,9 @@ export default async function handler(req, res) {
       });
     }
   } else if (req.method === "PATCH") {
-    const { key, newPassword } = req.body;
+    const { key, newpassword } = req.body;
     try {
-      let ok = await updatepassword(key, newPassword);
+      let ok = await updatepassword(key, newpassword);
       if (ok) {
         res
           .status(200)

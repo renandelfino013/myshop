@@ -1,6 +1,7 @@
-import styles from "../styles/forgotpassword.module.css";
+import styles from "/styles/forgotpassword.module.css";
 import { useState } from "react";
-import SuccessCheckmark from "../utils/checkmarck";
+import SuccessCheckmark from "../utils/checkmark";
+
 
 function forgotPassword() {
   let [estado, setEstado] = useState(false);
@@ -33,7 +34,6 @@ function forgotPassword() {
               com as instruções para redefinir sua senha.
             </p>
           </div>
-          <SuccessCheckmark />
         </main>
       );
     }

@@ -1,10 +1,10 @@
 import bcrypt from "bcryptjs";
-import pool from "../../utils/db";
+import pool from "/utils/db";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import { sendLoginNotification } from "../../utils/sendEmail";
-import { finduserbyemail, insertkey } from "../../models/users/users";
+import { sendLoginNotification } from "/utils/sendEmail";
+import { finduserbyemail, insertkey } from "/models/users/users";
 import {
   NetworkError,
   NotFoundError,
@@ -99,35 +99,41 @@ export async function createresetkey(email) {
     throw new NetworkError("failed to fetch users");
   }
 }
-export async function validationresettoken(key, newPassword) {
+export async function validationresettoken(key, newpassword) {
   try {
     const result = await pool.query(
       "SELECT usuariosid FROM password_reset_keys WHERE key = $1 AND expirado = FALSE",
       [key],
     );
+  console.log("log de dentro da vali reste token " , result)
+    return result.rows;
+
+
   } catch (error) {
     throw new ValidationError("Reset token invalido!!");
   }
-  return result.rows.length;
 }
 
 export async function updatepassindb(hashedpassword, userid) {
   try {
     const updateResult = await pool.query(
       "UPDATE usuarios SET senha = $1 WHERE id = $2 RETURNING id",
-      [hashedPassword, userId],
+      [hashedpassword, userid],
     );
+    console.log("teste de dentro da função updatepassindb" , updateResult)
+
+    return updateResult.rows
   } catch (error) {
     throw new ValidationError("error on updating password");
   }
 }
-export async function expiringResetToken() {
+export async function expiringResetToken(userId) {
   try {
     let ok = await pool.query(
       "UPDATE password_reset_keys SET expirado = TRUE WHERE usuariosid = $1",
       [userId],
     );
-    return ok.rows.length;
+    return ok.rows;
   } catch (error) {
     throw new ValidationError("error on expiring reset token!");
   }

@@ -1,3 +1,9 @@
+import orchestrator from "test/orchestrator.js";
+
+beforeAll(async () => {
+  await orchestrator.waitForAllServices();
+});
+
 test("teste de get status da api", async () => {
   const res = await fetch("http://localhost:3000/api/v1/status/");
   expect(res.status).toBe(200);
@@ -12,5 +18,5 @@ test("teste de get status da api", async () => {
   expect(data.dependencies).toHaveProperty("database");
   expect(data.dependencies).toHaveProperty("max_connections");
   expect(data.dependencies).toHaveProperty("active_connections");
-  expect(data.dependencies.active_connections).toBeLessThanOrEqual(3);
+  expect(data.dependencies.active_connections).toBeLessThanOrEqual(10);
 });

@@ -1,4 +1,13 @@
 import pool from "utils/db";
+import orchestrator from "test/orchestrator.js";
+import createuser from "test/hooks/userfortests";
+
+beforeAll(async () => {
+  await orchestrator.waitForAllServices();
+  createuser.user("jaestalogadoteste@gmail.com","aDSADAASa","123dsDSA")
+});
+
+
 async function cleanuser(email) {
   const users = await pool.query(
     "SELECT id, nome, email, senha, role FROM usuarios",

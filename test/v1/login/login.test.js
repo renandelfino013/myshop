@@ -1,3 +1,10 @@
+import orchestrator from "test/orchestrator.js";
+import createuser from "test/hooks/userfortests";
+
+beforeAll(async () => {
+  await orchestrator.waitForAllServices();
+  let user = await createuser.user("testedeeuse@gmail.com","renan","1234Rnads")
+});
 
 describe("teste de login", () => {
 
@@ -9,8 +16,8 @@ describe("teste de login", () => {
 
         body:JSON.stringify({
 
-        email: "jaestalogadoteste@gmail.com"
-        ,senha: "123dsDSA"
+        email: "testedeeuse@gmail.com"
+        ,senha: "1234Rnads"
         })
         })
         let data = await login.json()

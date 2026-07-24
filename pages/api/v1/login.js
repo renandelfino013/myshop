@@ -11,7 +11,7 @@ dotenv.config();
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
-      teste()
+      teste();
       const { email, senha } = req.body;
       const { user, token } = await login(email, senha);
       res.status(200).json({
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         token,
       });
     } catch (error) {
-      console.log("error log : " , error)
+      console.log("error log : ", error);
       res
         .status(error.statusCode || 500)
         .json({ succes: false, error: error.message, type: error.name });

@@ -2,7 +2,6 @@ import styles from "/styles/forgotpassword.module.css";
 import { useState } from "react";
 import SuccessCheckmark from "../utils/checkmark";
 
-
 function forgotPassword() {
   let [estado, setEstado] = useState(false);
   const handleSubmit = async (e) => {

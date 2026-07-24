@@ -1,7 +1,7 @@
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
-export const shorthands = undefined;
+export const shorthands = undefined
 
 /**
  * @param pgm {import('node-pg-migrate').MigrationBuilder}
@@ -9,11 +9,11 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-  pgm.createTable("marca", {
-    id: "id",
-    nome: { type: "VARCHAR(255)", notNull: true },
-  });
-};
+  pgm.createTable('marca', {
+    id: 'id',
+    nome: { type: 'VARCHAR(255)', notNull: true },
+  })
+}
 
 /**
  * @param pgm {import('node-pg-migrate').MigrationBuilder}
@@ -21,5 +21,5 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-  pgm.dropTable("marca");
-};
+  pgm.dropTable('marca')
+}

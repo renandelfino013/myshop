@@ -4,9 +4,8 @@ import createuser from "test/hooks/userfortests";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
-  createuser.user("jaestalogadoteste@gmail.com","aDSADAASa","123dsDSA")
+  createuser.user("jaestalogadoteste@gmail.com", "aDSADAASa", "123dsDSA");
 });
-
 
 async function cleanuser(email) {
   const users = await pool.query(

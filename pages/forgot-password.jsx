@@ -1,8 +1,7 @@
 import styles from "/styles/forgotpassword.module.css";
 import { useState } from "react";
-import SuccessCheckmark from "../utils/checkmark";
 
-function forgotPassword() {
+function ForgotPassword() {
   let [estado, setEstado] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -10,14 +9,13 @@ function forgotPassword() {
     setEstado(true);
     const email = e.target.email.value;
     try {
-      const response = await fetch("/api/v1/rede-password", {
+      await fetch("/api/v1/rede-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email }),
       });
-      const data = await response.json();
     } catch (error) {
       console.error("Error sending password reset email:", error);
     }
@@ -64,4 +62,4 @@ function forgotPassword() {
   );
 }
 
-export default forgotPassword;
+export default ForgotPassword;

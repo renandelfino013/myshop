@@ -4,13 +4,15 @@ import createuser from "test/hooks/userfortests";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
-  createuser.user("jaestalogadoteste@gmail.com", "aDSADAASa", "123dsDSA");
+  await createuser.fakeuser.user(
+    "jaestalogadoteste@gmail.com",
+    "aDSADAASa",
+    "123dsDSA",
+  );
 });
 
 async function cleanuser(email) {
-  const users = await pool.query(
-    "SELECT id, nome, email, senha, role FROM usuarios",
-  );
+  await pool.query("SELECT id, nome, email, senha, role FROM usuarios");
   await pool.query("DELETE FROM usuarios WHERE email = $1", [email]);
 }
 let email = "test3fdf@gmail.com";
@@ -77,6 +79,7 @@ describe("teste register/users", () => {
     });
     let body = await register.json();
     expect(register.status).toBe(400);
+    console.error(body.error);
     expect(body).toHaveProperty("error");
   });
 

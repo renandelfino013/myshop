@@ -1,10 +1,5 @@
-import bcrypt from 'bcryptjs'
-import pool from '../../utils/db'
-import jwt from 'jsonwebtoken'
-import dotenv from 'dotenv'
-import { sendLoginNotification } from '../../utils/sendEmail'
-import { ValidationError } from '../../utils/error'
-import { useId } from 'react'
+import pool from '/utils/db'
+import { ValidationError } from '/utils/error'
 
 export async function finduserbyemail(email) {
   let emailtolower = email.toLowerCase()
@@ -24,7 +19,7 @@ export async function findEmailUserbyId(userid) {
     )
     return emailuser.rows
   } catch (error) {
-    throw new ValidationError('error on find email user')
+    throw new ValidationError('error on find email user', error)
   }
 }
 export async function insertkey(userid, resetkey) {

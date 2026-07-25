@@ -11,7 +11,6 @@ export default async function handler(req, res) {
         "INSERT INTO pedidos (usuarios_id) VALUES ($1) RETURNING id",
         [decoded.id],
       );
-      const id = decoded.id;
 
       //await pool.query(
       //  "INSERT INTO itens_pedido (pedido_id, produto_id, quantidade) VALUES ($1, $2, $3)",

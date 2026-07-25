@@ -2,7 +2,7 @@ import styles from "../styles/resetpassword.module.css";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useRouter } from "next/router";
-
+import Link from "next/link";
 function ResetPassword() {
   const searchParams = useSearchParams();
   const key = searchParams.get("key");
@@ -15,9 +15,10 @@ function ResetPassword() {
         <div className={styles.divtext}>
           <h1>Link de redefinição inválido</h1>
           <p>O link de redefinição de senha é inválido ou expirou.</p>
-          <a href="/forgot-password" className={styles.button}>
+
+          <Link href="/forgot-password/" className={styles.button}>
             Solicitar novo link
-          </a>
+          </Link>
         </div>
         <footer className={styles.footer}>
           <p>© 2026 MyShop. Todos os direitos reservados.</p>
@@ -42,7 +43,6 @@ function ResetPassword() {
       if (response.ok) {
         router.push("https://myshop-murex-iota.vercel.app");
       }
-      const data = await response.json();
     } catch (error) {
       console.error("Error resetting password:", error);
     }

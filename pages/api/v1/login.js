@@ -1,10 +1,5 @@
-import bcrypt from "bcryptjs";
-import pool from "/utils/db";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { login } from "/services/authservices";
-import { sendLoginNotification } from "/utils/sendEmail";
-import { resetpassword } from "/models/users/resetpassword";
 import teste from "../../../models/teste.";
 dotenv.config();
 

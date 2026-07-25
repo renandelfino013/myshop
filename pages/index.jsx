@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "/styles/login.module.css";
+import Link from "next/link";
 
 function Login() {
   const [estado, setEstado] = useState(false);
@@ -132,9 +133,9 @@ function Login() {
         )}
 
         {!register && (
-          <a href="/forgot-password" className={styles.forgotPassword}>
+          <Link href="/forgot-password/" className={styles.forgotPassword}>
             Forgot password?
-          </a>
+          </Link>
         )}
       </div>
     </main>

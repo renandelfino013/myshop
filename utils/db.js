@@ -1,4 +1,12 @@
 import { Pool } from "pg";
+import dotenv from "dotenv";
+import dotenvExpand from "dotenv-expand";
+
+try {
+  dotenvExpand.expand(dotenv.config());
+} catch (err) {
+  console.warn("Nenhum .env encontrado, usando variáveis do ambiente", err);
+}
 
 const isProd = process.env.NODE_ENV === "production";
 

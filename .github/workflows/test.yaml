@@ -1,0 +1,59 @@
+name: testes automatizados
+on: pull_request
+
+jobs:
+  jest:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: testdb
+      DB_PORT: 5432
+      EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      EMAIL_USE: ${{ secrets.EMAIL_USE }}
+      JWT_SECRET: teste-apenas-para-ci-nao-usar-em-producao
+    services:
+      postgres:
+        image: postgres:16.0-alpine3.18
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U $POSTGRES_USER -h localhost -p 5432"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Run migrations
+        run: npm run migrate:up
+      - name: Start API server
+        run: |
+          npx next dev --hostname 0.0.0.0 --port 3000 > /tmp/myshop-next.log 2>&1 &
+          for i in {1..60}; do
+            if curl -sf http://127.0.0.1:3000/api/v1/status > /dev/null; then
+              echo "API server is ready"
+              break
+            fi
+            echo "Waiting for API server..."
+            sleep 2
+          done
+          curl -sf http://127.0.0.1:3000/api/v1/status > /tmp/myshop-status.json || {
+            echo "API server failed to start"
+            cat /tmp/myshop-next.log
+            exit 1
+          }
+      - name: Run Jest directly
+        run: npx jest --runInBand --detectOpenHandles --verbose
+      - name: Show server log
+        if: always()
+        run: cat /tmp/myshop-next.log

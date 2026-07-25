@@ -1,7 +1,3 @@
-import bcrypt from "bcryptjs";
-import pool from "/utils/db";
-import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
 import { createresetkey } from "/models/users/resetpassword";

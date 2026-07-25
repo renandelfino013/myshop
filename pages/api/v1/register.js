@@ -1,7 +1,3 @@
-import bcrypt from "bcryptjs";
-import pool from "/utils/db";
-import jwt from "jsonwebtoken";
-import { registerUserInDB } from "/models/users/users";
 import { registeruser } from "/services/authservices";
 
 export default async function handler(req, res) {
@@ -14,7 +10,7 @@ export default async function handler(req, res) {
       if (token.success == false) {
         res.status(401).json({ error: token.error });
       } else {
-        res
+        return res
           .status(201)
           .json({ message: "User created successfully", token: token });
       }
@@ -23,10 +19,10 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Email already exists" });
       } else {
         console.error("Error creating user:", error);
-        res.status(error.statusCode).json({ error: error.message });
+        return res.status(error.statusCode).json({ error: error.message });
       }
     }
   } else {
-    res.status(405).json({ error: error.message });
+    return res.status(405).json({ error: "invalid method" });
   }
 }

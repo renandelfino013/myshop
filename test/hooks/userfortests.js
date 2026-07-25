@@ -1,4 +1,3 @@
-import pool from '/utils/db'
 async function user(email, nome, senha) {
   const usuario = await fetch('http://localhost:3000/api/v1/register', {
     method: 'POST',
@@ -11,7 +10,6 @@ async function user(email, nome, senha) {
       senha: senha,
     }),
   })
-  let data = await usuario.json()
 
   if ((await usuario.status) == 201) {
     return true
@@ -19,6 +17,7 @@ async function user(email, nome, senha) {
     return false
   }
 }
+const fakeuser = { user }
 export default {
-  user,
+  fakeuser,
 }

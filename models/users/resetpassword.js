@@ -1,7 +1,5 @@
-import bcrypt from 'bcryptjs'
 import pool from '/utils/db'
 import jwt from 'jsonwebtoken'
-import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
 import { sendLoginNotification } from '/utils/sendEmail'
 import { finduserbyemail, insertkey } from '/models/users/users'
@@ -47,8 +45,6 @@ export async function createresetkey(email) {
         } else {
           return true
         }
-
-        return true
       } else {
         throw new NotFoundError('Usuario nao encontrado')
       }
@@ -60,7 +56,7 @@ export async function createresetkey(email) {
     throw new NetworkError('failed to fetch users')
   }
 }
-export async function validationresettoken(key, newpassword) {
+export async function validationresettoken(key) {
   try {
     const result = await pool.query(
       'SELECT usuariosid FROM password_reset_keys WHERE key = $1 AND expirado = FALSE',
@@ -68,7 +64,7 @@ export async function validationresettoken(key, newpassword) {
     )
     return result.rows
   } catch (error) {
-    throw new ValidationError('Reset token invalido!!')
+    throw new ValidationError('Reset token invalido!!', error)
   }
 }
 
@@ -81,7 +77,7 @@ export async function updatepassindb(hashedpassword, userid) {
 
     return updateResult.rows
   } catch (error) {
-    throw new ValidationError('error on updating password')
+    throw new ValidationError('error on updating password', error)
   }
 }
 export async function expiringResetToken(userId) {
@@ -92,6 +88,6 @@ export async function expiringResetToken(userId) {
     )
     return ok.rows
   } catch (error) {
-    throw new ValidationError('error on expiring reset token!')
+    throw new ValidationError('error on expiring reset token!', error)
   }
 }

@@ -70,7 +70,6 @@ export async function login(email, senha) {
         }
       } else {
         throw new NotFoundError('User not found')
-        return
       }
     }
   } catch (error) {
@@ -91,7 +90,7 @@ export async function updatepassword(key, newpassword) {
       console.log('teste de updatepassindb', UpdatePassInDB)
 
       if (UpdatePassInDB.length > 0) {
-        const expiringretoken = await expiringResetToken(userId)
+        await expiringResetToken(userId)
         const emailResult = await findEmailUserbyId(userId)
         console.log('teste de emailresult', emailResult[0])
         if (emailResult.length > 0) {
@@ -119,7 +118,7 @@ export async function updatepassword(key, newpassword) {
             console.log('Error sending password change email:', error)
           }
         } else {
-          console.log('Error fetching user email:', error)
+          console.log('Error fetching user email:')
         }
 
         return true
@@ -192,6 +191,7 @@ export async function registeruser(nome, email, senha) {
       }
     }
   } catch (error) {
+    console.log(error)
     throw error
   }
 }

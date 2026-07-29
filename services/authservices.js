@@ -45,11 +45,11 @@ export async function login(email, senha) {
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
           )
-
-          let ok = await sendLoginNotification(
-            user.email,
-            'Notificação de Login - MyShop',
-            `
+          try {
+            let ok = await sendLoginNotification(
+              user.email,
+              'Notificação de Login - MyShop',
+              `
             <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
               <div style="text-align:center; margin-bottom:20px;">
                 <img src="https://img.icons8.com/ios-filled/50/ffffff/shopping-cart.png" alt="MyShop" />
@@ -58,13 +58,14 @@ export async function login(email, senha) {
               <p style="color:#e3f2fd;">Você acabou de fazer login na sua conta <b>MyShop</b>.</p>
             </div>
           `
-          )
-
-          if (ok == true) {
-            return { user, token }
-          } else {
-            throw new SendEmailError('Failed to send login notification email1')
+            )
+            if (ok == true) {
+              console.log('email enviado com sucesso')
+            }
+          } catch (error) {
+            throw new NetworkError('erro ao enviar email de login!', error)
           }
+          return { user, token }
         } else {
           throw new AuthError('email or password invalid')
         }

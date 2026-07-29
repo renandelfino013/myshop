@@ -1,7 +1,12 @@
 import { exec } from 'node:child_process'
 
 function waitforpostgres() {
-  exec('docker exec my_database pg_isready --host localhost', handlereturn)
+  const port = process.env.DB_PORT || 5432
+  const user = process.env.POSTGRES_USER || 'postgres'
+  exec(
+    `docker exec my_database pg_isready -h localhost -p ${port} -U ${user}`,
+    handlereturn
+  )
   function handlereturn(error, stdout) {
     let up = stdout.search('accepting connections')
     if (up !== -1) {

@@ -30,7 +30,8 @@ jobs:
       - run: npm ci --legacy-peer-deps
 
       - run: npm run lint:eslint:check
-        commitlint:
+
+  commitlint:
     name: commit/linting
     runs-on: ubuntu-latest
     steps:

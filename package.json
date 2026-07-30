@@ -65,7 +65,8 @@
     "globals": "^17.7.0",
     "husky": "^9.1.7",
     "next-test-api-route-handler": "^5.0.5",
-    "prettier": "^3.9.6"
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3"
   },
   "config": {
     "commitizen": {

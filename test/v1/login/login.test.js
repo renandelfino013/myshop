@@ -3,7 +3,12 @@ import createuser from 'test/hooks/userfortests'
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
-  await createuser.fakeuser.user('testedeeuse@gmail.com', 'renan', '1234Rnads')
+  let result = await createuser.fakeuser.user(
+    'testedeeuse@gmail.com',
+    'renan',
+    '1234Rnads'
+  )
+  console.log('result of user creation : ', result)
 })
 
 describe('teste de login', () => {

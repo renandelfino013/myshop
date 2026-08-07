@@ -131,7 +131,7 @@ export async function updatepassword(key, newpassword) {
     }
   } catch (error) {
     console.error('Error resetting password:', error)
-    throw new Error('Failed to reset password')
+    throw new Error('Failed to reset password: ' + error.message)
   }
 }
 async function validation_user(nome, email, senha) {

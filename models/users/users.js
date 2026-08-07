@@ -46,3 +46,10 @@ export async function registerUserInDB(nome, email, hashedpassword) {
     throw error
   }
 }
+export async function findresetkey(email) {
+  let resetkey = await pool.query(
+    'SELECT key FROM password_reset_keys WHERE usuariosid = (SELECT id FROM usuarios WHERE email = $1) AND expirado = FALSE',
+    [email]
+  )
+  return resetkey.rows
+}

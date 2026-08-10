@@ -62,8 +62,10 @@ export async function validationresettoken(key) {
       'SELECT usuariosid FROM password_reset_keys WHERE key = $1 AND expirado = FALSE',
       [key]
     )
+
     return result.rows
   } catch (error) {
+    console.error('error on validationresettoken', error)
     throw new ValidationError('Reset token invalido!!', error)
   }
 }

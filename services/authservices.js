@@ -46,7 +46,7 @@ export async function login(email, senha) {
             { expiresIn: '1h' }
           )
           try {
-            let ok = await sendLoginNotification(
+            await sendLoginNotification(
               user.email,
               'Notificação de Login - MyShop',
               `
@@ -59,9 +59,6 @@ export async function login(email, senha) {
             </div>
           `
             )
-            if (ok == true) {
-              console.log('email enviado com sucesso')
-            }
           } catch (error) {
             throw new NetworkError('erro ao enviar email de login!', error)
           }
@@ -80,19 +77,29 @@ export async function login(email, senha) {
 }
 export async function updatepassword(key, newpassword) {
   console.log('teste da funçao updatepassword')
+
   try {
+    const sml = regexsenha(newpassword)
+    if (!sml) {
+      throw new ValidationError(
+        'invalid password, min 4 carac and with 1 uppercase'
+      )
+    }
     const result = await validationresettoken(key)
-    console.log('teste de result', result.rows)
-    console.log('teste de result')
-    if (result.length > 0) {
+
+    console.log('teste de result reset token', result[0])
+    if (result.length > 0 && result[0] !== undefined) {
       const userId = result[0].usuariosid
       const hashedPassword = await bcrypt.hash(newpassword, 10)
       const UpdatePassInDB = await updatepassindb(hashedPassword, userId)
+
       console.log('teste de updatepassindb', UpdatePassInDB)
 
       if (UpdatePassInDB.length > 0) {
         await expiringResetToken(userId)
+
         const emailResult = await findEmailUserbyId(userId)
+
         console.log('teste de emailresult', emailResult[0])
         if (emailResult.length > 0) {
           try {

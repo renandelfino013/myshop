@@ -14,7 +14,7 @@ export default async function handler(req, res) {
         token,
       });
     } catch (error) {
-      console.log("error log : ", error);
+      console.error("error log : ", error);
       res
         .status(error.statusCode || 500)
         .json({ succes: false, error: error.message, type: error.name });

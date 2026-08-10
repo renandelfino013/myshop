@@ -7,7 +7,6 @@ export async function finduserbyemail(email) {
     'SELECT id, nome, email, role, senha FROM usuarios WHERE email = $1',
     [emailtolower]
   )
-  console.log(user.rows)
   return user.rows
 }
 export async function findEmailUserbyId(userid) {
@@ -39,10 +38,9 @@ export async function registerUserInDB(nome, email, hashedpassword) {
       'INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3) RETURNING id',
       [nome, email, hashedpassword]
     )
-    console.log(result.rows[0])
     return result.rows[0]
   } catch (error) {
-    console.log('erro no db ', error)
+    console.error('erro no db ', error)
     throw error
   }
 }

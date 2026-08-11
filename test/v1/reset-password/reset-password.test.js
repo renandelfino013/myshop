@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import orchestrator from 'test/orchestrator.js'
-import { sendLoginNotification } from '/utils/sendEmail'
-jest.mock('/utils/sendEmail')
 
 import createuser from 'test/hooks/userfortests.js'
 import {

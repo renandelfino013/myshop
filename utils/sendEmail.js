@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 async function sendLoginNotification(to, subject, html) {
-  if (process.env.NODE_ENV === "test") {
+  if (process.env.APP_EMAIL === "test") {
     console.log("[TEST] email não enviado de verdade:", to, subject);
     return true;
   }

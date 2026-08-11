@@ -22,8 +22,10 @@ export default async function handler(req, res) {
           .status(200)
           .json({ sucess: "true", message: "password updated be sucessul!" });
       }
-    } catch (error) {
-      return res.json({ error: error });
+    } catch (err) {
+      return res.status(400).json({
+        error: err.message,
+      });
     }
   }
 }

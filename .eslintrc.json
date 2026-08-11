@@ -30,6 +30,15 @@
     "infra/**"
   ],
   "rules": {
-    "no-unused-vars": "warn"
-  }
+    "no-unused-vars": "warn",
+    "no-console": ["warn", { "allow": ["warn", "error"] }]
+  },
+  "overrides": [
+    {
+      "files": ["infra/**/*.js", "test/**/*.js"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
 }

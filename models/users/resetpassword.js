@@ -1,8 +1,8 @@
-import pool from '/utils/db'
+import pool from 'utils/db'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
-import { sendLoginNotification } from '/utils/sendEmail'
-import { finduserbyemail, insertkey } from '/models/users/users'
+import { sendLoginNotification } from 'utils/sendEmail'
+import { finduserbyemail, insertkey } from 'models/users/users'
 import {
   NetworkError,
   NotFoundError,

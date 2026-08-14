@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { createresetkey } from "/models/users/resetpassword";
-import { updatepassword } from "/services/authservices";
+import { createresetkey } from "models/users/resetpassword";
+import { updatepassword } from "services/authservices";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {

@@ -6,17 +6,17 @@ import {
   ValidationError,
   NetworkError,
   RegisterError,
-} from '/utils/error'
-import regexemail from '/utils/regexemail'
+} from 'utils/error'
+import regexemail from 'utils/regexemail'
 import jwt from 'jsonwebtoken'
-import { findEmailUserbyId, finduserbyemail } from '/models/users/users'
+import { findEmailUserbyId, finduserbyemail } from 'models/users/users'
 import bcrypt from 'bcryptjs'
-import { updatepassindb } from '/models/users/resetpassword'
-import { expiringResetToken } from '/models/users/resetpassword'
-import regexsenha from '/utils/regexsenha'
-import { sendLoginNotification } from '/utils/sendEmail'
-import { validationresettoken } from '/models/users/resetpassword'
-import { registerUserInDB } from '/models/users/users'
+import { updatepassindb } from 'models/users/resetpassword'
+import { expiringResetToken } from 'models/users/resetpassword'
+import regexsenha from 'utils/regexsenha'
+import { sendLoginNotification } from 'utils/sendEmail'
+import { validationresettoken } from 'models/users/resetpassword'
+import { registerUserInDB } from 'models/users/users'
 
 export async function login(email, senha) {
   let emailtolower = email.toLowerCase()

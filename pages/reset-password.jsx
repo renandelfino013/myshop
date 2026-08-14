@@ -1,4 +1,4 @@
-import styles from "../styles/resetpassword.module.css";
+import styles from "styles/resetpassword.module.css";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useRouter } from "next/router";

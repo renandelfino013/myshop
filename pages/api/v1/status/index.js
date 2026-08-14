@@ -1,4 +1,4 @@
-import { dbversion, dbmaxconec, dbsActivec } from "/models/status/status";
+import { dbversion, dbmaxconec, dbsActivec } from "models/status/status";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {

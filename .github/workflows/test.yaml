@@ -1,9 +1,17 @@
 name: testes-automatizados
 on: pull_request
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   jest:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
       POSTGRES_HOST: localhost
@@ -13,8 +21,11 @@ jobs:
       DB_PORT: 5432
       EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
       EMAIL_USE: ${{ secrets.EMAIL_USE }}
+      UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+      UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
       JWT_SECRET: teste-apenas-para-ci-nao-usar-em-producao
       APP_EMAIL: test
+      APP_ENV: test
     services:
       postgres:
         image: postgres:16.0-alpine3.18
@@ -34,6 +45,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: "npm"
       - run: npm ci
       - name: Run migrations
         run: npm run migrate:up
@@ -55,6 +67,9 @@ jobs:
           }
       - name: Run Jest directly
         run: npx jest --runInBand --detectOpenHandles --verbose
-      - name: Show server log
+      - name: Upload server log
         if: always()
-        run: cat /tmp/myshop-next.log
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-server-log
+          path: /tmp/myshop-next.log

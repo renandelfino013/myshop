@@ -51,3 +51,15 @@ export async function findresetkey(email) {
   )
   return resetkey.rows
 }
+export async function registerAdminInDB(nome, email, hashedpassword) {
+  try {
+    let result = await pool.query(
+      'INSERT INTO usuarios (nome, email, senha, role) VALUES ($1, $2, $3,$4) RETURNING id',
+      [nome, email, hashedpassword, 'ADMIN']
+    )
+    return result.rows[0]
+  } catch (error) {
+    console.error('erro no db ', error)
+    throw error
+  }
+}

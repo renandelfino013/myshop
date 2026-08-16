@@ -12,9 +12,9 @@ async function user(email, nome, senha) {
   })
 
   if ((await usuario.status) == 201) {
-    return true
+    return [true, await usuario.json()]
   } else {
-    return false
+    return [false, await usuario.json()]
   }
 }
 const fakeuser = { user }

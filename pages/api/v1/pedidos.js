@@ -12,10 +12,6 @@ export default async function handler(req, res) {
         [decoded.id],
       );
 
-      //await pool.query(
-      //  "INSERT INTO itens_pedido (pedido_id, produto_id, quantidade) VALUES ($1, $2, $3)",
-      //   [bg.rows[0].id, item.produto_id, item.quantidade],
-      // );
       await Promise.all(
         itens.map((item) =>
           pool.query(

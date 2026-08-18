@@ -3,7 +3,9 @@ import {
   getbrandbyid,
   getbrandbyname,
   getallbrands,
+  renameBrand,
   createbrand,
+  removebrand,
 } from "services/brand-services";
 import validationtoken from "services/validationtoken";
 dotenv.config();
@@ -17,8 +19,7 @@ export default async function handler(req, res) {
     if (req.method === "GET" && !req.query.id && !req.query.nome) {
       const getbrands = await getallbrands();
       res.status(200).json(getbrands);
-    }
-    if (req.method === "GET" && req.query.id) {
+    } else if (req.method === "GET" && req.query.id) {
       const { id } = req.query;
       const brand = await getbrandbyid(id);
       res.status(200).json(brand);
@@ -31,6 +32,20 @@ export default async function handler(req, res) {
       res
         .status(201)
         .json({ success: true, message: "Brand sucessfully created" });
+    } else if (req.method == "PATCH") {
+      const { brandname, newname } = req.body;
+      await renameBrand(brandname, newname, role);
+      res
+        .status(200)
+        .json({ success: true, message: "Brand sucessfully updated" });
+    } else if (req.method === "DELETE") {
+      const { name } = req.body;
+      await removebrand(name, role);
+      res
+        .status(200)
+        .json({ success: true, message: "Brand sucessfully deleted" });
+    } else {
+      res.status(405).json({ error: "Method Not Allowed" });
     }
   } catch (error) {
     res

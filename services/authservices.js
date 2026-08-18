@@ -1,55 +1,50 @@
 import {
   NotFoundError,
   AuthError,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  SendEmailError,
   ValidationError,
   NetworkError,
+  SendEmailError,
   RegisterError,
-} from 'utils/error'
-import regexemail from 'utils/regexemail'
-import jwt from 'jsonwebtoken'
-import { findEmailUserbyId, finduserbyemail } from 'models/users/users'
-import bcrypt from 'bcryptjs'
-import { updatepassindb } from 'models/users/resetpassword'
-import { expiringResetToken } from 'models/users/resetpassword'
-import regexsenha from 'utils/regexsenha'
-import { sendLoginNotification } from 'utils/sendEmail'
-import { validationresettoken } from 'models/users/resetpassword'
-import { registerUserInDB } from 'models/users/users'
+} from "utils/error";
+import regexemail from "utils/regexemail";
+import jwt from "jsonwebtoken";
+import { findEmailUserbyId, finduserbyemail } from "models/users/users";
+import bcrypt from "bcryptjs";
+import { updatepassindb } from "models/users/resetpassword";
+import { expiringResetToken } from "models/users/resetpassword";
+import regexsenha from "utils/regexsenha";
+import { sendLoginNotification } from "utils/sendEmail";
+import { validationresettoken } from "models/users/resetpassword";
+import { registerUserInDB } from "models/users/users";
 
 export async function login(email, senha) {
-  let emailtolower = email.toLowerCase()
-  console.log(emailtolower, senha)
+  let emailtolower = email.toLowerCase();
   try {
-    let sml = regexsenha(senha)
+    let sml = regexsenha(senha);
     if (!sml) {
       throw new ValidationError(
-        'invalid password, min 4 carac and with 1 uppercase'
-      )
+        "invalid password, min 4 carac and with 1 uppercase",
+      );
     }
-    let eml = regexemail(email)
-    console.log(eml)
+    let eml = regexemail(email);
     if (!eml) {
-      throw new ValidationError('invalid email')
+      throw new ValidationError("invalid email");
     } else {
-      const result = await finduserbyemail(emailtolower)
+      const result = await finduserbyemail(emailtolower);
 
       if (result.length > 0) {
-        const user = result[0]
-        const passwordMatch = await bcrypt.compare(senha, user.senha)
-        console.log(passwordMatch)
-
+        const user = result[0];
+        const passwordMatch = await bcrypt.compare(senha, user.senha);
         if (passwordMatch) {
           const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-          )
+            { expiresIn: "1h" },
+          );
           try {
             await sendLoginNotification(
               user.email,
-              'Notificação de Login - MyShop',
+              "Notificação de Login - MyShop",
               `
             <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
               <div style="text-align:center; margin-bottom:20px;">
@@ -58,55 +53,49 @@ export async function login(email, senha) {
               <h2 style="margin:0; color:#fff;">Olá, ${user.nome} 👋</h2>
               <p style="color:#e3f2fd;">Você acabou de fazer login na sua conta <b>MyShop</b>.</p>
             </div>
-          `
-            )
+          `,
+            );
           } catch (error) {
-            throw new NetworkError('erro ao enviar email de login!', error)
+            throw new NetworkError("erro ao enviar email de login!", error);
           }
-          return { user, token }
+          return { user, token };
         } else {
-          throw new AuthError('email or password invalid')
+          throw new AuthError("email or password invalid");
         }
       } else {
-        throw new NotFoundError('User not found')
+        throw new NotFoundError("User not found");
       }
     }
   } catch (error) {
-    console.error('Error fetching users:', error)
-    throw new NetworkError(error)
+    console.error("Error fetching users:", error);
+    throw new NetworkError(error);
   }
 }
 export async function updatepassword(key, newpassword) {
-  console.log('teste da funçao updatepassword')
-
   try {
-    const sml = regexsenha(newpassword)
+    const sml = regexsenha(newpassword);
     if (!sml) {
       throw new ValidationError(
-        'invalid password, min 4 carac and with 1 uppercase'
-      )
+        "invalid password, min 4 carac and with 1 uppercase",
+      );
     }
-    const result = await validationresettoken(key)
+    const result = await validationresettoken(key);
 
-    console.log('teste de result reset token', result[0])
     if (result.length > 0 && result[0] !== undefined) {
-      const userId = result[0].usuariosid
-      const hashedPassword = await bcrypt.hash(newpassword, 10)
-      const UpdatePassInDB = await updatepassindb(hashedPassword, userId)
-
-      console.log('teste de updatepassindb', UpdatePassInDB)
+      const userId = result[0].usuariosid;
+      const hashedPassword = await bcrypt.hash(newpassword, 10);
+      const UpdatePassInDB = await updatepassindb(hashedPassword, userId);
 
       if (UpdatePassInDB.length > 0) {
-        await expiringResetToken(userId)
+        await expiringResetToken(userId);
 
-        const emailResult = await findEmailUserbyId(userId)
+        const emailResult = await findEmailUserbyId(userId);
 
-        console.log('teste de emailresult', emailResult[0])
         if (emailResult.length > 0) {
           try {
             await sendLoginNotification(
               emailResult[0].email,
-              'Notificação de Alteração de Senha - MyShop',
+              "Notificação de Alteração de Senha - MyShop",
               `
             <div style="font-family: Arial, sans-serif; background-color:#0d47a1; padding:20px; color:#fff;">
               <div style="text-align:center; margin-bottom:20px;">
@@ -115,86 +104,87 @@ export async function updatepassword(key, newpassword) {
               <h2 style="margin:0; color:#fff;">Olá,</h2>
               <p style="color:#e3f2fd;">Sua senha da conta <b>MyShop</b> foi alterada com sucesso.</p>
             </div>
-          `
-            )
+          `,
+            );
           } catch (error) {
-            console.log('Error sending password change email:', error)
+            console.error(error);
+
+            throw new SendEmailError("Error sending password change email:");
           }
         } else {
-          console.log('Error fetching user email:')
+          throw new SendEmailError("Error fetching user email:");
         }
 
-        return true
+        return true;
       } else {
-        throw new AuthError('Failed to update password')
+        throw new AuthError("Failed to update password");
       }
     } else {
-      throw new Error('Invalid or expired reset key')
+      throw new Error("Invalid or expired reset key");
     }
   } catch (error) {
-    console.error('Error resetting password:', error)
-    throw new Error('Failed to reset password: ' + error.message)
+    console.error("Error resetting password:", error);
+    throw new Error("Failed to reset password: " + error.message);
   }
 }
 async function validation_user(nome, email, senha) {
-  let error = []
+  let error = [];
 
   if (nome.length < 4) {
     error.push(
-      new RegisterError('nome', 'username they have must 4 lengths a more')
-    )
+      new RegisterError("nome", "username they have must 4 lengths a more"),
+    );
   }
   if (senha.length < 6) {
     error.push(
-      new RegisterError('senha', 'Password invalid email 6 lengths a more')
-    )
+      new RegisterError("senha", "Password invalid email 6 lengths a more"),
+    );
   }
   let allowed_emails = [
-    '@',
-    'hotmail.com',
-    'hotmail.com.br',
-    'gmail.com.br',
-    'gmail.com',
-    'outlook.com',
-    'outlook.com.br',
-  ]
+    "@",
+    "hotmail.com",
+    "hotmail.com.br",
+    "gmail.com.br",
+    "gmail.com",
+    "outlook.com",
+    "outlook.com.br",
+  ];
   let regexEmail = new RegExp(
-    `^[a-zA-Z0-9._%+-]+@(${allowed_emails.map((domain) => domain.replace('.', '\\.')).join('|')})$`
-  )
+    `^[a-zA-Z0-9._%+-]+@(${allowed_emails.map((domain) => domain.replace(".", "\\.")).join("|")})$`,
+  );
   if (!regexEmail.test(email)) {
-    error.push(new RegisterError('email', 'invalid email'))
+    error.push(new RegisterError("email", "invalid email"));
   }
   if (error.length > 0) {
-    return { success: false, error }
+    return { success: false, error };
   } else {
-    return { success: true }
+    return { success: true };
   }
 }
 
 export async function registeruser(nome, email, senha) {
   try {
-    let emailtolower = email.toLowerCase().trim()
-    console.log(emailtolower)
+    let emailtolower = email.toLowerCase().trim();
 
-    let errors = await validation_user(nome, emailtolower, senha)
+    let errors = await validation_user(nome, emailtolower, senha);
     if (errors.success == false) {
-      return errors
+      return errors;
     } else {
-      const hashedPassword = await bcrypt.hash(senha, 10)
-      const result = await registerUserInDB(nome, emailtolower, hashedPassword)
+      const hashedPassword = await bcrypt.hash(senha, 10);
+      const result = await registerUserInDB(nome, emailtolower, hashedPassword);
       if (result) {
         const token = await jwt.sign(
-          { email, nome, role: 'USER', id: result.id },
+          { email, nome, role: "USER", id: result.id },
           process.env.JWT_SECRET,
           {
-            expiresIn: '1h',
-          }
-        )
-        return token
+            expiresIn: "1h",
+          },
+        );
+        return token;
       }
     }
   } catch (error) {
-    console.log(error)
-    throw error
+    console.error(error);
+    throw error;
   }
 }

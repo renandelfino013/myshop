@@ -15,9 +15,7 @@ const ratelimit = new Ratelimit({
 })
 function checkauthorization(request) {
   const path = request.nextUrl.pathname
-  console.log('Request path:', path)
   if (path.startsWith('/api/v1/marcas')) {
-    console.log('Validating token for /api/v1/marcas')
     const authHeader = request.headers.get('authorization')
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

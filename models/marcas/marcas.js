@@ -23,3 +23,19 @@ export async function FindBrandByName(name) {
   ])
   return result.rows
 }
+export async function updatebrand(id, newname) {
+  const result = await pool.query(
+    'UPDATE marcas SET nome = $1 WHERE id = $2 RETURNING *',
+    [newname, id]
+  )
+
+  return result.rows
+}
+export async function deletebrand(id) {
+  const result = await pool.query(
+    'DELETE FROM marcas WHERE id = $1 RETURNING *',
+    [id]
+  )
+
+  return result.rows
+}

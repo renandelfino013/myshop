@@ -11,7 +11,6 @@ export const shorthands = undefined
 export const up = (pgm) => {
   pgm.createTable('produtos', {
     id: 'id',
-    image: { type: 'VARCHAR(500)' },
     nome: { type: 'VARCHAR (255)', notNull: true },
     preco: { type: 'NUMERIC (10,2)', notNull: true },
     estoque: { type: 'INTEGER', notNull: true },
@@ -19,6 +18,16 @@ export const up = (pgm) => {
       type: 'INTEGER',
       references: '"categorias"',
       onDelete: 'SET NULL',
+    },
+    marca_id: {
+      type: 'INTEGER',
+      notNull: true,
+      references: '"marcas"',
+      onDelete: 'SET NULL',
+    },
+    descricao: {
+      type: 'VARCHAR (255)',
+      notNull: true,
     },
   })
 }

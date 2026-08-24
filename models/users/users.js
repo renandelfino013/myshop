@@ -1,5 +1,5 @@
-import pool from 'utils/db'
-import { ValidationError } from 'utils/error'
+import pool from 'infra/database/db'
+import { ValidationError } from 'utils/errors/error'
 
 export async function finduserbyemail(email) {
   let emailtolower = email.toLowerCase()

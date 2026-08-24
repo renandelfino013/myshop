@@ -1,4 +1,4 @@
-import { registeruser } from "services/authservices";
+import { registeruser } from "services/auth/authservices";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {

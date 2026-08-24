@@ -11,7 +11,7 @@ export const shorthands = undefined
 export const up = (pgm) => {
   pgm.createTable('categorias', {
     id: 'id',
-    nome: { type: 'VARCHAR (255)', notNull: true },
+    nome: { type: 'VARCHAR (255)', notNull: true, unique: true },
   })
 }
 

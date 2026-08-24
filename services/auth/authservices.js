@@ -5,15 +5,15 @@ import {
   NetworkError,
   SendEmailError,
   RegisterError,
-} from "utils/error";
-import regexemail from "utils/regexemail";
+} from "utils/errors/error";
+import regexemail from "utils/Regex/regexemail";
 import jwt from "jsonwebtoken";
 import { findEmailUserbyId, finduserbyemail } from "models/users/users";
 import bcrypt from "bcryptjs";
 import { updatepassindb } from "models/users/resetpassword";
 import { expiringResetToken } from "models/users/resetpassword";
-import regexsenha from "utils/regexsenha";
-import { sendLoginNotification } from "utils/sendEmail";
+import regexsenha from "utils/Regex/regexsenha";
+import { sendLoginNotification } from "utils/mail/sendEmail";
 import { validationresettoken } from "models/users/resetpassword";
 import { registerUserInDB } from "models/users/users";
 

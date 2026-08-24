@@ -15,7 +15,11 @@ const ratelimit = new Ratelimit({
 })
 function checkauthorization(request) {
   const path = request.nextUrl.pathname
-  if (path.startsWith('/api/v1/marcas')) {
+  if (
+    path.startsWith('/api/v1/marcas') ||
+    path.startsWith('/api/v1/produtos') ||
+    path.startsWith('/api/v1/categorias')
+  ) {
     const authHeader = request.headers.get('authorization')
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

@@ -1,4 +1,4 @@
-import pool from 'utils/db'
+import pool from 'infra/database/db'
 
 export async function FindAllBrands() {
   const result = await pool.query('SELECT * FROM marcas')

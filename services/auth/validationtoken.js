@@ -1,9 +1,9 @@
 import { finduserbyemail } from "models/users/users";
-import { ValidationError } from "utils/error";
+import { NotFoundError } from "utils/errors/error";
 export default async function validationtoken(userid, email) {
   const result = await finduserbyemail(email);
   if (result.length === 0) {
-    throw new ValidationError("User not found");
+    throw new NotFoundError("User not found");
   }
   return true;
 }

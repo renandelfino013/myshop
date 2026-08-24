@@ -1,59 +1,62 @@
-import pool from "utils/db";
+import validationtoken from "services/auth/validationtoken";
+import {
+  GetAllproducts,
+  GetProductPerId,
+  Postproduct,
+  Putproduct,
+  removeproduct,
+} from "services/products/products-services";
+import { ValidationError } from "utils/errors/error";
 
 export default async function handler(req, res) {
-  if (req.method === "GET") {
-    try {
-      const result = await pool.query("SELECT * FROM produtos");
-      res.status(200).json(result.rows);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      res.status(500).json({ error: "Failed to fetch products" });
-    }
-    if (req.method === "GET" && req.body.produto_id) {
-      try {
-        const result = await pool.query(
-          "SELECT * FROM produtos WHERE id = $1",
-          [req.body.produto_id],
-        );
-        res.status(200).json(result.rows);
-      } catch (error) {
-        console.error("Error fetching product:", error);
-        res.status(500).json({ error: "Failed to fetch product" });
-      }
-    }
-  } else if (req.method === "POST") {
-    try {
-      const { nome, preco, estoque, categoria_id } = req.body;
-      await pool.query(
-        "INSERT INTO produtos (nome, preco ,estoque,categoria_id) VALUES ($1, $2, $3 , $4)",
-        [nome, preco, estoque, categoria_id],
+  try {
+    const userId = req.headers["x-user-id"];
+    const email = req.headers["x-user-email"];
+    const role = req.headers["x-user-role"];
+    await validationtoken(userId, email, role);
+
+    if (req.method === "GET" && !req.query.id) {
+      const products = await GetAllproducts();
+      res.status(200).json(products);
+    } else if (req.method === "GET" && req.query.id) {
+      const id = req.query.id;
+      const product = await GetProductPerId(id);
+      res.status(200).json(product);
+    } else if (req.method === "POST") {
+      const { name, price, stock, categoryId, markId, desc } = req.body;
+      await Postproduct(name, price, stock, categoryId, markId, desc, role);
+      res
+        .status(201)
+        .json({ success: true, message: "Product created successfully" });
+    } else if (req.method === "PUT") {
+      const { productid, newname, price, stock, categoryId, markId, desc } =
+        req.body;
+      await Putproduct(
+        productid,
+        newname,
+        price,
+        stock,
+        categoryId,
+        markId,
+        desc,
+        role,
       );
-      res.status(201).json({ message: "Product added successfully" });
-    } catch (error) {
-      console.error("Error adding product:", error);
-      console.error(error);
-      res.status(500).json({ error: "Failed to add product" });
+      res
+        .status(200)
+        .json({ success: true, message: "Product updated successfully" });
+    } else if (req.method === "DELETE") {
+      const id = req.query.id || req.body?.id;
+      if (!id) throw new ValidationError("id is required!");
+      await removeproduct(id, role);
+      res
+        .status(200)
+        .json({ success: true, message: "Product deleted successfully" });
+    } else {
+      res.status(405).json({ error: "Method Not Allowed" });
     }
-  } else if (req.method === "PUT") {
-    try {
-      const { id, nome, preco, estoque, categoria_id } = req.body;
-      await pool.query(
-        "UPDATE produtos SET nome = $1, preco = $2, estoque = $3, categoria_id = $4 WHERE id = $5",
-        [nome, preco, estoque, categoria_id, id],
-      );
-      res.status(200).json({ message: "Product updated successfully" });
-    } catch (error) {
-      console.error("Error updating product:", error);
-      res.status(500).json({ error: "Failed to update product" });
-    }
-  } else if (req.method === "DELETE") {
-    try {
-      const { id } = req.body;
-      await pool.query("DELETE FROM produtos WHERE id = $1", [id]);
-      res.status(200).json({ message: "Product deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      res.status(500).json({ error: "Failed to delete product" });
-    }
+  } catch (error) {
+    res
+      .status(error.status || error.statusCode || 500)
+      .json({ error: error.message });
   }
 }

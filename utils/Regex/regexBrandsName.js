@@ -1,4 +1,4 @@
-import { ValidationError } from "utils/error";
+import { ValidationError } from "utils/errors/error";
 export default function regexBrandsName(name) {
   const regex = /^\p{L}{3}[\p{L}0-9 ]{0,17}$/u;
   if (!regex.test(name)) {

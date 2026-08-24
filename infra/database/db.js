@@ -1,14 +1,14 @@
-import { Pool } from "pg";
-import dotenv from "dotenv";
-import dotenvExpand from "dotenv-expand";
+import { Pool } from 'pg'
+import dotenv from 'dotenv'
+import dotenvExpand from 'dotenv-expand'
 
 try {
-  dotenvExpand.expand(dotenv.config());
+  dotenvExpand.expand(dotenv.config())
 } catch (err) {
-  console.warn("Nenhum .env encontrado, usando variáveis do ambiente", err);
+  console.warn('Nenhum .env encontrado, usando variáveis do ambiente', err)
 }
 
-const isProd = process.env.NODE_ENV === "production";
+const isProd = process.env.NODE_ENV === 'production'
 
 const pool = new Pool(
   isProd
@@ -22,12 +22,12 @@ const pool = new Pool(
       }
     : {
         user: process.env.POSTGRES_USER,
-        host: "localhost",
+        host: 'localhost',
         database: process.env.POSTGRES_DB,
         password: process.env.POSTGRES_PASSWORD,
         port: parseInt(process.env.DB_PORT, 10) || 5433,
         ssl: false,
-      },
-);
+      }
+)
 
-export default pool;
+export default pool

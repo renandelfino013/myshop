@@ -42,8 +42,16 @@ class NetworkError extends Error {
     this.statusCode = 500;
   }
 }
+class ForbiddenError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ForbiddenError";
+    this.statusCode = 403;
+  }
+}
 
 export {
+  ForbiddenError,
   NotFoundError,
   ValidationError,
   AuthError,

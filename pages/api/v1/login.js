@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { login } from "services/authservices";
+import { login } from "services/auth/authservices";
 dotenv.config();
 
 export default async function handler(req, res) {

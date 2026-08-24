@@ -1,5 +1,5 @@
 import { registerAdminInDB } from 'models/users/users'
-import { ValidationError } from 'utils/error'
+import { ValidationError } from 'utils/errors/error'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 export default async function userRoleAdmin(nome, email, senha) {

@@ -1,14 +1,14 @@
-import pool from 'utils/db'
+import pool from 'infra/database/db'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
-import { sendLoginNotification } from 'utils/sendEmail'
+import { sendLoginNotification } from 'utils/mail/sendEmail'
 import { finduserbyemail, insertkey } from 'models/users/users'
 import {
   NetworkError,
   NotFoundError,
   SendEmailError,
   ValidationError,
-} from '../../utils/error'
+} from '../../utils/errors/error'
 dotenv.config()
 export async function createresetkey(email) {
   try {

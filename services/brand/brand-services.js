@@ -7,16 +7,12 @@ import {
   deletebrand,
 } from "models/marcas/marcas";
 import regexBrandsName from "utils/Regex/regexBrandsName";
-import regexidforbrands from "utils/Regex/regexBrandsId";
+import regexidforbrands from "utils/Regex/regexId";
+import verifyuserRole from "utils/validators/verifyuserRole";
 
 function NotFoundError(message) {
   const error = new Error(message);
   error.status = 404;
-  return error;
-}
-function ForbiddenError(message) {
-  const error = new Error(message);
-  error.status = 403;
   return error;
 }
 
@@ -99,10 +95,4 @@ export async function verifyBrandExist(name) {
     throw NotFoundError("brand not found");
   }
   return findbrand[0].id;
-}
-export async function verifyuserRole(role, context) {
-  if (role !== "ADMIN") {
-    throw ForbiddenError(`User does not have permission to ${context} a brand`);
-  }
-  return null;
 }

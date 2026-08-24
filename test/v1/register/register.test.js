@@ -1,4 +1,4 @@
-import pool from "utils/db";
+import pool from "infra/database/db";
 import orchestrator from "test/orchestrator.js";
 import createuser from "test/hooks/userfortests";
 

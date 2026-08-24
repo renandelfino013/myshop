@@ -6,8 +6,8 @@ import {
   renameBrand,
   createbrand,
   removebrand,
-} from "services/brand-services";
-import validationtoken from "services/validationtoken";
+} from "services/brand/brand-services";
+import validationtoken from "services/auth/validationtoken";
 dotenv.config();
 export default async function handler(req, res) {
   try {

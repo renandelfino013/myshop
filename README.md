@@ -5,33 +5,33 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.0-336791?logo=postgresql)](https://www.postgresql.org/)
 [![React](https://img.shields.io/badge/React-19.2.8-61DAFB?logo=react)](https://react.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green)](#license)
-[![Status](https://img.shields.io/badge/Status-Em%20Refatoração-yellow)](#status-do-projeto)
+[![Status](https://img.shields.io/badge/Status-Em%20desenvolvimento-yellow)](#status-do-projeto)
 
 ---
 
 ## 📋 Visão Geral
 
-**MyShop** é uma plataforma de **e-commerce fullstack** moderna, desenvolvida para demonstrar expertise em arquitetura limpa, boas práticas de desenvolvimento e padrões de segurança. O projeto implementa um ecossistema completo com autenticação JWT, gerenciamento de produtos/pedidos, integração de emails e rate limiting.
+**MyShop** é uma plataforma de **e-commerce fullstack** em desenvolvimento, criada para praticar e demonstrar arquitetura de APIs, persistência relacional e boas práticas de backend. O projeto implementa autenticação JWT, gerenciamento de catálogo, início do fluxo de pedidos, integração de emails e rate limiting.
 
-**Objetivo do Projeto**: Ferramenta profissional para recrutar talento e demonstrar capacidade técnica em stack moderno com **Next.js 16**, **PostgreSQL**, **Docker**, **Vercel** e boas práticas de engenharia.
+**Objetivo do Projeto**: construir uma aplicação de portfólio com **Next.js 16**, **PostgreSQL**, **Docker**, **Vercel** e boas práticas de engenharia, mostrando evolução incremental e decisões técnicas reais.
 
 ---
 
 ## 🚀 Destaques Técnicos
 
-| **Área**           | **Tecnologia**          | **Detalhes**                                          |
-| ------------------ | ----------------------- | ----------------------------------------------------- |
-| **Backend**        | Next.js 16 + Node.js 24 | API REST com autenticação JWT                         |
-| **Frontend**       | React 19 + Next.js      | UI moderna com CSS Modules                            |
-| **Banco de Dados** | PostgreSQL 16           | 6 tabelas com relacionamentos, migrations automáticas |
-| **Autenticação**   | JWT + bcrypt            | Stateless, segura, com reset de senha por email       |
-| **Email**          | Nodemailer + Gmail      | Notificações de login e reset de senha                |
-| **Rate Limiting**  | Upstash Redis           | Proteção contra brute force (10 req/10s)              |
-| **Infraestrutura** | Docker Compose          | PostgreSQL isolado, desenvolvimento reprodutível      |
-| **Deploy**         | Vercel                  | CI/CD automático via GitHub, serverless functions     |
-| **Qualidade**      | ESLint + Prettier       | Code style automático, pre-commit hooks com Husky     |
-| **Commits**        | Commitizen              | Conventional Commits, changelog automático            |
-| **Testes**         | Jest + Supertest        | Testes E2E de API, 60s timeout                        |
+| **Área**           | **Tecnologia**          | **Detalhes**                                      |
+| ------------------ | ----------------------- | ------------------------------------------------- |
+| **Backend**        | Next.js 16 + Node.js 24 | API REST com autenticação JWT                     |
+| **Frontend**       | React 19 + Next.js      | UI moderna com CSS Modules                        |
+| **Banco de Dados** | PostgreSQL 16           | Tabelas relacionais e migrations automáticas      |
+| **Autenticação**   | JWT + bcrypt            | Stateless, segura, com reset de senha por email   |
+| **Email**          | Nodemailer + Gmail      | Notificações de login e reset de senha            |
+| **Rate Limiting**  | Upstash Redis           | Proteção contra brute force (10 req/10s)          |
+| **Infraestrutura** | Docker Compose          | PostgreSQL isolado, desenvolvimento reprodutível  |
+| **Deploy**         | Vercel                  | Build e deploy automáticos via GitHub             |
+| **Qualidade**      | ESLint + Prettier       | Code style automático, pre-commit hooks com Husky |
+| **Commits**        | Commitizen              | Conventional Commits, changelog automático        |
+| **Testes**         | Jest + fetch            | Testes de integração dos endpoints                |
 
 ---
 
@@ -121,6 +121,7 @@ myshop/
 │   ├── api/v1/               # Endpoints da API REST
 │   │   ├── login.js          # Autenticação
 │   │   ├── register.js       # Registro de usuário
+│   │   ├── categorias.js      # CRUD de categorias
 │   │   ├── marcas.js         # CRUD de marcas
 │   │   ├── produtos.js       # CRUD de produtos
 │   │   ├── pedidos.js        # Gerenciamento de pedidos
@@ -138,19 +139,21 @@ myshop/
 │   │   ├── users.js          # Model de usuários
 │   │   └── resetpassword.js  # Model de reset de senha
 │   ├── marcas/               # Model de marcas
+│   ├── categorys/            # Model de categorias
+│   ├── products/             # Model de produtos
 │   └── status/               # Model de status
 │
 ├── services/                 # Serviços reutilizáveis
-│   ├── authservices.js       # Lógica de autenticação
-│   ├── brand-services.js     # Lógica de marcas
-│   └── validationtoken.js    # Validação de JWT
+│   ├── auth/                 # Autenticação e validação de token
+│   ├── brand/                # Regras de negócio de marcas
+│   ├── category/             # Regras de negócio de categorias
+│   └── products/             # Regras de negócio de produtos
 │
 ├── utils/                    # Utilitários
-│   ├── db.js                 # Conexão com PostgreSQL
-│   ├── sendEmail.js          # Envio de emails
-│   ├── error.js              # Tratamento de erros
-│   ├── regexemail.js         # Validação de email
-│   └── regexsenha.js         # Validação de força de senha
+│   ├── errors/               # Erros de domínio e códigos HTTP
+│   ├── mail/                 # Envio de emails
+│   ├── Regex/                # Validações de texto
+│   └── validators/           # Validações de negócio
 │
 ├── styles/                   # Estilos CSS Modules
 │   ├── globals.css           # Estilos globais
@@ -165,6 +168,8 @@ myshop/
 │       ├── login/
 │       ├── register/
 │       ├── brands/
+│       ├── categorys/
+│       ├── products/
 │       ├── status/
 │       └── reset-password/
 │
@@ -220,25 +225,32 @@ cp .env.example .env
 ### 🏷️ Gerenciamento de Marcas
 
 - ✅ **Criar** (apenas ADMIN)
-- ✅ **Listar** (público)
+- ✅ **Listar** (usuário autenticado)
+- ✅ **Atualizar** (apenas ADMIN)
+- ✅ **Deletar** (apenas ADMIN)
+
+### 🗂️ Gerenciamento de Categorias
+
+- ✅ **Criar** (apenas ADMIN)
+- ✅ **Listar e consultar por ID ou nome** (usuário autenticado)
 - ✅ **Atualizar** (apenas ADMIN)
 - ✅ **Deletar** (apenas ADMIN)
 
 ### 📦 Gerenciamento de Produtos
 
 - ✅ **Criar** (apenas ADMIN)
-- ✅ **Listar com filtros** (público)
-- ✅ **Detalhes** (público)
+- ✅ **Listar** (usuário autenticado)
+- ✅ **Detalhes por ID** (usuário autenticado)
 - ✅ **Atualizar** (apenas ADMIN)
 - ✅ **Deletar** (apenas ADMIN)
-- 🔄 Relacionado com marcas e categorias
+- ✅ Validações de nome, preço, estoque, marca e categoria
+- ✅ Relacionamento com marcas e categorias
 
 ### 🛒 Pedidos e Itens
 
-- ✅ **Criar pedido** (usuário autenticado)
-- ✅ **Listar pedidos** (USER vê seus, ADMIN vê todos)
-- ✅ **Status do pedido** (acompanhamento)
-- 🔄 Itens do pedido com preço unitário
+- 🔄 **Criar pedido** (endpoint existente, em refatoração)
+- 🔄 **Listar pedidos** (USER vê seus, ADMIN vê todos)
+- ⏳ Transações, validações de estoque e filas planejadas
 
 ### 📧 Notificações por Email
 
@@ -335,6 +347,7 @@ Content-Type: application/json
 
 ```
 GET /api/v1/marcas
+Authorization: Bearer {JWT}
 
 ✅ Response (200):
 [
@@ -355,7 +368,7 @@ Content-Type: application/json
 }
 
 ✅ Response (201):
-{ "id": 3, "nome": "Puma" }
+{ "success": true, "message": "Brand sucessfully created" }
 
 ❌ Response (403):
 { "erro": "Permissão negada" }
@@ -389,12 +402,48 @@ Authorization: Bearer {JWT}
 
 ---
 
+### **Categorias**
+
+#### Listar Categorias
+
+```
+GET /api/v1/categorias
+Authorization: Bearer {JWT}
+
+✅ Response (200):
+[
+  { "id": 1, "nome": "Calçados" }
+]
+```
+
+#### Consultar Categoria
+
+```
+GET /api/v1/categorias?id=1
+GET /api/v1/categorias?nome=Calçados
+Authorization: Bearer {JWT}
+```
+
+#### Criar Categoria (apenas ADMIN)
+
+```
+POST /api/v1/categorias
+Authorization: Bearer {JWT}
+Content-Type: application/json
+
+{ "nome": "Calçados" }
+
+✅ Response (201):
+{ "success": true, "message": "Category sucessfully created" }
+```
+
 ### **Produtos**
 
 #### Listar Produtos
 
 ```
-GET /api/v1/produtos?categoria_id=1&marca_id=2
+GET /api/v1/produtos
+Authorization: Bearer {JWT}
 
 ✅ Response (200):
 [
@@ -403,7 +452,7 @@ GET /api/v1/produtos?categoria_id=1&marca_id=2
     "nome": "Tênis Nike",
     "preco": "199.99",
     "estoque": 50,
-    "imagem": "url-da-imagem",
+    "descricao": "Produto para uso diário",
     "categoria_id": 1,
     "marca_id": 1
   }
@@ -418,16 +467,16 @@ Authorization: Bearer {JWT}
 Content-Type: application/json
 
 {
-  "nome": "Tênis Novo",
-  "preco": "249.99",
-  "estoque": 30,
-  "imagem": "url-imagem",
-  "categoria_id": 1,
-  "marca_id": 1
+  "name": "Tênis Novo",
+  "price": 249.99,
+  "stock": 30,
+  "categoryId": 1,
+  "markId": 1,
+  "desc": "Produto para uso diário"
 }
 
 ✅ Response (201):
-{ "id": 10, ... }
+{ "success": true, "message": "Product created successfully" }
 ```
 
 #### Atualizar Produto (apenas ADMIN)
@@ -438,13 +487,17 @@ Authorization: Bearer {JWT}
 Content-Type: application/json
 
 {
-  "id": 1,
-  "nome": "Tênis Atualizado",
-  "preco": "299.99"
+  "productid": 1,
+  "newname": "Tênis Atualizado",
+  "price": 299.99,
+  "stock": 25,
+  "categoryId": 1,
+  "markId": 1,
+  "desc": "Produto atualizado"
 }
 
 ✅ Response (200):
-{ "id": 1, ... }
+{ "success": true, "message": "Product updated successfully" }
 ```
 
 #### Deletar Produto (apenas ADMIN)
@@ -454,14 +507,14 @@ DELETE /api/v1/produtos?id=1
 Authorization: Bearer {JWT}
 
 ✅ Response (200):
-{ "mensagem": "Produto deletado" }
+{ "success": true, "message": "Product deleted successfully" }
 ```
 
 ---
 
 ### **Pedidos**
 
-#### Criar Pedido (autenticado)
+#### Criar Pedido (endpoint em refatoração)
 
 ```
 POST /api/v1/pedidos
@@ -475,17 +528,15 @@ Content-Type: application/json
   ]
 }
 
-✅ Response (201):
+✅ Response atual (201):
 {
-  "id": 5,
-  "usuarios_id": 1,
-  "data_pedido": "2026-08-18T10:30:00Z",
-  "status": "pendente",
-  "itens": [...]
+  "message": "Order created successfully"
 }
+
+> O fluxo de pedidos ainda será migrado para a separação entre rota, service e model. A próxima etapa inclui transação, validação de estoque, preço unitário e processamento assíncrono.
 ```
 
-#### Listar Pedidos
+#### Listar Pedidos (endpoint existente)
 
 ```
 GET /api/v1/pedidos
@@ -494,15 +545,21 @@ Authorization: Bearer {JWT}
 ✅ Response (200):
 [
   {
-    "id": 5,
-    "usuarios_id": 1,
+    "usuario_nome": "João Silva",
+    "produto_nome": "Tênis Novo",
+    "produto_preco": "249.99",
+    "pedido_id": 5,
     "data_pedido": "2026-08-18T10:30:00Z",
-    "status": "pendente"
+    "produto_id": 1,
+    "quantidade": 2,
+    "totalprice": "499.98"
   }
 ]
 
-📌 USER: Vê apenas seus pedidos
-📌 ADMIN: Vê todos os pedidos
+📌 USER: consulta apenas pedidos próprios
+📌 ADMIN: consulta todos os pedidos
+
+> O formato atual é uma listagem achatada por item do pedido e será revisado durante a refatoração.
 ```
 
 ---

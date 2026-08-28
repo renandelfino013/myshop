@@ -16,7 +16,7 @@
     "start": "next start",
     "postinstall": "npm rebuild bcrypt --build-from-source",
     "test": "npm run services:up && npm run wait-for-postgres && npm run migrate:up && concurrently -n next,jest -k --success command-jest --hide next \"cross-env APP_ENV=test next dev\" \"jest --runInBand --detectOpenHandles --verbose\"",
-    "test:watch": "jest --watchAll --runInBand",
+    "test:watch": "npm run services:up && npm run wait-for-postgres && npm run migrate:up && concurrently -n next,jest -k -i --default-input-target jest --success command-jest --hide next \"cross-env APP_ENV=test next dev\" \"jest orders --watch --runInBand --verbose\"",
     "migrate:create": "node-pg-migrate --migrations-dir infra/migrations create",
     "migrate:up": "node-pg-migrate --migrations-dir infra/migrations --envPath .env  up",
     "migrate:down": "node-pg-migrate --migrations-dir infra/migrations --envPath .env down",

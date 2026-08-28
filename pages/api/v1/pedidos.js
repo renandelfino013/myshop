@@ -1,65 +1,71 @@
-import jwt from "jsonwebtoken";
-import pool from "infra/database/db";
-
+import validationtoken from "services/auth/validationtoken";
+import {
+  Get_All_orders_Admin,
+  Get_All_Orders_Of_User,
+  Get_order_per_Id,
+  Get_order_per_id_admin,
+  PostOrder,
+  Removeorder,
+  RemoveorderAdmin,
+} from "services/orders/order-services";
+import { ValidationError } from "utils/errors/error";
 export default async function handler(req, res) {
-  if (req.method === "POST" && req.headers.authorization) {
-    try {
-      const token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      let itens = req.body.itens;
-      const bg = await pool.query(
-        "INSERT INTO pedidos (usuarios_id) VALUES ($1) RETURNING id",
-        [decoded.id],
-      );
+  try {
+    const userId = req.headers["x-user-id"];
+    const email = req.headers["x-user-email"];
+    const role = req.headers["x-user-role"];
+    await validationtoken(userId, email, role);
+    if (
+      req.method === "GET" &&
+      Object.keys(req.query).length === 0 &&
+      role === "ADMIN"
+    ) {
+      const orders = await Get_All_orders_Admin(role);
+      res.status(200).json(orders);
+    } else if (req.method === "GET" && Object.keys(req.query).length === 0) {
+      const orders = await Get_All_Orders_Of_User(userId);
+      res.status(200).json(orders);
+    } else if (req.method === "GET" && req.query.order_id && role === "ADMIN") {
+      const { order_id } = req.query;
+      const order = await Get_order_per_id_admin(order_id, role);
+      res.status(200).json(order);
+    } else if (req.method === "GET" && req.query.order_id) {
+      const { order_id } = req.query;
+      const order = await Get_order_per_Id(userId, order_id);
+      res.status(200).json(order);
+    } else if (req.method === "POST") {
+      const { items } = req.body;
+      if (!items) {
+        throw new ValidationError("items is required!");
+      }
+      const order_id = await PostOrder(userId, items);
+      res.status(201).json({
+        success: true,
+        message: "Order created successfully!",
+        order_id: order_id,
+      });
+    } else if (req.method === `DELETE` && role === `ADMIN`) {
+      const { order_id } = req.query;
+      if (!order_id) throw new ValidationError("id is required!");
 
-      await Promise.all(
-        itens.map((item) =>
-          pool.query(
-            "INSERT INTO itens_pedido (pedido_id, produto_id, quantidade) VALUES ($1, $2, $3)",
-            [bg.rows[0].id, item.produto_id, item.quantidade],
-          ),
-        ),
-      );
+      await RemoveorderAdmin(order_id, role);
+      res
+        .status(200)
+        .json({ success: true, message: "order deleted successfully!" });
+    } else if (req.method === "DELETE") {
+      const { order_id } = req.query;
+      if (!order_id) throw new ValidationError("id is required!");
 
-      res.status(201).json({ message: "Order created successfully" });
-    } catch (error) {
-      console.error("Error creating order:", error);
-      res.status(500).json({ error: "Failed to create order" });
+      await Removeorder(userId, order_id);
+      res
+        .status(200)
+        .json({ success: true, message: "order deleted successfully!" });
+    } else {
+      res.status(405).json({ error: "Method Not Allowed" });
     }
-  } else if (req.method === "GET") {
-    try {
-      if (!req.headers.authorization) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      const token = req.headers.authorization.split(" ")[1];
-      if (!token) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log(decoded.role);
-      if (decoded.role === "USER") {
-        let result = await pool.query(
-          "SELECT u.nome as usuario_nome,u.id as usuario_id,u.email as usuario_email,u.role as usuario_role,pr.nome as produto_nome,pr.preco as produto_preco,p.id as pedido_id, p.data_pedido, i.produto_id, i.quantidade, (i.quantidade * pr.preco) as totalprice  FROM pedidos p JOIN itens_pedido i ON p.id = i.pedido_id JOIN usuarios u ON p.usuarios_id = u.id JOIN produtos pr ON i.produto_id = pr.id = pr.id WHERE p.usuarios_id = $1",
-          [decoded.id],
-        );
-
-        console.log(result.rows);
-        res.status(200).json(result.rows);
-      } else if (decoded.role === "ADMIN") {
-        let result = await pool.query(
-          "SELECT u.nome as usuario_nome,u.id as usuario_id,u.email as usuario_email,u.role as usuario_role,pr.nome as produto_nome,pr.preco as produto_preco,p.id as pedido_id, p.data_pedido, i.produto_id, i.quantidade, (i.quantidade * pr.preco) as totalprice  FROM pedidos p JOIN itens_pedido i ON p.id = i.pedido_id JOIN usuarios u ON p.usuarios_id = u.id JOIN produtos pr ON i.produto_id = pr.id",
-        );
-        console.log(result.rows);
-        res.status(200).json(result.rows);
-      } else {
-        return res.status(403).json({ error: "Role not permitted" });
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      res.status(500).json({ error: "Failed to fetch orders" });
-    }
-  } else {
-    res.status(401).json({ error: "Unauthorized" });
+  } catch (error) {
+    res
+      .status(error.status || error.statusCode || 500)
+      .json({ error: error.message });
   }
 }

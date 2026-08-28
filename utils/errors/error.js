@@ -5,6 +5,13 @@ class NotFoundError extends Error {
     this.statusCode = 404;
   }
 }
+class InsufficientStockError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "InsufficientStockError";
+    this.statusCode = 409;
+  }
+}
 
 class ValidationError extends Error {
   constructor(message) {
@@ -58,4 +65,5 @@ export {
   SendEmailError,
   NetworkError,
   RegisterError,
+  InsufficientStockError,
 };

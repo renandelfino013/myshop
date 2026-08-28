@@ -27,7 +27,7 @@ describe("teste register/users", () => {
       body: JSON.stringify({
         nome: "TESTEAUTOMATIZADOdsa",
         email: email,
-        senha: "1234ddsa4",
+        senha: "1234ddsa44",
       }),
     });
     expect(register.status).toBe(201);

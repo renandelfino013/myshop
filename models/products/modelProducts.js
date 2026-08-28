@@ -6,8 +6,12 @@ export async function FindAllProducts() {
   return result.rows
 }
 
-export async function FindproductPerId(id) {
-  const result = await pool.query('SELECT * FROM produtos WHERE id = $1', [id])
+export async function FindproductPerId(id, client) {
+  const executor = client || pool
+  const result = await executor.query('SELECT * FROM produtos WHERE id = $1', [
+    id,
+  ])
+
   return result.rows
 }
 

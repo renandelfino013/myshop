@@ -18,6 +18,7 @@ function checkauthorization(request) {
   if (
     path.startsWith('/api/v1/marcas') ||
     path.startsWith('/api/v1/produtos') ||
+    path.startsWith('/api/v1/pedidos') ||
     path.startsWith('/api/v1/categorias')
   ) {
     const authHeader = request.headers.get('authorization')

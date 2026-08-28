@@ -141,13 +141,15 @@ myshop/
 │   ├── marcas/               # Model de marcas
 │   ├── categorys/            # Model de categorias
 │   ├── products/             # Model de produtos
+│   ├── orders/               # Model de pedidos e itens
 │   └── status/               # Model de status
 │
 ├── services/                 # Serviços reutilizáveis
 │   ├── auth/                 # Autenticação e validação de token
 │   ├── brand/                # Regras de negócio de marcas
 │   ├── category/             # Regras de negócio de categorias
-│   └── products/             # Regras de negócio de produtos
+│   ├── products/             # Regras de negócio de produtos
+│   └── orders/               # Regras de negócio de pedidos
 │
 ├── utils/                    # Utilitários
 │   ├── errors/               # Erros de domínio e códigos HTTP
@@ -170,6 +172,7 @@ myshop/
 │       ├── brands/
 │       ├── categorys/
 │       ├── products/
+│       ├── orders/
 │       ├── status/
 │       └── reset-password/
 │
@@ -248,9 +251,14 @@ cp .env.example .env
 
 ### 🛒 Pedidos e Itens
 
-- 🔄 **Criar pedido** (endpoint existente, em refatoração)
-- 🔄 **Listar pedidos** (USER vê seus, ADMIN vê todos)
-- ⏳ Transações, validações de estoque e filas planejadas
+- ✅ **Criar pedido** com um ou mais itens
+- ✅ **Listar pedidos** (USER vê seus, ADMIN vê todos)
+- ✅ Consultar pedido por ID com controle de acesso
+- ✅ Excluir pedido (USER próprio pedido, ADMIN qualquer pedido)
+- ✅ Validação de IDs, quantidades e produtos duplicados
+- ✅ Controle transacional de estoque
+- ✅ Registro de preço unitário e total do pedido
+- ⏳ Pagamentos, status e processamento assíncrono são escopo futuro
 
 ### 📧 Notificações por Email
 
@@ -514,7 +522,7 @@ Authorization: Bearer {JWT}
 
 ### **Pedidos**
 
-#### Criar Pedido (endpoint em refatoração)
+#### Criar Pedido
 
 ```
 POST /api/v1/pedidos
@@ -522,23 +530,23 @@ Authorization: Bearer {JWT}
 Content-Type: application/json
 
 {
-  "itens": [
+  "items": [
     { "produto_id": 1, "quantidade": 2 },
     { "produto_id": 3, "quantidade": 1 }
   ]
 }
 
-✅ Response atual (201):
+✅ Response (201):
 {
-  "message": "Order created successfully"
+  "success": true,
+  "message": "Order created successfully!",
+  "order_id": 5
 }
-
-> O fluxo de pedidos ainda será migrado para a separação entre rota, service e model. A próxima etapa inclui transação, validação de estoque, preço unitário e processamento assíncrono.
 ```
 
-#### Listar Pedidos (endpoint existente)
+#### Listar Pedidos
 
-```
+````
 GET /api/v1/pedidos
 Authorization: Bearer {JWT}
 
@@ -559,7 +567,26 @@ Authorization: Bearer {JWT}
 📌 USER: consulta apenas pedidos próprios
 📌 ADMIN: consulta todos os pedidos
 
-> O formato atual é uma listagem achatada por item do pedido e será revisado durante a refatoração.
+Cada item do pedido aparece como uma linha na resposta. O campo `totalprice` representa o total daquele item.
+
+#### Consultar Pedido por ID
+
+```http
+GET /api/v1/pedidos?order_id=5
+Authorization: Bearer {JWT}
+````
+
+Usuários comuns só podem consultar pedidos próprios. Administradores podem consultar qualquer pedido.
+
+#### Excluir Pedido
+
+```http
+DELETE /api/v1/pedidos?order_id=5
+Authorization: Bearer {JWT}
+```
+
+A exclusão devolve as quantidades ao estoque dentro de uma transação. Usuários comuns só excluem pedidos próprios; administradores podem excluir qualquer pedido.
+
 ```
 
 ---
@@ -569,21 +596,23 @@ Authorization: Bearer {JWT}
 #### Health Check
 
 ```
+
 GET /api/v1/status
 
 ✅ Response (200):
 {
-  "api": "ok",
-  "database": "ok",
-  "timestamp": "2026-08-18T10:30:00Z"
+"api": "ok",
+"database": "ok",
+"timestamp": "2026-08-18T10:30:00Z"
 }
 
 ❌ Response (503):
 {
-  "api": "ok",
-  "database": "error",
-  "erro": "Falha ao conectar no banco"
+"api": "ok",
+"database": "error",
+"erro": "Falha ao conectar no banco"
 }
+
 ```
 
 ---
@@ -593,64 +622,66 @@ GET /api/v1/status
 ### Modelo Entidade-Relacionamento (ER)
 
 ```
+
 ┌─────────────┐
-│  usuarios   │
+│ usuarios │
 ├─────────────┤
-│ id (PK)     │
-│ nome        │
-│ email (U)   │
-│ senha       │
-│ role        │
+│ id (PK) │
+│ nome │
+│ email (U) │
+│ senha │
+│ role │
 └──────┬──────┘
-       │ 1:N
-       ├────────────────────────────────────┐
-       │                                    │
-       ▼ 1:N                               ▼
-┌─────────────┐                    ┌──────────────────┐
-│ pedidos     │                    │ password_reset   │
-├─────────────┤                    ├──────────────────┤
-│ id (PK)     │                    │ usuarios_id (FK) │
-│ usuario_id  │◄────────────────► │ key              │
-│ data_pedido │ (FK)               │ expirado         │
-│ status      │                    └──────────────────┘
-└──────┬──────┘                    1:1 relacionamento
-       │
-       ▼ 1:N
+│ 1:N
+├────────────────────────────────────┐
+│ │
+▼ 1:N ▼
+┌─────────────┐ ┌──────────────────┐
+│ pedidos │ │ password_reset │
+├─────────────┤ ├──────────────────┤
+│ id (PK) │ │ usuarios_id (FK) │
+│ usuario_id │◄────────────────► │ key │
+│ data_pedido │ (FK) │ expirado │
+│ status │ └──────────────────┘
+└──────┬──────┘ 1:1 relacionamento
+│
+▼ 1:N
 ┌──────────────────┐
-│ itens_pedidos    │
+│ itens_pedido │
 ├──────────────────┤
-│ id (PK)          │
-│ pedido_id (FK)   │
-│ produto_id (FK)  │
-│ quantidade       │
-│ preco_unitario   │
+│ id (PK) │
+│ pedido_id (FK) │
+│ produto_id (FK) │
+│ quantidade │
+│ preco_unitario │
 └────┬─────────┬───┘
-     │         │
-     └─┐       ├─►┌─────────────┐
-       │       │  │  produtos   │
-       │       │  ├─────────────┤
-       │       │  │ id (PK)     │
-       │       │  │ nome        │
-       │       │  │ preco       │
-       │       │  │ estoque     │
-       │       │  │ imagem      │
-       │       │  │ categoria_id├───────┐
-       │       │  │ marca_id    ├───────┼─► ┌──────────┐
-       │       │  └─────────────┘       │   │ marcas   │
-       │       │        N:1             │   ├──────────┤
-       │       └──────────────────────────────► id (PK) │
-       │                                │   │ nome     │
-       └────────────────────────────────┼──►└──────────┘
-                         N:1            │   1:N
-                                        │
-                                        ▼
-                                  ┌────────────┐
-                                  │ categorias │
-                                  ├────────────┤
-                                  │ id (PK)    │
-                                  │ nome       │
-                                  └────────────┘
-```
+│ │
+└─┐ ├─►┌─────────────┐
+│ │ │ produtos │
+│ │ ├─────────────┤
+│ │ │ id (PK) │
+│ │ │ nome │
+│ │ │ preco │
+│ │ │ estoque │
+│ │ │ imagem │
+│ │ │ categoria_id├───────┐
+│ │ │ marca_id ├───────┼─► ┌──────────┐
+│ │ └─────────────┘ │ │ marcas │
+│ │ N:1 │ ├──────────┤
+│ └──────────────────────────────► id (PK) │
+│ │ │ nome │
+└────────────────────────────────┼──►└──────────┘
+N:1 │ 1:N
+│
+▼
+┌────────────┐
+│ categorias │
+├────────────┤
+│ id (PK) │
+│ nome │
+└────────────┘
+
+````
 
 ### Tabelas Principais
 
@@ -659,8 +690,8 @@ GET /api/v1/status
 | **usuarios**            | id, nome, email (UNIQUE), senha, role                                                           | 1:N → pedidos, 1:1 → password_reset                |
 | **marcas**              | id, nome                                                                                        | 1:N → produtos                                     |
 | **categorias**          | id, nome                                                                                        | 1:N → produtos                                     |
-| **produtos**            | id, nome, preco (NUMERIC 10,2), estoque (INTEGER), imagem (VARCHAR 500), categoria_id, marca_id | N:1 → categorias, N:1 → marcas, 1:N → itens_pedido |
-| **pedidos**             | id, usuarios_id, data_pedido (TIMESTAMP), status                                                | N:1 → usuarios, 1:N → itens_pedido                 |
+| **produtos**            | id, nome, preco (NUMERIC 10,2), estoque (INTEGER), categoria_id, marca_id, descricao            | N:1 → categorias, N:1 → marcas, 1:N → itens_pedido |
+| **pedidos**             | id, usuario_id, data_pedido (TIMESTAMP), total (NUMERIC 10,2)                                    | N:1 → usuarios, 1:N → itens_pedido                 |
 | **itens_pedido**        | id, pedido_id, produto_id, quantidade, preco_unitario                                           | N:1 → pedidos, N:1 → produtos                      |
 | **password_reset_keys** | usuarios_id, key, expirado                                                                      | 1:1 → usuarios                                     |
 
@@ -677,7 +708,7 @@ infra/migrations/
 ├── 1783385211643_create-pedidos.js
 ├── 1783385450148_create-itens-pedidos.js
 └── 1783385813523_create-password-reset-keys.js
-```
+````
 
 ---
 
@@ -1052,9 +1083,9 @@ services:
 
 ## 🗺️ Roadmap
 
-### ✅ Fase 1 - Backend MVP (Completo ✔️ | Em Refatoração 🔄)
+### 🔄 Fase 1 - Backend MVP (Em evolução)
 
-**Status**: Backend funcional, mas em refatoração para melhorias de arquitetura, validações e testes.
+**Status**: O backend possui um núcleo funcional de MVP, mas a refatoração e a padronização ainda estão em andamento.
 
 **Implementado**:
 
@@ -1107,9 +1138,9 @@ services:
 - [ ] Melhorias visuais gerais (design melhor)
 - [ ] Testes (React Testing Library)
 
-### 🚀 Fase 2 - Backend Refatorado & Validações (Próximo)
+### 🚀 Fase 2 - Backend Hardening (Próximo)
 
-**Ordem de Execução**: Após Backend MVP estar refatorado
+**Ordem de Execução**: Evolução contínua após a estabilização dos fluxos principais
 
 - [ ] Validação com Zod em todos os endpoints
 - [ ] Documentação Swagger/OpenAPI (auto-gerada)
@@ -1164,9 +1195,9 @@ services:
 
 ## 📌 Status do Projeto
 
-### � Em Refatoração - Estado Real
+### 🔄 Backend - Estado Real
 
-**Backend**: ✅ MVP completo | 🔄 **REFATORAÇÃO EM ANDAMENTO** (Você está aqui)  
+**Backend**: 🔄 Núcleo do MVP funcional | 🚧 Refatoração, validação e documentação em andamento
 **Frontend**: ⚠️ Incompleto | 🚧 Páginas básicas prontas | 🚫 Faltam dashboards, catálogo, checkout
 
 ---
@@ -1179,12 +1210,12 @@ services:
 └──────────────────────────────────────────────────────────────────┘
 
 📌 AGORA (Agosto 2026)
-├─ Backend MVP ✅ (Fase 1) - Funcional
-├─ Backend em Refatoração 🔄 (Fase 2) - Validações, Testes, Docs
+├─ Backend MVP 🔄 (Fase 1) - Núcleo funcional
+├─ Backend hardening 🔄 (Fase 2) - Validações, Testes, Docs
 └─ Frontend básico ⚠️ (Fase 1.5) - Páginas prontas, mas faltam dashboards
 
-📅 PRÓXIMO (Após Backend refatorado)
-├─ Backend Refatorado ✅
+📅 PRÓXIMO (Evolução do MVP)
+├─ Backend hardening 🔄
 ├─ Frontend em Refatoração (Fase 3) - Dashboards, Catálogo, Checkout
 └─ Testes frontend (React Testing Library)
 
@@ -1198,9 +1229,9 @@ services:
 
 ### O Que Está Pronto
 
-✅ **Backend - Funcionalidades**:
+🔄 **Backend - Funcionalidades**:
 
-- API REST completa (autenticação, CRUD, pedidos, emails)
+- API REST funcional (autenticação, CRUD, pedidos, emails)
 - Banco de dados normalizado (7 tabelas com relacionamentos)
 - Testes básicos (login, register, brands, status)
 - Rate limiting com Redis
@@ -1215,9 +1246,9 @@ services:
 
 ---
 
-### O Que Está em Progresso
+### Próximas Melhorias
 
-🔄 **Backend - Refatoração** (AGORA):
+🔄 **Backend - Hardening**:
 
 - Validação com Zod em todos os endpoints
 - Documentação Swagger/OpenAPI
@@ -1226,7 +1257,7 @@ services:
 - Proteção contra SQL Injection
 - Error handling mais robusto
 
-🚧 **Frontend - Desenvolvimento** (PRÓXIMO):
+🚧 **Frontend - Desenvolvimento**:
 
 - Dashboard do User (pedidos, perfil)
 - Dashboard Admin (gerenciar produtos, marcas, pedidos)
@@ -1238,7 +1269,7 @@ services:
 
 ---
 
-### O Que Falta
+### Backlog
 
 ❌ **Frontend (Prioridade Alta)**:
 

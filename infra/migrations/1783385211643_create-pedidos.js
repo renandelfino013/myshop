@@ -11,14 +11,14 @@ export const shorthands = undefined
 export const up = (pgm) => {
   pgm.createTable('pedidos', {
     id: 'id',
-    usuarios_id: { type: 'integer', notNull: true },
+    usuario_id: { type: 'integer', notNull: true },
     data_pedido: { type: 'timestamp', default: pgm.func('current_timestamp') },
-    status: { type: 'varchar(50)', notNull: true },
+    total: { type: 'NUMERIC (10,2)', notNull: false },
   })
 
   pgm.addConstraint('pedidos', 'fk_pedidos_usuario', {
     foreignKeys: {
-      columns: 'usuarios_id',
+      columns: 'usuario_id',
       references: 'usuarios(id)',
       onDelete: 'CASCADE',
     },

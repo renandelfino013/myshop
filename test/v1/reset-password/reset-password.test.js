@@ -70,9 +70,7 @@ test('reset password with incorrect password', async () => {
 
   expect(body.error).toBeDefined()
   expect(response.status).toBe(400)
-  expect(body.error).toBe(
-    'Failed to reset password: invalid password, min 4 carac and with 1 uppercase'
-  )
+  expect(body.error).toBe('Password must be at least 4 characters long.')
   console.log(body, 'status: ', response.status)
 })
 test('used reset key', async () => {

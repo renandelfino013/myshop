@@ -1,103 +1,103 @@
-import pool from "infra/database/db";
-import orchestrator from "test/orchestrator.js";
-import createuser from "test/hooks/userfortests";
+import pool from 'infra/database/db'
+import orchestrator from 'test/orchestrator.js'
+import createuser from 'test/hooks/userfortests'
 
 beforeAll(async () => {
-  await orchestrator.waitForAllServices();
+  await orchestrator.waitForAllServices()
   await createuser.fakeuser.user(
-    "jaestalogadoteste@gmail.com",
-    "aDSADAASa",
-    "123dsDSA",
-  );
-});
+    'jaestalogadoteste@gmail.com',
+    'aDSADAASa',
+    '123dsDSA'
+  )
+})
 
 async function cleanuser(email) {
-  await pool.query("SELECT id, nome, email, senha, role FROM usuarios");
-  await pool.query("DELETE FROM usuarios WHERE email = $1", [email]);
+  await pool.query('SELECT id, nome, email, senha, role FROM usuarios')
+  await pool.query('DELETE FROM usuarios WHERE email = $1', [email])
 }
-let email = "test3fdf@gmail.com";
+let email = 'test3fdf@gmail.com'
 
-describe("teste register/users", () => {
-  test("register test from myshop", async () => {
-    const register = await fetch("http://localhost:3000/api/v1/register", {
-      method: "POST",
+describe('teste register/users', () => {
+  test('register test from myshop', async () => {
+    const register = await fetch('http://localhost:3000/api/v1/register', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        nome: "TESTEAUTOMATIZADOdsa",
+        nome: `teste${Date.now()}`,
         email: email,
-        senha: "1234ddsa44",
+        senha: `Renan${Date.now()}`,
       }),
-    });
-    expect(register.status).toBe(201);
-    let respbody = await register.json();
+    })
+    expect(register.status).toBe(201)
+    let respbody = await register.json()
     if (respbody.error) {
-      console.log(respbody.error);
+      console.log(respbody.error)
     }
-  });
+  })
 
-  test("create user with incorrect informations", async () => {
-    email = "testetest@";
-    const register = await fetch("http://localhost:3000/api/v1/register", {
-      method: "POST",
+  test('create user with incorrect informations', async () => {
+    email = 'testetest@'
+    const register = await fetch('http://localhost:3000/api/v1/register', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        nome: "aa",
+        nome: 'aa',
         email: email,
-        senha: "123ds",
+        senha: '123ds',
       }),
-    });
-    let body = await register.json();
-    console.log("TEST : create user with incorrect information:", body);
-    expect(body).toHaveProperty("error");
-    expect(register.status).toBe(401);
+    })
+    let body = await register.json()
+    console.log('TEST : create user with incorrect information:', body)
+    expect(body).toHaveProperty('error')
+    expect(register.status).toBe(400)
     console.log(
-      "TEST : create user with incorrect information:",
-      register.status,
-    );
-  });
+      'TEST : create user with incorrect information:',
+      register.status
+    )
+  })
   afterEach(async () => {
-    await cleanuser(email);
-  });
+    await cleanuser(email)
+  })
 
-  let emailforlooged = "jaestalogadoteste@gmail.com";
+  let emailforlooged = 'jaestalogadoteste@gmail.com'
 
-  test("create acount with looged email", async () => {
-    const register = await fetch("http://localhost:3000/api/v1/register", {
-      method: "POST",
+  test('create acount with looged email', async () => {
+    const register = await fetch('http://localhost:3000/api/v1/register', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        nome: "aDSADAASa",
+        nome: 'aDSADAASa',
         email: emailforlooged,
-        senha: "123dsDSA",
+        senha: '123dsDSA',
       }),
-    });
-    let body = await register.json();
-    expect(register.status).toBe(400);
-    console.error(body.error);
-    expect(body).toHaveProperty("error");
-  });
+    })
+    let body = await register.json()
+    expect(register.status).toBe(400)
+    console.error(body.error)
+    expect(body).toHaveProperty('error')
+  })
 
-  test("tryng register user with invalid email", async () => {
-    const register = await fetch("http://localhost:3000/api/v1/register", {
-      method: "POST",
+  test('tryng register user with invalid email', async () => {
+    const register = await fetch('http://localhost:3000/api/v1/register', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        nome: "aDSADAASa",
-        email: "@.ddsadm",
-        senha: "123dsDSA",
+        nome: 'aDSADAASa',
+        email: '@.ddsadm',
+        senha: '123dsDSA',
       }),
-    });
-    let body = await register.json();
-    expect(register.status).toBe(401);
-    expect(body).toHaveProperty("error");
-    console.log(body.error);
-  });
-});
+    })
+    let body = await register.json()
+    expect(register.status).toBe(400)
+    expect(body).toHaveProperty('error')
+    console.log(body.error)
+  })
+})

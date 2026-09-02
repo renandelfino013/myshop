@@ -65,7 +65,7 @@ describe('POST api/v1/marcas', () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        nome: `${Date.now()}`,
+        nome: `bra${Date.now()}`,
       }),
     })
 
@@ -212,7 +212,7 @@ describe('GET api/v1/marcas by id or nome', () => {
 
   test('GET brand by nome that does not exist', async () => {
     const response = await fetch(
-      `http://localhost:3000/api/v1/marcas?nome=does-not-exist-${Date.now()}`,
+      `http://localhost:3000/api/v1/marcas?nome=does${Date.now()}`,
       {
         method: 'GET',
         headers: {
@@ -284,7 +284,7 @@ describe('GET api/v1/marcas by id or nome', () => {
     expect(respbody.message).toBeDefined()
     expect(respbody.message).toEqual('Token is missing')
   })
-  test('GET [recurso] by id with invalid format', async () => {
+  test('GET brand by id with invalid format', async () => {
     const response = await fetch(
       `http://localhost:3000/api/v1/marcas?id=abc123`,
       {
@@ -446,8 +446,8 @@ describe('PATCH api/v1/marcas', () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        brandname: `brand-that-does-not-exist-${Date.now()}`,
-        newname: `newname${Date.now()}`,
+        brandname: `bra${Date.now()}`,
+        newname: `newn${Date.now()}`,
       }),
     })
 
@@ -502,7 +502,7 @@ describe('DELETE api/v1/marcas', () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: `brand-that-does-not-exist-${Date.now()}`,
+        name: `baa${Date.now()}`,
       }),
     })
 

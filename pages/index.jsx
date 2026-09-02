@@ -21,7 +21,6 @@ function Login() {
         });
 
         const data = await response.json();
-        console.log(data);
         localStorage.setItem("token", data.token);
       } catch (error) {
         console.error("Erro de rede:", error);
@@ -44,7 +43,6 @@ function Login() {
         }
 
         const data = await response.json();
-        console.log("Login bem-sucedido:", data);
         localStorage.setItem("token", data.token);
         setEstado(false);
       } catch (error) {

@@ -14,9 +14,10 @@ class InsufficientStockError extends Error {
 }
 
 class ValidationError extends Error {
-  constructor(message) {
+  constructor(message, field) {
     super(message);
     this.name = "ValidationError";
+    this.field = field;
     this.statusCode = 400;
   }
 }

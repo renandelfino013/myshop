@@ -482,13 +482,14 @@ describe('GET /api/v1/pedidos', () => {
 
   test("GET order by ID — admin can view any user's order", async () => {
     const orderId = await createOrder(tokenUser, productId)
-
+    console.log('teste de order id ', orderId)
     const response = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${orderId}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${encodeURIComponent(orderId)}`,
       { headers: { Authorization: `Bearer ${tokenAdmin}` } }
     )
 
     const respbody = await response.json()
+    console.log('respbody', respbody)
 
     expect(response.status).toBe(200)
     expect(Array.isArray(respbody)).toBe(true)
@@ -807,7 +808,7 @@ describe('DELETE /api/v1/pedidos', () => {
 
     expect(response.status).toBe(400)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('id is required!')
+    expect(respbody.error).toEqual('orderId is required!')
   })
 })
 

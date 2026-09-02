@@ -72,7 +72,7 @@ describe('POST api/v1/categorias', () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        nome: `${Date.now()}`,
+        nome: `category${Date.now()}`,
       }),
     })
 
@@ -218,7 +218,7 @@ describe('GET api/v1/categorias by id or nome', () => {
 
   test('GET category by nome that does not exist', async () => {
     const response = await fetch(
-      `http://localhost:3000/api/v1/categorias?nome=does-not-exist-${Date.now()}`,
+      `http://localhost:3000/api/v1/categorias?nome=does${Date.now()}`,
       {
         method: 'GET',
         headers: {
@@ -568,7 +568,7 @@ describe('DELETE api/v1/categorias', () => {
   })
 
   test('DELETE with user token (forbidden)', async () => {
-    const nome = `categoria-forbidden-${Date.now()}`
+    const nome = `categoriaforbidden${Date.now()}`
     await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
@@ -582,10 +582,9 @@ describe('DELETE api/v1/categorias', () => {
       { headers: { Authorization: `Bearer ${tokenUser}` } }
     )
     const s = await searchResponse.json()
-    console.log(s)
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/categorias?id=${s.id}`,
+      `http://localhost:3000/api/v1/categorias?id=${s[0].id}`,
       {
         method: 'DELETE',
         headers: {

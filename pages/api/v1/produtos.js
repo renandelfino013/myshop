@@ -1,3 +1,7 @@
+import {
+  validateProductSchema,
+  validateProductsPerIdSchema,
+} from "schemas/products/products.schema";
 import validationtoken from "services/auth/validationtoken";
 import {
   GetAllproducts,
@@ -6,7 +10,6 @@ import {
   Putproduct,
   removeproduct,
 } from "services/products/products-services";
-import { ValidationError } from "utils/errors/error";
 
 export default async function handler(req, res) {
   try {
@@ -20,25 +23,51 @@ export default async function handler(req, res) {
       res.status(200).json(products);
     } else if (req.method === "GET" && req.query.id) {
       const id = req.query.id;
-      const product = await GetProductPerId(id);
+      const data = validateProductsPerIdSchema({ id });
+      const product = await GetProductPerId(data.id);
       res.status(200).json(product);
     } else if (req.method === "POST") {
       const { name, price, stock, categoryId, markId, desc } = req.body;
-      await Postproduct(name, price, stock, categoryId, markId, desc, role);
+      const data = validateProductSchema({
+        name,
+        price,
+        stock,
+        categoryId,
+        markId,
+        desc,
+      });
+      await Postproduct(
+        data.name,
+        data.price,
+        data.stock,
+        data.categoryId,
+        data.markId,
+        data.desc,
+        role,
+      );
       res
         .status(201)
         .json({ success: true, message: "Product created successfully" });
     } else if (req.method === "PUT") {
       const { productid, newname, price, stock, categoryId, markId, desc } =
         req.body;
-      await Putproduct(
-        productid,
-        newname,
+      const data = validateProductSchema({
+        name: newname,
         price,
         stock,
         categoryId,
         markId,
         desc,
+        productId: productid,
+      });
+      await Putproduct(
+        data.productId,
+        data.name,
+        data.price,
+        data.stock,
+        data.categoryId,
+        data.markId,
+        data.desc,
         role,
       );
       res
@@ -46,8 +75,8 @@ export default async function handler(req, res) {
         .json({ success: true, message: "Product updated successfully" });
     } else if (req.method === "DELETE") {
       const id = req.query.id || req.body?.id;
-      if (!id) throw new ValidationError("id is required!");
-      await removeproduct(id, role);
+      const data = validateProductsPerIdSchema({ id });
+      await removeproduct(data.id, role);
       res
         .status(200)
         .json({ success: true, message: "Product deleted successfully" });

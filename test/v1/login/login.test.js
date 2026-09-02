@@ -54,7 +54,7 @@ describe('teste de login', () => {
       headers: { 'Content-Type': 'application/json' },
 
       body: JSON.stringify({
-        email: 'jaestalo@gadote.com',
+        email: 'jaestalo@ga .com',
         senha: '123dsD',
       }),
     })
@@ -63,7 +63,7 @@ describe('teste de login', () => {
     expect(data.succes).toBeDefined()
     expect(data.succes).toBe(false)
     expect(data.error).toBeDefined()
-    expect(data.error).toEqual('ValidationError: invalid email')
+    expect(data.error).toEqual('invalid email')
     expect(typeof data.error).toEqual('string')
 
     expect(data.type).toBeDefined()
@@ -82,9 +82,7 @@ describe('teste de login', () => {
     expect(data.succes).toBeDefined()
     expect(data.succes).toBe(false)
     expect(data.error).toBeDefined()
-    expect(data.error).toEqual(
-      'ValidationError: invalid password, min 4 carac and with 1 uppercase'
-    )
+    expect(data.error).toEqual('Password must contain an uppercase letter.')
     console.log(data.error)
 
     expect(data.type).toBeDefined()

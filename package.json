@@ -15,8 +15,8 @@
     "build": "next build",
     "start": "next start",
     "postinstall": "npm rebuild bcrypt --build-from-source",
-    "test": "npm run services:up && npm run wait-for-postgres && npm run migrate:up && concurrently -n next,jest -k --success command-jest --hide next \"cross-env APP_ENV=test next dev\" \"jest --runInBand --detectOpenHandles --verbose\"",
-    "test:watch": "npm run services:up && npm run wait-for-postgres && npm run migrate:up && concurrently -n next,jest -k -i --default-input-target jest --success command-jest --hide next \"cross-env APP_ENV=test next dev\" \"jest orders --watch --runInBand --verbose\"",
+    "test": "npm run services:up && npm run wait-for-postgres && npm run migrate:up && concurrently -n next,jest -k --success command-jest  \"cross-env APP_ENV=test next dev\" \"jest --runInBand --detectOpenHandles --verbose\"",
+    "test:watch": "npm run services:up && npm run wait-for-postgres && npm run migrate:up && concurrently -n next,jest -k -i --default-input-target jest --success command-jest  \"cross-env APP_ENV=test next dev\" \"jest --watch --runInBand --verbose\"",
     "migrate:create": "node-pg-migrate --migrations-dir infra/migrations create",
     "migrate:up": "node-pg-migrate --migrations-dir infra/migrations --envPath .env  up",
     "migrate:down": "node-pg-migrate --migrations-dir infra/migrations --envPath .env down",
@@ -38,7 +38,8 @@
     "pg": "8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "supertest": "7.2.2"
+    "supertest": "7.2.2",
+    "zod": "^4.5.1"
   },
   "engines": {
     "node": "24.x"

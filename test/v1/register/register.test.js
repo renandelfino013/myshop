@@ -7,7 +7,7 @@ beforeAll(async () => {
   await createuser.fakeuser.user(
     'jaestalogadoteste@gmail.com',
     'aDSADAASa',
-    '123dsDSA'
+    'ValidPass1!'
   )
 })
 
@@ -27,7 +27,7 @@ describe('teste register/users', () => {
       body: JSON.stringify({
         nome: `teste${Date.now()}`,
         email: email,
-        senha: `Renan${Date.now()}`,
+        senha: `Renan${Date.now()}!A1`,
       }),
     })
     expect(register.status).toBe(201)
@@ -74,7 +74,7 @@ describe('teste register/users', () => {
       body: JSON.stringify({
         nome: 'aDSADAASa',
         email: emailforlooged,
-        senha: '123dsDSA',
+        senha: 'ValidPass1!',
       }),
     })
     let body = await register.json()
@@ -92,7 +92,7 @@ describe('teste register/users', () => {
       body: JSON.stringify({
         nome: 'aDSADAASa',
         email: '@.ddsadm',
-        senha: '123dsDSA',
+        senha: 'ValidPass1!',
       }),
     })
     let body = await register.json()

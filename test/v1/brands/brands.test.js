@@ -8,11 +8,11 @@ let nameupdated = ''
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `teste${Date.now()}@gmail.com`
-  const user = await createuser.fakeuser.user(email, 'renan', '1234Rnads')
+  const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
   const admin = await userRoleAdmin(
     'renanadmin',
     `teste2${Date.now()}@gmail.com`,
-    'Testeadmin1345'
+    'AdminPass!23'
   )
   tokenUser = user[1].token
   tokenAdmin = admin

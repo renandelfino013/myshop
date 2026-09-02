@@ -12,11 +12,11 @@ let productWithLowStockId = ''
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `teste${Date.now()}@gmail.com`
-  const user = await createuser.fakeuser.user(email, 'renan', '1234Rnads')
+  const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
   const admin = await userRoleAdmin(
     'renanadmin',
     `teste2${Date.now()}@gmail.com`,
-    'Testeadmin1345'
+    'AdminPass!23'
   )
   tokenUser = user[1].token
   tokenAdmin = admin
@@ -501,7 +501,7 @@ describe('GET /api/v1/pedidos', () => {
     const user2 = await createuser.fakeuser.user(
       email2,
       'outrorenan',
-      '1234Rnads'
+      'Abcdef12!'
     )
     const tokenUser2 = user2[1].token
 
@@ -662,7 +662,7 @@ describe('DELETE /api/v1/pedidos', () => {
     const user2 = await createuser.fakeuser.user(
       email2,
       'usuario para exclusao',
-      '1234Rnads'
+      'Abcdef12!'
     )
     const tokenUser2 = user2[1].token
 

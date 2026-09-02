@@ -31,13 +31,13 @@ beforeAll(async () => {
   const user = await createuser.fakeuser.user(
     `product-user-${Date.now()}@gmail.com`,
     'product user',
-    '1234Rnads'
+    'Abcdef12!'
   )
   tokenUser = user[1].token
   tokenAdmin = await userRoleAdmin(
     'product admin',
     `product-admin-${Date.now()}@gmail.com`,
-    'Testeadmin1345'
+    'AdminPass!23'
   )
 
   const categoryName = `Category ${Date.now()}`

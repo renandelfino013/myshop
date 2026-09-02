@@ -8,6 +8,14 @@ import {
   removebrand,
 } from "services/brand/brand-services";
 import validationtoken from "services/auth/validationtoken";
+import {
+  validateSchemaDeleteBrand,
+  validateSchemaGetperIdBrand,
+  validateSchemaGetperNameBrand,
+  validateSchemaPostBrand,
+  validateSchemaPutBrand,
+} from "schemas/brands/brand.schema";
+
 dotenv.config();
 export default async function handler(req, res) {
   try {
@@ -21,26 +29,31 @@ export default async function handler(req, res) {
       res.status(200).json(getbrands);
     } else if (req.method === "GET" && req.query.id) {
       const { id } = req.query;
-      const brand = await getbrandbyid(id);
+      const data = validateSchemaGetperIdBrand({ id });
+      const brand = await getbrandbyid(data.id);
       res.status(200).json(brand);
     } else if (req.method === "GET" && req.query.nome) {
       const { nome } = req.query;
-      const brand = await getbrandbyname(nome);
+      const data = validateSchemaGetperNameBrand({ nome });
+      const brand = await getbrandbyname(data.nome);
       res.status(200).json(brand);
     } else if (req.method === "POST") {
-      await createbrand(req.body.nome, role);
+      const data = validateSchemaPostBrand({ nome: req.body.nome });
+      await createbrand(data.nome, role);
       res
         .status(201)
         .json({ success: true, message: "Brand sucessfully created" });
     } else if (req.method == "PATCH") {
       const { brandname, newname } = req.body;
-      await renameBrand(brandname, newname, role);
+      const data = validateSchemaPutBrand({ brandname, newname });
+      await renameBrand(data.brandname, data.newname, role);
       res
         .status(200)
         .json({ success: true, message: "Brand sucessfully updated" });
     } else if (req.method === "DELETE") {
       const { name } = req.body;
-      await removebrand(name, role);
+      const data = validateSchemaDeleteBrand({ name });
+      await removebrand(data.name, role);
       res
         .status(200)
         .json({ success: true, message: "Brand sucessfully deleted" });

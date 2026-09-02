@@ -1,11 +1,17 @@
 import { registeruser } from "services/auth/authservices";
+import { validateSchemaregister } from "schemas/register/register.schema";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const { nome, email, senha } = req.body;
 
-      const token = await registeruser(nome, email, senha);
+      const data = validateSchemaregister({
+        name: nome,
+        email,
+        password: senha,
+      });
+      const token = await registeruser(data.name, data.email, data.password);
 
       if (token.success == false) {
         res.status(401).json({ error: token.error });
@@ -19,7 +25,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Email already exists" });
       } else {
         console.error("Error creating user:", error);
-        return res.status(error.statusCode).json({ error: error.message });
+        return res
+          .status(error.statusCode || error.status)
+          .json({ error: error.message });
       }
     }
   } else {

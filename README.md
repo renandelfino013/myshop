@@ -11,27 +11,29 @@
 
 ## 📋 Visão Geral
 
-**MyShop** é uma plataforma de **e-commerce fullstack** em desenvolvimento, criada para praticar e demonstrar arquitetura de APIs, persistência relacional e boas práticas de backend. O projeto implementa autenticação JWT, gerenciamento de catálogo, início do fluxo de pedidos, integração de emails e rate limiting.
+**MyShop** é uma aplicação de **e-commerce fullstack** em desenvolvimento, pensada para praticar arquitetura de API, persistência relacional, autenticação e fluxo de pedidos em um contexto realista de loja online.
 
-**Objetivo do Projeto**: construir uma aplicação de portfólio com **Next.js 16**, **PostgreSQL**, **Docker**, **Vercel** e boas práticas de engenharia, mostrando evolução incremental e decisões técnicas reais.
+O projeto já contempla autenticação com JWT, validações no backend, cadastro e login, gestão de catálogo, pedidos e reset de senha. A estrutura está organizada para evoluir de forma incremental, mantendo boa separação entre camadas e facilitando testes automatizados.
+
+**Objetivo do projeto**: construir uma base sólida de portfólio com **Next.js 16**, **PostgreSQL**, **Docker**, **JWT**, **Zod** e boas práticas de backend, mantendo foco em funcionalidade real e clareza de implementação.
 
 ---
 
 ## 🚀 Destaques Técnicos
 
-| **Área**           | **Tecnologia**          | **Detalhes**                                      |
-| ------------------ | ----------------------- | ------------------------------------------------- |
-| **Backend**        | Next.js 16 + Node.js 24 | API REST com autenticação JWT                     |
-| **Frontend**       | React 19 + Next.js      | UI moderna com CSS Modules                        |
-| **Banco de Dados** | PostgreSQL 16           | Tabelas relacionais e migrations automáticas      |
-| **Autenticação**   | JWT + bcrypt            | Stateless, segura, com reset de senha por email   |
-| **Email**          | Nodemailer + Gmail      | Notificações de login e reset de senha            |
-| **Rate Limiting**  | Upstash Redis           | Proteção contra brute force (10 req/10s)          |
-| **Infraestrutura** | Docker Compose          | PostgreSQL isolado, desenvolvimento reprodutível  |
-| **Deploy**         | Vercel                  | Build e deploy automáticos via GitHub             |
-| **Qualidade**      | ESLint + Prettier       | Code style automático, pre-commit hooks com Husky |
-| **Commits**        | Commitizen              | Conventional Commits, changelog automático        |
-| **Testes**         | Jest + fetch            | Testes de integração dos endpoints                |
+| **Área**           | **Tecnologia**          | **Detalhes**                                            |
+| ------------------ | ----------------------- | ------------------------------------------------------- |
+| **Backend**        | Next.js 16 + Node.js 24 | API REST com autenticação JWT                           |
+| **Frontend**       | React 19 + Next.js      | UI moderna com CSS Modules                              |
+| **Banco de Dados** | PostgreSQL 16           | Tabelas relacionais e migrations automáticas            |
+| **Autenticação**   | JWT + bcrypt + Zod      | Login, registro, reset de senha e validação de payloads |
+| **Email**          | Nodemailer + Gmail      | Notificações de login e reset de senha                  |
+| **Rate Limiting**  | Upstash Redis           | Proteção contra brute force (10 req/10s)                |
+| **Infraestrutura** | Docker Compose          | PostgreSQL isolado, desenvolvimento reprodutível        |
+| **Deploy**         | Vercel                  | Build e deploy automáticos via GitHub                   |
+| **Qualidade**      | ESLint + Prettier       | Code style automático, hooks de pré-commit              |
+| **Commits**        | Commitizen              | Conventional Commits e padronização de histórico        |
+| **Testes**         | Jest + fetch            | Testes de integração dos endpoints                      |
 
 ---
 
@@ -112,79 +114,106 @@ npm run dev
 
 ```
 myshop/
-├── infra/                    # Infraestrutura e configurações
-│   ├── compose.yaml          # Docker Compose (PostgreSQL)
-│   ├── migrations/           # Migrations do banco (node-pg-migrate)
-│   └── scripts/              # Scripts auxiliares (wait-for-postgres)
+├── .env                     # Variáveis locais do ambiente
+├── .env.example             # Modelo de variáveis de ambiente
+├── .gitignore               # Arquivos ignorados pelo Git
+├── .husky/                  # Hooks de pre-commit
+├── .vscode/                 # Configuração local do editor
+├── infra/                   # Infraestrutura e banco
+│   ├── compose.yaml         # Docker Compose do PostgreSQL
+│   ├── database/            # Conexão e utilitários do banco
+│   ├── migrations/          # Migrations do PostgreSQL
+│   └── scripts/             # Script de espera do Postgres
 │
-├── pages/                    # Rotas Next.js (frontend + API)
-│   ├── api/v1/               # Endpoints da API REST
-│   │   ├── login.js          # Autenticação
-│   │   ├── register.js       # Registro de usuário
-│   │   ├── categorias.js      # CRUD de categorias
-│   │   ├── marcas.js         # CRUD de marcas
-│   │   ├── produtos.js       # CRUD de produtos
-│   │   ├── pedidos.js        # Gerenciamento de pedidos
-│   │   ├── rede-password.js  # Reset de senha
-│   │   └── status/           # Health check
-│   ├── _app.js               # Layout global
-│   ├── index.jsx             # Home page
-│   ├── login.jsx             # Página de login
-│   ├── register.jsx          # Página de registro
-│   ├── forgot-password.jsx   # Solicitar reset
-│   └── reset-password.jsx    # Resetar senha
+├── models/                  # Models / query layer do banco
+│   ├── categorys/
+│   ├── marcas/
+│   ├── orders/
+│   ├── products/
+│   ├── status/
+│   └── users/
 │
-├── models/                   # Lógica de negócio + queries SQL
-│   ├── users/
-│   │   ├── users.js          # Model de usuários
-│   │   └── resetpassword.js  # Model de reset de senha
-│   ├── marcas/               # Model de marcas
-│   ├── categorys/            # Model de categorias
-│   ├── products/             # Model de produtos
-│   ├── orders/               # Model de pedidos e itens
-│   └── status/               # Model de status
-│
-├── services/                 # Serviços reutilizáveis
-│   ├── auth/                 # Autenticação e validação de token
-│   ├── brand/                # Regras de negócio de marcas
-│   ├── category/             # Regras de negócio de categorias
-│   ├── products/             # Regras de negócio de produtos
-│   └── orders/               # Regras de negócio de pedidos
-│
-├── utils/                    # Utilitários
-│   ├── errors/               # Erros de domínio e códigos HTTP
-│   ├── mail/                 # Envio de emails
-│   ├── Regex/                # Validações de texto
-│   └── validators/           # Validações de negócio
-│
-├── styles/                   # Estilos CSS Modules
-│   ├── globals.css           # Estilos globais
-│   ├── Home.module.css       # Estilos da home
-│   ├── login.module.css      # Estilos do login
+├── pages/                   # Next.js + rotas da API
+│   ├── api/v1/              # Endpoints REST da aplicação
+│   │   ├── login.js         # Login
+│   │   ├── register.js      # Cadastro
+│   │   ├── forgot-password.js
+│   │   ├── reset-password.js
+│   │   ├── categorias.js
+│   │   ├── marcas.js
+│   │   ├── produtos.js
+│   │   ├── pedidos.js
+│   │   └── status/
+│   ├── _app.js              # App shell do Next
+│   ├── _document.js         # Document do Next
+│   ├── index.jsx            # Home
+│   ├── login.jsx            # Tela de login
+│   ├── register.jsx         # Tela de cadastro
+│   ├── forgot-password.jsx  # Tela de recuperação
+│   ├── reset-password.jsx   # Tela de redefinição
 │   └── ...
 │
-├── test/                     # Testes automatizados (Jest + Supertest)
-│   ├── orchestrator.js       # Setup dos testes
-│   ├── hooks/                # Helpers e fixtures
-│   └── v1/                   # Testes dos endpoints
-│       ├── login/
-│       ├── register/
+├── schemas/                 # Validação com Zod
+│   ├── brands/
+│   ├── categorys/
+│   ├── login/
+│   ├── orders/
+│   ├── products/
+│   ├── register/
+│   ├── reset-password./
+│   ├── validator/
+│   ├── variables/
+│   └── ...
+│
+├── services/                # Lógica de negócio e integração
+│   ├── auth/
+│   ├── brand/
+│   ├── category/
+│   ├── orders/
+│   └── products/
+│
+├── utils/                   # Helpers, erros e utilitários
+│   ├── errors/
+│   ├── helper/
+│   ├── mail/
+│   ├── Regex/
+│   ├── validators/
+│   └── ...
+│
+├── styles/                  # CSS Modules e estilos globais
+│   ├── globals.css
+│   ├── Home.module.css
+│   ├── login.module.css
+│   ├── forgotpassword.module.css
+│   ├── resetpassword.module.css
+│   └── ...
+│
+├── test/                    # Testes automatizados
+│   ├── hooks/
+│   ├── orchestrator.js
+│   └── v1/
 │       ├── brands/
 │       ├── categorys/
-│       ├── products/
+│       ├── login/
 │       ├── orders/
-│       ├── status/
-│       └── reset-password/
+│       ├── products/
+│       ├── register/
+│       ├── reset-password/
+│       └── status/
 │
-├── public/                   # Assets estáticos
+├── public/                  # Arquivos públicos
 │   └── assets/
 │
-├── .env.example              # Exemplo de variáveis (será criado)
-├── package.json              # Dependências e scripts
-├── jest.config.cjs           # Configuração de testes
-├── eslint.config.mjs         # Configuração de linting
-├── commitlint.config.mjs     # Configuração de commits
-└── README.md                 # Este arquivo
+├── .github/                 # Workflows e configs do GitHub
+├── commitlint.config.mjs    # Commit lint config
+├── eslint.config.mjs        # ESLint config
+├── jest.config.cjs          # Jest config
+├── jsconfig.json            # Alias do projeto
+├── LICENSE                  # Licença do projeto
+├── package.json             # Dependências e scripts
+├── proxy.js                 # Proxy/ajustes de ambiente
+├── README.md                # Documentação do projeto
+└── ...
 ```
 
 ---
@@ -219,11 +248,14 @@ cp .env.example .env
 
 ### 🔐 Autenticação JWT
 
-- **Login**: Email + Senha → JWT com expiração de 1 hora
-- **Registro**: Criação de novo usuário com bcrypt
-- **Reset de Senha**: Link por email + chave temporária
-- **Validação**: Headers `x-user-id`, `x-user-email`, `x-user-role`
-- **Roles**: `USER` (cliente) e `ADMIN` (gerenciador)
+- **Login**: Email + senha → geração de JWT com expiração de 1 hora
+- **Registro**: criação de usuário com hash de senha via bcrypt
+- **Reset de Senha**: fluxo por email com chave temporária
+- **Validação**: headers `x-user-id`, `x-user-email` e `x-user-role`
+- **Roles**: `USER` e `ADMIN`
+- **Política de senha atual**: mínimo de 8 caracteres, com pelo menos 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial
+
+> A regra foi mantida com um equilíbrio entre boa UX e segurança. Senhas simples demais continuam sendo rejeitadas pelos schemas.
 
 ### 🏷️ Gerenciamento de Marcas
 
@@ -282,52 +314,50 @@ Todos os endpoints estão em `/api/v1/`
 
 #### Login
 
-```
+```http
 POST /api/v1/login
 Content-Type: application/json
 
 {
   "email": "usuario@example.com",
-  "senha": "senha123"
+  "senha": "Senha123!"
 }
+```
 
-✅ Response (200):
-{
-  "id": 1,
-  "email": "usuario@example.com",
-  "role": "USER",
-  "token": "eyJhbGc..."
-}
+Exemplo de resposta válida:
 
-❌ Response (401):
+```json
 {
-  "erro": "Email ou senha inválidos"
+  "sucess": true,
+  "message": "Login realizado com sucesso",
+  "user": {
+    "id": 1,
+    "email": "usuario@example.com",
+    "role": "USER"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
 #### Register
 
-```
+```http
 POST /api/v1/register
 Content-Type: application/json
 
 {
   "nome": "João Silva",
   "email": "joao@example.com",
-  "senha": "Senha123"
+  "senha": "Senha123!"
 }
+```
 
-✅ Response (201):
-{
-  "id": 2,
-  "nome": "João Silva",
-  "email": "joao@example.com",
-  "role": "USER"
-}
+Resposta esperada em caso de sucesso:
 
-❌ Response (400):
+```json
 {
-  "erro": "Email já cadastrado"
+  "message": "User created successfully",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
@@ -446,6 +476,8 @@ Content-Type: application/json
 ```
 
 ### **Produtos**
+
+> O schema atual valida nome, preço, estoque, categoria e marca antes de persistir o registro.
 
 #### Listar Produtos
 

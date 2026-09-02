@@ -31,13 +31,13 @@ beforeAll(async () => {
   const user = await createuser.fakeuser.user(
     `product-user-${Date.now()}@gmail.com`,
     'product user',
-    '1234Rnads'
+    'Abcdef12!'
   )
   tokenUser = user[1].token
   tokenAdmin = await userRoleAdmin(
     'product admin',
     `product-admin-${Date.now()}@gmail.com`,
-    'Testeadmin1345'
+    'AdminPass!23'
   )
 
   const categoryName = `Category ${Date.now()}`
@@ -70,7 +70,10 @@ beforeAll(async () => {
     }),
   })
   if (productResponse.status !== 201) {
-    throw new Error(`Failed to create product: ${productResponse.status}`)
+    const errorBody = await productResponse.json().catch(() => null)
+    throw new Error(
+      `Failed to create product: ${productResponse.status} - ${JSON.stringify(errorBody)}`
+    )
   }
 
   const productsResponse = await fetch(`${apiUrl}/produtos`, {
@@ -108,7 +111,7 @@ describe('GET api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(404)
-    expect(body.error).toBe('Product not found')
+    expect(body.error).toBe('Product not found!')
   })
 
   test('GET without token', async () => {
@@ -295,7 +298,7 @@ describe('PUT api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(404)
-    expect(body.error).toBe('Product not found')
+    expect(body.error).toBe('Product not found!')
   })
 
   test.each([
@@ -378,7 +381,7 @@ describe('DELETE api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(400)
-    expect(body.error).toBe('id is required!')
+    expect(body.error).toBe('id is required')
   })
 
   test('DELETE accepts the id in the request body', async () => {
@@ -420,7 +423,7 @@ describe('DELETE api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(404)
-    expect(body.error).toBe('Product not found')
+    expect(body.error).toBe('Product not found!')
   })
 
   test('DELETE with user token is forbidden', async () => {

@@ -1,3 +1,9 @@
+import {
+  validateidForOrders,
+  validateidForOrdersUser,
+  validateorderDelete,
+  validateorderPost,
+} from "schemas/orders/orders.schemas";
 import validationtoken from "services/auth/validationtoken";
 import {
   Get_All_orders_Admin,
@@ -8,7 +14,6 @@ import {
   Removeorder,
   RemoveorderAdmin,
 } from "services/orders/order-services";
-import { ValidationError } from "utils/errors/error";
 export default async function handler(req, res) {
   try {
     const userId = req.headers["x-user-id"];
@@ -27,18 +32,18 @@ export default async function handler(req, res) {
       res.status(200).json(orders);
     } else if (req.method === "GET" && req.query.order_id && role === "ADMIN") {
       const { order_id } = req.query;
-      const order = await Get_order_per_id_admin(order_id, role);
+      const data = validateidForOrders({ id: order_id });
+      const order = await Get_order_per_id_admin(data.id, role);
       res.status(200).json(order);
     } else if (req.method === "GET" && req.query.order_id) {
       const { order_id } = req.query;
-      const order = await Get_order_per_Id(userId, order_id);
+      const data = validateidForOrdersUser({ id: order_id, user_id: userId });
+      const order = await Get_order_per_Id(data.user_id, data.id);
       res.status(200).json(order);
     } else if (req.method === "POST") {
       const { items } = req.body;
-      if (!items) {
-        throw new ValidationError("items is required!");
-      }
-      const order_id = await PostOrder(userId, items);
+      const data = validateorderPost({ userId, items });
+      const order_id = await PostOrder(data.userId, data.items);
       res.status(201).json({
         success: true,
         message: "Order created successfully!",
@@ -46,17 +51,19 @@ export default async function handler(req, res) {
       });
     } else if (req.method === `DELETE` && role === `ADMIN`) {
       const { order_id } = req.query;
-      if (!order_id) throw new ValidationError("id is required!");
+      const data = validateorderDelete({ orderId: order_id });
+      const orderId = data.orderId;
 
-      await RemoveorderAdmin(order_id, role);
+      await RemoveorderAdmin(orderId, role);
       res
         .status(200)
         .json({ success: true, message: "order deleted successfully!" });
     } else if (req.method === "DELETE") {
       const { order_id } = req.query;
-      if (!order_id) throw new ValidationError("id is required!");
+      const data = validateorderDelete({ orderId: order_id });
+      const orderId = data.orderId;
 
-      await Removeorder(userId, order_id);
+      await Removeorder(userId, orderId);
       res
         .status(200)
         .json({ success: true, message: "order deleted successfully!" });
@@ -64,6 +71,7 @@ export default async function handler(req, res) {
       res.status(405).json({ error: "Method Not Allowed" });
     }
   } catch (error) {
+    console.error("Error in orders API:", error);
     res
       .status(error.status || error.statusCode || 500)
       .json({ error: error.message });

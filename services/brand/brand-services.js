@@ -6,21 +6,9 @@ import {
   updatebrand,
   deletebrand,
 } from "models/marcas/marcas";
-import regexBrandsName from "utils/Regex/regexBrandsName";
-import regexidforbrands from "utils/Regex/regexId";
+import { ValidationError } from "utils/errors/error";
+import assertFound from "utils/helper/assertFound";
 import verifyuserRole from "utils/validators/verifyuserRole";
-
-function NotFoundError(message) {
-  const error = new Error(message);
-  error.status = 404;
-  return error;
-}
-
-function ValidationError(message) {
-  const error = new Error(message);
-  error.status = 400;
-  return error;
-}
 
 export async function getallbrands() {
   try {
@@ -31,20 +19,13 @@ export async function getallbrands() {
 }
 
 export async function getbrandbyid(id) {
-  let str = id.toString();
-  await regexidforbrands(str);
-
   const brand = await FindBrandById(id);
-  if (!brand || brand.length === 0) {
-    throw NotFoundError("Brand not found");
-  }
+  assertFound(brand, "Brand");
   return brand;
 }
 export async function getbrandbyname(name) {
   const brand = await FindBrandByName(name);
-  if (!brand || brand.length === 0) {
-    throw NotFoundError("Brand not found");
-  }
+  assertFound(brand, "Brand");
   return brand;
 }
 
@@ -52,47 +33,34 @@ export async function createbrand(name, role) {
   const context = "create";
   await verifyuserRole(role, context);
   await createabrandvalidation(name);
-  await regexBrandsName(name);
   return InsertNewBrand(name);
 }
 
 async function createabrandvalidation(name) {
-  if (!name) {
-    throw ValidationError("Brand name is required");
-  }
   const existingBrand = await FindBrandByName(name);
   if (existingBrand.length > 0) {
-    throw ValidationError("Brand already exists");
+    throw new ValidationError("Brand already exists", "Brand");
   }
   return null;
 }
 export async function renameBrand(brandname, newname, role) {
   const context = "rename";
   await verifyuserRole(role, context);
-  if (!brandname || !newname) {
-    throw ValidationError("brandname and newname are required");
-  }
 
   const id = await verifyBrandExist(brandname);
   await createabrandvalidation(newname);
-  await regexBrandsName(newname);
   const updatedBrand = await updatebrand(id, newname);
   return updatedBrand;
 }
 export async function removebrand(name, role) {
   const context = "remove";
   await verifyuserRole(role, context);
-  if (!name) {
-    throw ValidationError("Brand name is required");
-  }
   const id = await verifyBrandExist(name);
   await deletebrand(id);
   return true;
 }
 export async function verifyBrandExist(name) {
   const findbrand = await FindBrandByName(name);
-  if (!findbrand || findbrand.length === 0) {
-    throw NotFoundError("brand not found");
-  }
+  assertFound(findbrand, "Brand");
   return findbrand[0].id;
 }

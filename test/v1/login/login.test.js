@@ -3,12 +3,10 @@ import createuser from 'test/hooks/userfortests'
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
-  let result = await createuser.fakeuser.user(
-    'testedeeuse@gmail.com',
-    'renan',
-    '1234Rnads'
-  )
+  const email = `testedeeuse-${Date.now()}@gmail.com`
+  let result = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
   console.log('result of user creation : ', result)
+  globalThis.__loginEmailTest = email
 })
 
 describe('teste de login', () => {
@@ -18,8 +16,8 @@ describe('teste de login', () => {
       headers: { 'Content-Type': 'application/json' },
 
       body: JSON.stringify({
-        email: 'testedeeuse@gmail.com',
-        senha: '1234Rnads',
+        email: globalThis.__loginEmailTest,
+        senha: 'Abcdef12!@dfd',
       }),
     })
     let data = await login.json()
@@ -37,7 +35,7 @@ describe('teste de login', () => {
 
       body: JSON.stringify({
         email: 'jaestalogadote@gmail.com',
-        senha: '123dsD',
+        senha: 'Password1!',
       }),
     })
     let data = await login.json()
@@ -54,8 +52,8 @@ describe('teste de login', () => {
       headers: { 'Content-Type': 'application/json' },
 
       body: JSON.stringify({
-        email: 'jaestalo@gadote.com',
-        senha: '123dsD',
+        email: 'jaestalo@ga .com',
+        senha: 'Password1!',
       }),
     })
     let data = await login.json()
@@ -63,7 +61,7 @@ describe('teste de login', () => {
     expect(data.succes).toBeDefined()
     expect(data.succes).toBe(false)
     expect(data.error).toBeDefined()
-    expect(data.error).toEqual('ValidationError: invalid email')
+    expect(data.error).toEqual('invalid email')
     expect(typeof data.error).toEqual('string')
 
     expect(data.type).toBeDefined()
@@ -82,9 +80,7 @@ describe('teste de login', () => {
     expect(data.succes).toBeDefined()
     expect(data.succes).toBe(false)
     expect(data.error).toBeDefined()
-    expect(data.error).toEqual(
-      'ValidationError: invalid password, min 4 carac and with 1 uppercase'
-    )
+    expect(data.error).toEqual('A senha deve ter pelo menos 8 caracteres.')
     console.log(data.error)
 
     expect(data.type).toBeDefined()

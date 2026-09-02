@@ -27,6 +27,7 @@ export async function resetPassword(key, password) {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
       key,

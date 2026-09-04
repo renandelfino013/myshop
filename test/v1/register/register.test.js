@@ -78,7 +78,7 @@ describe('teste register/users', () => {
       }),
     })
     let body = await register.json()
-    expect(register.status).toBe(400)
+    expect(register.status).toBe(409)
     console.error(body.error)
     expect(body).toHaveProperty('error')
   })

@@ -6,8 +6,9 @@ import {
   validateSchemapassword,
 } from "schemas/reset-password./password-reset.schema";
 import { updatepassword } from "services/auth/authservices";
+import { withErrorHandler } from "utils/errors/withErrorHandler";
 
-export default async function handler(req, res) {
+export async function handler(req, res) {
   if (req.method === "POST") {
     let { email } = req.body;
     const data = validatePasswordResetSchema({ email });
@@ -20,18 +21,14 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "PATCH") {
     const { key, newpassword } = req.body;
-    try {
-      const data = validateSchemapassword({ newpassword });
-      let ok = await updatepassword(key, data.newpassword);
-      if (ok) {
-        res
-          .status(200)
-          .json({ sucess: "true", message: "password updated be sucessul!" });
-      }
-    } catch (err) {
-      return res.status(400).json({
-        error: err.message,
-      });
+
+    const data = validateSchemapassword({ newpassword });
+    let ok = await updatepassword(key, data.newpassword);
+    if (ok) {
+      res
+        .status(200)
+        .json({ sucess: "true", message: "password updated be sucessul!" });
     }
   }
 }
+export default withErrorHandler(handler);

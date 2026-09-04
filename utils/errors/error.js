@@ -1,60 +1,69 @@
-class NotFoundError extends Error {
-  constructor(message) {
+export class AppError extends Error {
+  constructor(message, statusCode, code) {
     super(message);
-    this.name = "NotFoundError";
-    this.statusCode = 404;
-  }
-}
-class InsufficientStockError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "InsufficientStockError";
-    this.statusCode = 409;
+    this.statusCode = statusCode;
+    this.code = code;
   }
 }
 
-class ValidationError extends Error {
-  constructor(message, field) {
-    super(message);
-    this.name = "ValidationError";
-    this.field = field;
-    this.statusCode = 400;
+class NotFoundError extends AppError {
+  constructor(details) {
+    super("Not found error", 404, "NOT_FOUND");
+    this.details = details;
   }
 }
-class RegisterError {
-  constructor(field, message) {
-    this.message = message;
-    this.field = field;
-    this.StatusCode = 401;
+export class UnauthorizedError extends AppError {
+  constructor(message = "Invalid or missing authentication token") {
+    super(message, 401, "UNAUTHORIZED");
+  }
+}
+export class EmailAlreadyExistsError extends AppError {
+  constructor(email) {
+    super(`Email ${email} already in use`, 409, "EMAIL_ALREADY_EXISTS");
+  }
+}
+class InsufficientStockError extends AppError {
+  constructor(details) {
+    super("Insufficient stock error", 409, "INSUFFICIENT_STOCK");
+    this.details = details;
   }
 }
 
-class AuthError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "AuthError";
-    this.statusCode = 401;
+class ValidationError extends AppError {
+  constructor(details) {
+    super("Validation error", 400, "VALIDATION_ERROR");
+    this.details = details;
   }
 }
-class SendEmailError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "SendEmailError";
-    this.statusCode = 500;
+class RegisterError extends AppError {
+  constructor(details) {
+    super("Register error", 401, "REGISTER_ERROR");
+    this.details = details;
   }
 }
-class NetworkError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "NetworkError";
-    this.statusCode = 500;
+
+class AuthError extends AppError {
+  constructor(details) {
+    super("Auth error", 401, "AUTH_ERROR");
+    this.details = details;
   }
 }
-class ForbiddenError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ForbiddenError";
-    this.statusCode = 403;
+class SendEmailError extends AppError {
+  constructor(details) {
+    super("Send email error", 500, "SEND_EMAIL_ERROR");
+    this.details = details;
+  }
+}
+class NetworkError extends AppError {
+  constructor(details) {
+    super("Network error", 500, "NETWORK_ERROR");
+    this.details = details;
+  }
+}
+class ForbiddenError extends AppError {
+  constructor(details) {
+    super("Forbidden error", 403, "FORBIDDEN_ERROR");
+    this.details = details;
   }
 }
 

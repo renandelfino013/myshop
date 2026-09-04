@@ -168,7 +168,12 @@ export async function Insertorder(user_id, itens) {
         [item.quantidade, item.produto_id]
       )
       if (stockResult.rows.length === 0) {
-        throw new InsufficientStockError('Insufficient Stock of product!')
+        throw new InsufficientStockError([
+          {
+            field: 'produto_id',
+            message: `Insufficient stock for product ${item.produto_id}`,
+          },
+        ])
       }
 
       await client.query(

@@ -4,8 +4,7 @@ import createuser from 'test/hooks/userfortests'
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `testedeeuse-${Date.now()}@gmail.com`
-  let result = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
-  console.log('result of user creation : ', result)
+  await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
   globalThis.__loginEmailTest = email
 })
 
@@ -21,11 +20,10 @@ describe('teste de login', () => {
       }),
     })
     let data = await login.json()
-    expect(data).toBeDefined()
-    expect(data.token).toBeDefined()
-    expect(data.user).toBeDefined()
-    expect(data.sucess).toBe(true)
-    expect(data.sucess).toBeDefined()
+    expect(data.success).toBeDefined()
+    expect(data.success).toBe(true)
+    expect(data.data.token).toBeDefined()
+    expect(data.message).toBe('successfully logged in')
   })
 
   test('login with incorrects informations', async () => {
@@ -35,15 +33,13 @@ describe('teste de login', () => {
 
       body: JSON.stringify({
         email: 'jaestalogadote@gmail.com',
-        senha: 'Password1!',
+        senha: 'Password142141!',
       }),
     })
     let data = await login.json()
-    console.log(data)
-    expect(data.succes).toBeDefined()
+    expect(data.success).toBeDefined()
     expect(data.error).toBeDefined()
-    expect(data.type).toBeDefined()
-    expect(data.succes).toBe(false)
+    expect(data.success).toBe(false)
   })
 
   test('login with invalid email', async () => {
@@ -57,14 +53,11 @@ describe('teste de login', () => {
       }),
     })
     let data = await login.json()
-    console.log('login with invalid email : ', data)
-    expect(data.succes).toBeDefined()
-    expect(data.succes).toBe(false)
+    expect(data.success).toBe(false)
     expect(data.error).toBeDefined()
-    expect(data.error).toEqual('invalid email')
-    expect(typeof data.error).toEqual('string')
-
-    expect(data.type).toBeDefined()
+    expect(data.error.details).toEqual([
+      { field: 'email', message: 'invalid email' },
+    ])
   })
   test('login with invalid password', async () => {
     const login = await fetch('http://localhost:3000/api/v1/login', {
@@ -77,12 +70,15 @@ describe('teste de login', () => {
       }),
     })
     let data = await login.json()
-    expect(data.succes).toBeDefined()
-    expect(data.succes).toBe(false)
+    expect(data.success).toBe(false)
     expect(data.error).toBeDefined()
-    expect(data.error).toEqual('A senha deve ter pelo menos 8 caracteres.')
-    console.log(data.error)
-
-    expect(data.type).toBeDefined()
+    expect(data.error.details).toEqual(
+      expect.arrayContaining([
+        {
+          field: 'senha',
+          message: 'A senha deve ter pelo menos 8 caracteres.',
+        },
+      ])
+    )
   })
 })

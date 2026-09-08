@@ -33,7 +33,7 @@ describe('teste register/users', () => {
     expect(register.status).toBe(201)
     let respbody = await register.json()
     if (respbody.error) {
-      console.log(respbody.error)
+      console.error(respbody.error)
     }
   })
 
@@ -51,13 +51,8 @@ describe('teste register/users', () => {
       }),
     })
     let body = await register.json()
-    console.log('TEST : create user with incorrect information:', body)
     expect(body).toHaveProperty('error')
     expect(register.status).toBe(400)
-    console.log(
-      'TEST : create user with incorrect information:',
-      register.status
-    )
   })
   afterEach(async () => {
     await cleanuser(email)
@@ -78,7 +73,7 @@ describe('teste register/users', () => {
       }),
     })
     let body = await register.json()
-    expect(register.status).toBe(400)
+    expect(register.status).toBe(409)
     console.error(body.error)
     expect(body).toHaveProperty('error')
   })
@@ -98,6 +93,5 @@ describe('teste register/users', () => {
     let body = await register.json()
     expect(register.status).toBe(400)
     expect(body).toHaveProperty('error')
-    console.log(body.error)
   })
 })

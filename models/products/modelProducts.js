@@ -1,5 +1,5 @@
 import pool from 'infra/database/db'
-import { ValidationError } from 'utils/errors/error'
+import { alreadyExistsError, ValidationError } from 'utils/errors/error'
 
 export async function FindAllProducts() {
   const result = await pool.query('SELECT * FROM produtos')
@@ -38,9 +38,23 @@ export async function Insertproduct(
     return result.rows
   } catch (err) {
     if (err.code === '23505')
-      throw new ValidationError('Product already exists')
+      throw new alreadyExistsError([
+        {
+          field: 'name',
+          message: 'Product already exists',
+        },
+      ])
     if (err.code === '23503')
-      throw new ValidationError('Invalid category or mark')
+      throw new ValidationError([
+        {
+          field: 'category_id',
+          message: 'Invalid category',
+        },
+        {
+          field: 'marca_id',
+          message: 'Invalid mark',
+        },
+      ])
     throw err
   }
 }
@@ -62,9 +76,23 @@ export async function Updateproduct(
     return result.rows
   } catch (err) {
     if (err.code === '23505')
-      throw new ValidationError('Product already exists')
+      throw new alreadyExistsError([
+        {
+          field: 'name',
+          message: 'Product already exists',
+        },
+      ])
     if (err.code === '23503')
-      throw new ValidationError('Invalid category or mark')
+      throw new ValidationError([
+        {
+          field: 'category_id',
+          message: 'Invalid category',
+        },
+        {
+          field: 'marca_id',
+          message: 'Invalid mark',
+        },
+      ])
     throw err
   }
 }

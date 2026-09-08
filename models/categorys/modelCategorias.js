@@ -1,5 +1,5 @@
 import pool from 'infra/database/db'
-import { ValidationError } from 'utils/errors/error'
+import { alreadyExistsError } from 'utils/errors/error'
 export async function FindAllCategorys() {
   const result = await pool.query('SELECT * FROM categorias')
   return result.rows
@@ -25,7 +25,12 @@ export async function InsertNewCategory(name) {
     return result.rows
   } catch (err) {
     if (err.code === '23505') {
-      throw new ValidationError('Category already exists')
+      throw new alreadyExistsError([
+        {
+          field: 'nome',
+          message: 'Category already exists',
+        },
+      ])
     }
     throw err
   }
@@ -39,7 +44,12 @@ export async function updateCategory(id, newname) {
     return result.rows
   } catch (err) {
     if (err.code === '23505') {
-      throw new ValidationError('Category already exists')
+      throw new alreadyExistsError([
+        {
+          field: 'nome',
+          message: 'Category already exists',
+        },
+      ])
     }
     throw err
   }

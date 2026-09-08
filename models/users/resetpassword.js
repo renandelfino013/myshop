@@ -7,6 +7,7 @@ import {
   NetworkError,
   NotFoundError,
   SendEmailError,
+  UnauthorizedError,
   ValidationError,
 } from '../../utils/errors/error'
 dotenv.config()
@@ -66,7 +67,7 @@ export async function validationresettoken(key) {
     return result.rows
   } catch (error) {
     console.error('error on validationresettoken', error)
-    throw new ValidationError('Reset token invalido!!', error)
+    throw new UnauthorizedError('Reset token invalido!!')
   }
 }
 

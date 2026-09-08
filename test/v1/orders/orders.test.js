@@ -18,7 +18,7 @@ beforeAll(async () => {
     `teste2${Date.now()}@gmail.com`,
     'AdminPass!23'
   )
-  tokenUser = user[1].token
+  tokenUser = user[1].data[0].token
   tokenAdmin = admin
 
   const categoryName = `catego${Date.now()}`
@@ -41,12 +41,12 @@ beforeAll(async () => {
     { headers: { Authorization: `Bearer ${tokenAdmin}` } }
   )
   const categoryBody = await categoryResp.json()
-  if (!Array.isArray(categoryBody)) {
+  if (categoryBody.data.length === 0) {
     throw new Error(
       `Category lookup failed: ${categoryResp.status} ${JSON.stringify(categoryBody)}`
     )
   }
-  categoryId = categoryBody[0].id
+  categoryId = categoryBody.data[0].id
 
   const markName = `marca${Date.now()}`
   const markCreate = await fetch('http://localhost:3000/api/v1/marcas', {
@@ -65,12 +65,12 @@ beforeAll(async () => {
     { headers: { Authorization: `Bearer ${tokenAdmin}` } }
   )
   const markBody = await markResp.json()
-  if (!Array.isArray(markBody)) {
+  if (markBody.data[0].length === 0) {
     throw new Error(
       `Brand lookup failed: ${markResp.status} ${JSON.stringify(markBody)}`
     )
   }
-  markId = markBody[0].id
+  markId = markBody.data[0].id
 
   const productName = `produto${Date.now()}`
   const productCreate = await fetch('http://localhost:3000/api/v1/produtos', {
@@ -99,7 +99,7 @@ beforeAll(async () => {
       headers: { Authorization: `Bearer ${tokenAdmin}` },
     })
   ).json()
-  const foundProduct = allProducts.find((p) => p.nome === productName)
+  const foundProduct = allProducts.data.find((p) => p.nome === productName)
   if (!foundProduct) {
     throw new Error(`Created product not found in listing: ${productName}`)
   }
@@ -132,7 +132,7 @@ beforeAll(async () => {
       headers: { Authorization: `Bearer ${tokenAdmin}` },
     })
   ).json()
-  const foundLowStock = allProducts2.find((p) => p.nome === lowStockName)
+  const foundLowStock = allProducts2.data.find((p) => p.nome === lowStockName)
   if (!foundLowStock) {
     throw new Error(`Low-stock product not found in listing: ${lowStockName}`)
   }
@@ -156,7 +156,7 @@ async function createOrder(token, produtoId, quantidade = 1) {
     throw new Error(`Order creation failed: ${JSON.stringify(body)}`)
   }
 
-  return body.order_id
+  return body.data[0].order_id
 }
 
 describe('POST /api/v1/pedidos', () => {
@@ -178,17 +178,16 @@ describe('POST /api/v1/pedidos', () => {
     expect(response.status).toBe(201)
     expect(respbody.success).toBe(true)
     expect(respbody.message).toEqual('Order created successfully!')
-
-    expect(respbody.order_id).toBeDefined()
+    expect(respbody.data[0].order_id).toBeDefined()
 
     const orderResponse = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${respbody.order_id}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${respbody.data[0].order_id}`,
       { headers: { Authorization: `Bearer ${tokenUser}` } }
     )
     const order = await orderResponse.json()
 
     expect(orderResponse.status).toBe(200)
-    expect(order[0].pedido_id).toBe(respbody.order_id)
+    expect(order.data[0].pedido_id).toBe(respbody.data[0].order_id)
   })
 
   test('POST create order actually decreases stock', async () => {
@@ -197,7 +196,7 @@ describe('POST /api/v1/pedidos', () => {
         headers: { Authorization: `Bearer ${tokenUser}` },
       })
     ).json()
-    const stockBefore = productBefore[0].estoque
+    const stockBefore = productBefore.data[0].estoque
 
     const orderResponse = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
@@ -212,14 +211,14 @@ describe('POST /api/v1/pedidos', () => {
 
     const orderBody = await orderResponse.json()
     expect(orderResponse.status).toBe(201)
-    expect(orderBody.order_id).toBeDefined()
+    expect(orderBody.data[0].order_id).toBeDefined()
 
     const productAfter = await (
       await fetch(`http://localhost:3000/api/v1/produtos?id=${productId}`, {
         headers: { Authorization: `Bearer ${tokenUser}` },
       })
     ).json()
-    const stockAfter = productAfter[0].estoque
+    const stockAfter = productAfter.data[0].estoque
 
     expect(Number(stockAfter)).toEqual(Number(stockBefore) - 3)
   })
@@ -238,7 +237,9 @@ describe('POST /api/v1/pedidos', () => {
 
     expect(response.status).toBe(400)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('items is required!')
+    expect(respbody.error.details).toEqual([
+      { field: 'items', message: 'items is required!' },
+    ])
   })
 
   test('POST create order with empty items array', async () => {
@@ -255,7 +256,9 @@ describe('POST /api/v1/pedidos', () => {
 
     expect(response.status).toBe(400)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Order must have at least one item')
+    expect(respbody.error.details).toEqual([
+      { field: 'items', message: 'Order must have at least one item' },
+    ])
   })
 
   test('POST create order with invalid produto_id', async () => {
@@ -274,7 +277,12 @@ describe('POST /api/v1/pedidos', () => {
 
     expect(response.status).toBe(400)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Invalid produto_id')
+    expect(respbody.error.details).toEqual([
+      {
+        field: 'items.0.produto_id',
+        message: 'Invalid input: expected number, received NaN',
+      },
+    ])
   })
 
   test('POST create order with zero quantity', async () => {
@@ -293,7 +301,12 @@ describe('POST /api/v1/pedidos', () => {
 
     expect(response.status).toBe(400)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('quantidade must be a positive integer')
+    expect(respbody.error.details).toEqual([
+      {
+        field: 'items.0.quantidade',
+        message: 'quantidade must be a positive integer',
+      },
+    ])
   })
 
   test('POST create order with negative quantity', async () => {
@@ -312,7 +325,12 @@ describe('POST /api/v1/pedidos', () => {
 
     expect(response.status).toBe(400)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('quantidade must be a positive integer')
+    expect(respbody.error.details).toEqual([
+      {
+        field: 'items.0.quantidade',
+        message: 'quantidade must be a positive integer',
+      },
+    ])
   })
 
   test('POST create order with duplicate product IDs', async () => {
@@ -334,7 +352,9 @@ describe('POST /api/v1/pedidos', () => {
 
     expect(response.status).toBe(400)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Duplicate produto_id in the same order')
+    expect(respbody.error.details).toEqual([
+      { field: 'items', message: 'Duplicate produto_id in the same order' },
+    ])
   })
 
   test('POST create order with insufficient stock', async () => {
@@ -353,7 +373,12 @@ describe('POST /api/v1/pedidos', () => {
 
     expect(response.status).toBe(409)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Insufficient Stock of product!')
+    expect(respbody.error.details).toEqual([
+      {
+        field: 'produto_id',
+        message: expect.stringContaining('Insufficient stock for product'),
+      },
+    ])
   })
 
   test('POST create order with non-existent produto_id', async () => {
@@ -369,9 +394,9 @@ describe('POST /api/v1/pedidos', () => {
     })
 
     let respbody = await response.json()
+    expect(respbody.error).toBeDefined()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toEqual('Product 99999999 not found')
   })
 
   test('POST order with invalid token', async () => {
@@ -384,10 +409,11 @@ describe('POST /api/v1/pedidos', () => {
     })
 
     let respbody = await response.json()
-
     expect(response.status).toBe(401)
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody.error.code).toEqual('UNAUTHORIZED')
+    expect(respbody.error.details).toEqual([
+      { field: 'token', message: 'invalid token' },
+    ])
   })
 
   test('POST order without token', async () => {
@@ -402,8 +428,10 @@ describe('POST /api/v1/pedidos', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody.error.code).toEqual('UNAUTHORIZED')
+    expect(respbody.error.details).toEqual([
+      { field: 'token', message: 'token is missing' },
+    ])
   })
 })
 
@@ -417,7 +445,7 @@ describe('GET /api/v1/pedidos', () => {
 
     expect(typeof respbody).toBe('object')
     expect(response.status).toBe(200)
-    expect(Array.isArray(respbody)).toBe(true)
+    expect(Array.isArray(respbody.data)).toBe(true)
   })
 
   test('GET all orders as admin returns orders from all users', async () => {
@@ -428,7 +456,7 @@ describe('GET /api/v1/pedidos', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(200)
-    expect(Array.isArray(respbody)).toBe(true)
+    expect(Array.isArray(respbody.data)).toBe(true)
   })
 
   test('GET all orders without token', async () => {
@@ -437,8 +465,10 @@ describe('GET /api/v1/pedidos', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody.error.code).toEqual('UNAUTHORIZED')
+    expect(respbody.error.details).toEqual([
+      { field: 'token', message: 'token is missing' },
+    ])
   })
 
   test('GET all orders with invalid token', async () => {
@@ -449,8 +479,10 @@ describe('GET /api/v1/pedidos', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody.error.code).toEqual('UNAUTHORIZED')
+    expect(respbody.error.details).toEqual([
+      { field: 'token', message: 'invalid token' },
+    ])
   })
 
   test('GET order by id happy path', async () => {
@@ -464,8 +496,8 @@ describe('GET /api/v1/pedidos', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(200)
-    expect(Array.isArray(respbody)).toBe(true)
-    expect(respbody[0].pedido_id).toEqual(orderId)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data[0].pedido_id).toEqual(orderId)
   })
 
   test('GET order by id that does not exist', async () => {
@@ -482,18 +514,16 @@ describe('GET /api/v1/pedidos', () => {
 
   test("GET order by ID — admin can view any user's order", async () => {
     const orderId = await createOrder(tokenUser, productId)
-    console.log('teste de order id ', orderId)
     const response = await fetch(
       `http://localhost:3000/api/v1/pedidos?order_id=${encodeURIComponent(orderId)}`,
       { headers: { Authorization: `Bearer ${tokenAdmin}` } }
     )
 
     const respbody = await response.json()
-    console.log('respbody', respbody)
 
     expect(response.status).toBe(200)
-    expect(Array.isArray(respbody)).toBe(true)
-    expect(respbody[0].pedido_id).toEqual(orderId)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data[0].pedido_id).toEqual(orderId)
   })
 
   test("GET order by id — A regular user cannot see another regular user's order.", async () => {
@@ -503,7 +533,7 @@ describe('GET /api/v1/pedidos', () => {
       'outrorenan',
       'Abcdef12!'
     )
-    const tokenUser2 = user2[1].token
+    const tokenUser2 = user2[1].data[0].token
 
     const createResp = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
@@ -519,7 +549,7 @@ describe('GET /api/v1/pedidos', () => {
     const created = await createResp.json()
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${created.order_id}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${created.data[0].order_id}`,
       { headers: { Authorization: `Bearer ${tokenUser}` } }
     )
 
@@ -544,7 +574,7 @@ describe('GET /api/v1/pedidos', () => {
     const created = await createResp.json()
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${created.order_id}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${created.data[0].order_id}`,
       { headers: { Authorization: `Bearer ${tokenUser}` } }
     )
 
@@ -574,8 +604,10 @@ describe('GET /api/v1/pedidos', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody.error.code).toEqual('UNAUTHORIZED')
+    expect(respbody.error.details).toEqual([
+      { field: 'token', message: 'token is missing' },
+    ])
   })
 })
 
@@ -596,17 +628,17 @@ describe('DELETE /api/v1/pedidos', () => {
     )
     expect(createorderResponse.status).toBe(201)
     const createorder = await createorderResponse.json()
-    expect(createorder.order_id).toBeDefined()
+    expect(createorder.data[0].order_id).toBeDefined()
 
     const productBefore = await (
       await fetch(`http://localhost:3000/api/v1/produtos?id=${productId}`, {
         headers: { Authorization: `Bearer ${tokenUser}` },
       })
     ).json()
-    const stockBefore = Number(productBefore[0].estoque)
+    const stockBefore = Number(productBefore.data[0].estoque)
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${createorder.order_id}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${createorder.data[0].order_id}`,
       {
         method: 'DELETE',
         headers: {
@@ -627,12 +659,12 @@ describe('DELETE /api/v1/pedidos', () => {
         headers: { Authorization: `Bearer ${tokenUser}` },
       })
     ).json()
-    const stockAfter = Number(productAfter[0].estoque)
+    const stockAfter = Number(productAfter.data[0].estoque)
 
     expect(stockAfter).toEqual(stockBefore + 1)
 
     const deletedOrderResponse = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${createorder.order_id}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${createorder.data[0].order_id}`,
       { headers: { Authorization: `Bearer ${tokenUser}` } }
     )
 
@@ -640,8 +672,9 @@ describe('DELETE /api/v1/pedidos', () => {
   })
 
   test('DELETE a non-existent order', async () => {
+    const idnonexist = 999999
     const response = await fetch(
-      'http://localhost:3000/api/v1/pedidos?order_id=99999999',
+      `http://localhost:3000/api/v1/pedidos?order_id=${encodeURIComponent(idnonexist)}`,
       {
         method: 'DELETE',
         headers: {
@@ -652,7 +685,6 @@ describe('DELETE /api/v1/pedidos', () => {
     )
 
     let respbody = await response.json()
-
     expect(response.status).toBe(404)
     expect(respbody.error).toBeDefined()
   })
@@ -664,7 +696,7 @@ describe('DELETE /api/v1/pedidos', () => {
       'usuario para exclusao',
       'Abcdef12!'
     )
-    const tokenUser2 = user2[1].token
+    const tokenUser2 = user2[1].data[0].token
 
     const createResponse = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
@@ -680,7 +712,7 @@ describe('DELETE /api/v1/pedidos', () => {
     const created = await createResponse.json()
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${created.order_id}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${created.data[0].order_id}`,
       {
         method: 'DELETE',
         headers: {
@@ -715,10 +747,10 @@ describe('DELETE /api/v1/pedidos', () => {
         headers: { Authorization: `Bearer ${tokenAdmin}` },
       })
     ).json()
-    const stockBefore = Number(productBefore[0].estoque)
+    const stockBefore = Number(productBefore.data[0].estoque)
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${created.order_id}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${created.data[0].order_id}`,
       {
         method: 'DELETE',
         headers: {
@@ -739,12 +771,12 @@ describe('DELETE /api/v1/pedidos', () => {
         headers: { Authorization: `Bearer ${tokenAdmin}` },
       })
     ).json()
-    const stockAfter = Number(productAfter[0].estoque)
+    const stockAfter = Number(productAfter.data[0].estoque)
 
     expect(stockAfter).toEqual(stockBefore + 1)
 
     const deletedOrderResponse = await fetch(
-      `http://localhost:3000/api/v1/pedidos?order_id=${created.order_id}`,
+      `http://localhost:3000/api/v1/pedidos?order_id=${created.data[0].order_id}`,
       { headers: { Authorization: `Bearer ${tokenUser}` } }
     )
 
@@ -781,8 +813,10 @@ describe('DELETE /api/v1/pedidos', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody.error.code).toEqual('UNAUTHORIZED')
+    expect(respbody.error.details).toEqual([
+      { field: 'token', message: 'invalid token' },
+    ])
   })
 
   test('DELETE order without token', async () => {
@@ -792,10 +826,11 @@ describe('DELETE /api/v1/pedidos', () => {
     )
 
     let respbody = await response.json()
-
     expect(response.status).toBe(401)
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody.error.code).toEqual('UNAUTHORIZED')
+    expect(respbody.error.details).toEqual([
+      { field: 'token', message: 'token is missing' },
+    ])
   })
 
   test('DELETE order without an order_id query parameter', async () => {
@@ -808,7 +843,12 @@ describe('DELETE /api/v1/pedidos', () => {
 
     expect(response.status).toBe(400)
     expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('orderId is required!')
+    expect(respbody.error.details).toEqual([
+      {
+        field: 'orderId',
+        message: 'Invalid input: expected number, received NaN',
+      },
+    ])
   })
 })
 

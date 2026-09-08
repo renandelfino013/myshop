@@ -3,6 +3,8 @@ import {
   AuthError,
   NetworkError,
   SendEmailError,
+  EmailAlreadyExistsError,
+  UnauthorizedError,
 } from "utils/errors/error";
 import jwt from "jsonwebtoken";
 import { findEmailUserbyId, finduserbyemail } from "models/users/users";
@@ -44,7 +46,7 @@ export async function login(email, senha) {
         } catch (error) {
           throw new NetworkError("erro ao enviar email de login!", error);
         }
-        return { user, token };
+        return { token };
       } else {
         throw new AuthError("email or password invalid");
       }
@@ -99,11 +101,11 @@ export async function updatepassword(key, newpassword) {
         throw new AuthError("Failed to update password");
       }
     } else {
-      throw new Error("Invalid or expired reset key");
+      throw new UnauthorizedError("Invalid or expired reset key");
     }
   } catch (error) {
     console.error("Error resetting password:", error);
-    throw new Error("Failed to reset password: " + error.message);
+    throw error;
   }
 }
 
@@ -122,6 +124,9 @@ export async function registeruser(nome, email, senha) {
       return token;
     }
   } catch (error) {
+    if (error.code === "23505") {
+      throw new EmailAlreadyExistsError(email);
+    }
     console.error("Error registering user:", error);
     throw error;
   }

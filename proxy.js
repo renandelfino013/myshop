@@ -9,7 +9,7 @@ const redis = Redis.fromEnv()
 const environment = process.env.VERCEL_ENV || 'development'
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(1000, '10 s'),
+  limiter: Ratelimit.slidingWindow(10, '10 s'),
   prefix: `@upstash/ratelimit:${environment}`,
   analytics: true,
 })
@@ -25,7 +25,13 @@ function checkauthorization(request) {
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse(
-        JSON.stringify({ error: 'Unauthorized', message: 'Token is missing' }),
+        JSON.stringify({
+          success: false,
+          error: {
+            code: 'UNAUTHORIZED',
+            details: [{ field: 'token', message: 'token is missing' }],
+          },
+        }),
         {
           status: 401,
           headers: { 'Content-Type': 'application/json' },
@@ -47,8 +53,15 @@ function checkauthorization(request) {
         },
       })
     } catch (error) {
+      console.error('Error verifying token in proxy:', error)
       return new NextResponse(
-        JSON.stringify({ error: 'Unauthorized', message: 'Invalid token' }),
+        JSON.stringify({
+          success: false,
+          error: {
+            code: 'UNAUTHORIZED',
+            details: [{ field: 'token', message: 'invalid token' }],
+          },
+        }),
         {
           status: 401,
           headers: { 'Content-Type': 'application/json' },
@@ -74,7 +87,19 @@ async function checkratelimit(request) {
 
   if (!success) {
     return new NextResponse(
-      JSON.stringify({ error: 'Too Many Requests', limit, remaining }),
+      JSON.stringify({
+        success: false,
+        error: {
+          code: 'TOO_MANY_REQUESTS',
+          details: [
+            {
+              message: 'Rate limit exceeded',
+              limit,
+              remaining,
+            },
+          ],
+        },
+      }),
       {
         status: 429,
         headers: {

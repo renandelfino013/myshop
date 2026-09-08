@@ -63,9 +63,7 @@ export default defineConfig([
   {
     files: ['infra/**/*.js', 'test/**/*.js'],
 
-    rules: {
-      'no-console': 'off',
-    },
+    rules: {},
   },
 
   prettier,

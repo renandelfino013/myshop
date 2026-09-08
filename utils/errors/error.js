@@ -6,7 +6,7 @@ export class AppError extends Error {
   }
 }
 
-class NotFoundError extends AppError {
+export class NotFoundError extends AppError {
   constructor(details) {
     super("Not found error", 404, "NOT_FOUND");
     this.details = details;
@@ -17,63 +17,65 @@ export class UnauthorizedError extends AppError {
     super(message, 401, "UNAUTHORIZED");
   }
 }
+export class alreadyExistsError extends AppError {
+  constructor(details) {
+    super("Already exists error", 409, "ALREADY_EXISTS");
+    this.details = details;
+  }
+}
 export class EmailAlreadyExistsError extends AppError {
   constructor(email) {
     super(`Email ${email} already in use`, 409, "EMAIL_ALREADY_EXISTS");
   }
 }
-class InsufficientStockError extends AppError {
+export class InsufficientStockError extends AppError {
   constructor(details) {
     super("Insufficient stock error", 409, "INSUFFICIENT_STOCK");
     this.details = details;
   }
 }
 
-class ValidationError extends AppError {
+export class ValidationError extends AppError {
   constructor(details) {
     super("Validation error", 400, "VALIDATION_ERROR");
     this.details = details;
   }
 }
-class RegisterError extends AppError {
+export class RegisterError extends AppError {
   constructor(details) {
     super("Register error", 401, "REGISTER_ERROR");
     this.details = details;
   }
 }
 
-class AuthError extends AppError {
+export class AuthError extends AppError {
   constructor(details) {
     super("Auth error", 401, "AUTH_ERROR");
     this.details = details;
   }
 }
-class SendEmailError extends AppError {
+export class SendEmailError extends AppError {
   constructor(details) {
     super("Send email error", 500, "SEND_EMAIL_ERROR");
     this.details = details;
   }
 }
-class NetworkError extends AppError {
+export class NetworkError extends AppError {
   constructor(details) {
     super("Network error", 500, "NETWORK_ERROR");
     this.details = details;
   }
 }
-class ForbiddenError extends AppError {
+export class ForbiddenError extends AppError {
   constructor(details) {
     super("Forbidden error", 403, "FORBIDDEN_ERROR");
     this.details = details;
   }
 }
-
-export {
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-  AuthError,
-  SendEmailError,
-  NetworkError,
-  RegisterError,
-  InsufficientStockError,
-};
+export class methodNotAllowedError extends AppError {
+  export;
+  constructor(details) {
+    super("Method not allowed error", 405, "METHOD_NOT_ALLOWED");
+    this.details = details;
+  }
+}

@@ -29,8 +29,8 @@ test('reset password happy path', async () => {
   expect(response.status).toBe(200)
 
   expect(await response.json()).toEqual({
-    sucess: 'true',
-    message: 'password updated be sucessul!',
+    message: 'password updated successfully',
+    success: true,
   })
 })
 test('reset password with invalid key', async () => {
@@ -47,11 +47,8 @@ test('reset password with invalid key', async () => {
   let body = await response.json()
 
   expect(body.error).toBeDefined()
-  expect(response.status).toBe(400)
-  expect(body.error).toBe(
-    'Failed to reset password: Invalid or expired reset key'
-  )
-  console.log(body, 'status: ', response.status)
+  expect(response.status).toBe(401)
+  expect(body.error.code).toBe('UNAUTHORIZED')
 })
 
 test('reset password with incorrect password', async () => {
@@ -70,16 +67,19 @@ test('reset password with incorrect password', async () => {
 
   expect(body.error).toBeDefined()
   expect(response.status).toBe(400)
-  expect(body.error).toBe('A senha deve ter pelo menos 8 caracteres.')
-  console.log(body, 'status: ', response.status)
+  expect(body.error.details).toEqual(
+    expect.arrayContaining([
+      {
+        field: 'newpassword',
+        message: 'A senha deve ter pelo menos 8 caracteres.',
+      },
+    ])
+  )
 })
 test('used reset key', async () => {
   const response = await resetPassword(twotimeskey, 'AnotherPass123!')
   let body = await response.json()
 
-  expect(response.status).toBe(400)
-  expect(body.error).toBe(
-    'Failed to reset password: Invalid or expired reset key'
-  )
-  console.log(body, 'status: ', response.status)
+  expect(response.status).toBe(401)
+  expect(body.error.code).toBe('UNAUTHORIZED')
 })

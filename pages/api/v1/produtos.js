@@ -10,9 +10,11 @@ import {
   Putproduct,
   removeproduct,
 } from "services/products/products-services";
+import { methodNotAllowedError } from "utils/errors/error";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
+import responseabstration from "utils/response/responseAbstration";
 
-export async function handler(req, res) {
+export async function handler(req) {
   const userId = req.headers["x-user-id"];
   const email = req.headers["x-user-email"];
   const role = req.headers["x-user-role"];
@@ -20,12 +22,12 @@ export async function handler(req, res) {
 
   if (req.method === "GET" && !req.query.id) {
     const products = await GetAllproducts();
-    res.status(200).json(products);
+    return responseabstration(200, "products found", products);
   } else if (req.method === "GET" && req.query.id) {
     const id = req.query.id;
     const data = validateProductsPerIdSchema({ id });
     const product = await GetProductPerId(data.id);
-    res.status(200).json(product);
+    return responseabstration(200, "product found", product);
   } else if (req.method === "POST") {
     const { name, price, stock, categoryId, markId, desc } = req.body;
     const data = validateProductSchema({
@@ -45,9 +47,7 @@ export async function handler(req, res) {
       data.desc,
       role,
     );
-    res
-      .status(201)
-      .json({ success: true, message: "Product created successfully" });
+    return responseabstration(201, "Product created successfully");
   } else if (req.method === "PUT") {
     const { productid, newname, price, stock, categoryId, markId, desc } =
       req.body;
@@ -70,18 +70,20 @@ export async function handler(req, res) {
       data.desc,
       role,
     );
-    res
-      .status(200)
-      .json({ success: true, message: "Product updated successfully" });
+    return responseabstration(200, "Product updated successfully");
   } else if (req.method === "DELETE") {
     const id = req.query.id || req.body?.id;
     const data = validateProductsPerIdSchema({ id });
     await removeproduct(data.id, role);
-    res
-      .status(200)
-      .json({ success: true, message: "Product deleted successfully" });
+
+    return responseabstration(200, "Product deleted successfully");
   } else {
-    res.status(405).json({ error: "Method Not Allowed" });
+    throw new methodNotAllowedError([
+      {
+        field: "method",
+        message: "Method not allowed",
+      },
+    ]);
   }
 }
 

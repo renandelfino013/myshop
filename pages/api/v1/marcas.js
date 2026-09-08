@@ -16,9 +16,10 @@ import {
   validateSchemaPutBrand,
 } from "schemas/brands/brand.schema";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
-
+import { methodNotAllowedError } from "utils/errors/error";
+import responseAbstration from "utils/response/responseAbstration";
 dotenv.config();
-export async function handler(req, res) {
+export async function handler(req) {
   const userId = req.headers["x-user-id"];
   const email = req.headers["x-user-email"];
   const role = req.headers["x-user-role"];
@@ -26,39 +27,38 @@ export async function handler(req, res) {
 
   if (req.method === "GET" && !req.query.id && !req.query.nome) {
     const getbrands = await getallbrands();
-    res.status(200).json(getbrands);
+    return responseAbstration(200, "Brands retrieved successfully", getbrands);
   } else if (req.method === "GET" && req.query.id) {
     const { id } = req.query;
     const data = validateSchemaGetperIdBrand({ id });
     const brand = await getbrandbyid(data.id);
-    res.status(200).json(brand);
+    return responseAbstration(200, "Brand retrieved successfully", brand);
   } else if (req.method === "GET" && req.query.nome) {
     const { nome } = req.query;
     const data = validateSchemaGetperNameBrand({ nome });
     const brand = await getbrandbyname(data.nome);
-    res.status(200).json(brand);
+    return responseAbstration(200, "Brand retrieved successfully", brand);
   } else if (req.method === "POST") {
     const data = validateSchemaPostBrand({ nome: req.body.nome });
     await createbrand(data.nome, role);
-    res
-      .status(201)
-      .json({ success: true, message: "Brand sucessfully created" });
+    return responseAbstration(201, "Brand sucessfully created");
   } else if (req.method == "PATCH") {
     const { brandname, newname } = req.body;
     const data = validateSchemaPutBrand({ brandname, newname });
     await renameBrand(data.brandname, data.newname, role);
-    res
-      .status(200)
-      .json({ success: true, message: "Brand sucessfully updated" });
+    return responseAbstration(200, "brand successfully updated");
   } else if (req.method === "DELETE") {
     const { name } = req.body;
     const data = validateSchemaDeleteBrand({ name });
     await removebrand(data.name, role);
-    res
-      .status(200)
-      .json({ success: true, message: "Brand sucessfully deleted" });
+    return responseAbstration(200, `brand successfully deleted`);
   } else {
-    res.status(405).json({ error: "Method Not Allowed" });
+    throw new methodNotAllowedError([
+      {
+        field: "method",
+        message: "Method not allowed",
+      },
+    ]);
   }
 }
 

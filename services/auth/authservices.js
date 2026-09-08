@@ -46,7 +46,7 @@ export async function login(email, senha) {
         } catch (error) {
           throw new NetworkError("erro ao enviar email de login!", error);
         }
-        return { user, token };
+        return { token };
       } else {
         throw new AuthError("email or password invalid");
       }
@@ -105,7 +105,7 @@ export async function updatepassword(key, newpassword) {
     }
   } catch (error) {
     console.error("Error resetting password:", error);
-    throw new Error("Failed to reset password: " + error.message);
+    throw error;
   }
 }
 

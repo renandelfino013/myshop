@@ -33,7 +33,7 @@ beforeAll(async () => {
     'product user',
     'Abcdef12!'
   )
-  tokenUser = user[1].token
+  tokenUser = user[1].data[0].token
   tokenAdmin = await userRoleAdmin(
     'product admin',
     `product-admin-${Date.now()}@gmail.com`,
@@ -53,8 +53,10 @@ beforeAll(async () => {
     `${apiUrl}/marcas?nome=${encodeURIComponent(markName)}`,
     { headers: headers(tokenUser) }
   )
-  categoryId = (await categoryResponse.json())[0].id
-  markId = (await brandResponse.json())[0].id
+  const brandbody = await brandResponse.json()
+  const categorybody = await categoryResponse.json()
+  categoryId = categorybody.data[0].id
+  markId = brandbody.data[0].id
 
   const productName = `Fixture product ${Date.now()}`
   const productResponse = await fetch(`${apiUrl}/produtos`, {
@@ -80,7 +82,7 @@ beforeAll(async () => {
     headers: headers(tokenUser),
   })
   const products = await productsResponse.json()
-  productId = products.find((product) => product.nome === productName).id
+  productId = products.data.find((product) => product.nome === productName).id
 })
 
 describe('GET api/v1/produtos', () => {
@@ -91,7 +93,7 @@ describe('GET api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(200)
-    expect(Array.isArray(body)).toBe(true)
+    expect(Array.isArray(body.data)).toBe(true)
   })
 
   test('GET product by id', async () => {
@@ -101,7 +103,7 @@ describe('GET api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(200)
-    expect(body[0].id).toBe(productId)
+    expect(body.data[0].id).toBe(productId)
   })
 
   test('GET product that does not exist', async () => {
@@ -111,7 +113,8 @@ describe('GET api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(404)
-    expect(body.error).toBe('Product not found!')
+    expect(body.error.details[0].message).toBe('Product not found!')
+    expect(body.error.details[0].field).toBe('product')
   })
 
   test('GET without token', async () => {
@@ -119,8 +122,10 @@ describe('GET api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(401)
-    expect(body.error).toBe('Unauthorized')
-    expect(body.message).toBe('Token is missing')
+    expect(body.error).toBeDefined()
+    expect(body.error.code).toBe('UNAUTHORIZED')
+    expect(body.error.details[0].field).toBe('token')
+    expect(body.error.details[0].message).toBe('token is missing')
   })
 
   test('GET with invalid token', async () => {
@@ -130,15 +135,20 @@ describe('GET api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(401)
-    expect(body).toEqual({ error: 'Unauthorized', message: 'Invalid token' })
+    expect(body.error).toBeDefined()
+    expect(body.error.code).toBe('UNAUTHORIZED')
+    expect(body.error.details[0].field).toBe('token')
+    expect(body.error.details[0].message).toBe('invalid token')
   })
 
   test('GET by id without token', async () => {
     const response = await fetch(`${apiUrl}/produtos?id=${productId}`)
     const body = await response.json()
-
     expect(response.status).toBe(401)
-    expect(body.error).toBe('Unauthorized')
+    expect(body.error).toBeDefined()
+    expect(body.error.code).toBe('UNAUTHORIZED')
+    expect(body.error.details[0].field).toBe('token')
+    expect(body.error.details[0].message).toBe('token is missing')
   })
 })
 
@@ -172,7 +182,7 @@ describe('POST api/v1/produtos', () => {
       headers: headers(tokenUser),
     })
     const products = await listResponse.json()
-    productId = products.find((product) => product.nome === name).id
+    productId = products.data.find((product) => product.nome === name).id
   })
 
   test.each([
@@ -209,7 +219,10 @@ describe('POST api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(400)
-    expect(body.error).toBe('Invalid category or mark')
+    expect(body.error.details[0].field).toBe('category_id')
+    expect(body.error.details[0].message).toBe('Invalid category')
+    expect(body.error.details[1].field).toBe('marca_id')
+    expect(body.error.details[1].message).toBe('Invalid mark')
   })
 
   test('POST rejects an unknown mark', async () => {
@@ -221,7 +234,10 @@ describe('POST api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(400)
-    expect(body.error).toBe('Invalid category or mark')
+    expect(body.error.details[0].field).toBe('category_id')
+    expect(body.error.details[0].message).toBe('Invalid category')
+    expect(body.error.details[1].field).toBe('marca_id')
+    expect(body.error.details[1].message).toBe('Invalid mark')
   })
 
   test('POST with user token is forbidden', async () => {
@@ -240,7 +256,9 @@ describe('POST api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(403)
-    expect(body.error).toBe('User does not have permission to create')
+    expect(body.error.details).toEqual([
+      { field: 'role', message: 'User does not have permission to create' },
+    ])
   })
 
   test('POST without token is unauthorized', async () => {
@@ -252,7 +270,10 @@ describe('POST api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(401)
-    expect(body.message).toBe('Token is missing')
+    expect(body.error).toBeDefined()
+    expect(body.error.code).toBe('UNAUTHORIZED')
+    expect(body.error.details[0].field).toBe('token')
+    expect(body.error.details[0].message).toBe('token is missing')
   })
 })
 
@@ -298,7 +319,9 @@ describe('PUT api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(404)
-    expect(body.error).toBe('Product not found!')
+    expect(body.error.details).toEqual([
+      { field: 'product', message: 'Product not found!' },
+    ])
   })
 
   test.each([
@@ -342,7 +365,9 @@ describe('PUT api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(403)
-    expect(body.error).toBe('User does not have permission to modify')
+    expect(body.error.details).toEqual([
+      { field: 'role', message: 'User does not have permission to modify' },
+    ])
   })
 
   test('PUT without token is unauthorized', async () => {
@@ -354,7 +379,10 @@ describe('PUT api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(401)
-    expect(body.message).toBe('Token is missing')
+    expect(body.error).toBeDefined()
+    expect(body.error.code).toBe('UNAUTHORIZED')
+    expect(body.error.details[0].field).toBe('token')
+    expect(body.error.details[0].message).toBe('token is missing')
   })
 })
 
@@ -381,7 +409,12 @@ describe('DELETE api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(400)
-    expect(body.error).toBe('id is required')
+    expect(body.error.details).toEqual([
+      {
+        field: 'id',
+        message: 'Invalid input: expected number, received NaN',
+      },
+    ])
   })
 
   test('DELETE accepts the id in the request body', async () => {
@@ -404,7 +437,7 @@ describe('DELETE api/v1/produtos', () => {
       headers: headers(tokenUser),
     })
     const products = await productsResponse.json()
-    const bodyProductId = products.find((item) => item.nome === product).id
+    const bodyProductId = products.data.find((item) => item.nome === product).id
 
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'DELETE',
@@ -423,7 +456,9 @@ describe('DELETE api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(404)
-    expect(body.error).toBe('Product not found!')
+    expect(body.error.details).toEqual([
+      { field: 'product', message: 'Product not found!' },
+    ])
   })
 
   test('DELETE with user token is forbidden', async () => {
@@ -434,7 +469,9 @@ describe('DELETE api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(403)
-    expect(body.error).toBe('User does not have permission to delete')
+    expect(body.error.details).toEqual([
+      { field: 'role', message: 'User does not have permission to delete' },
+    ])
   })
 
   test('DELETE without token is unauthorized', async () => {
@@ -444,7 +481,11 @@ describe('DELETE api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(401)
-    expect(body.message).toBe('Token is missing')
+    expect(body.error).toBeDefined()
+    expect(body.error.code).toBe('UNAUTHORIZED')
+    expect(body.error.details[0].field).toBe('token')
+    expect(body.error.details[0].message).toBe('token is missing')
+    console.error(body.error)
   })
 })
 
@@ -457,6 +498,9 @@ describe('Unsupported methods api/v1/produtos', () => {
     const body = await response.json()
 
     expect(response.status).toBe(405)
-    expect(body.error).toBe('Method Not Allowed')
+    expect(body.error.code).toBe('METHOD_NOT_ALLOWED')
+    expect(body.error.details).toEqual([
+      { field: 'method', message: 'Method not allowed' },
+    ])
   })
 })

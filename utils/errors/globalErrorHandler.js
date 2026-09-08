@@ -11,7 +11,7 @@ export default function handleError(err, res) {
     });
   }
 
-  console.error(err);
+  console.error("error 500 ", err);
   return res.status(500).json({
     success: false,
     error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" },

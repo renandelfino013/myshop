@@ -17,9 +17,8 @@ beforeAll(async () => {
     `teste2${Date.now()}@gmail.com`,
     'AdminPass!23'
   )
-  tokenUser = user[1].token
+  tokenUser = user[1].data[0].token
   tokenAdmin = admin
-  console.log('teste do tkadmin ', tokenAdmin)
 })
 
 describe('POST api/v1/categorias', () => {
@@ -37,14 +36,12 @@ describe('POST api/v1/categorias', () => {
       }),
     })
 
-    let respbody = await response.json()
-    if (respbody.error) {
-      console.log(respbody)
-    }
-    expect(typeof respbody).toBe('object')
+    const respbody = await response.json()
     expect(response.status).toBe(201)
-    expect(respbody.success).toBe(true)
-    expect(respbody.message).toEqual('Category sucessfully created')
+    expect(respbody).toEqual({
+      success: true,
+      message: 'Category created successfully',
+    })
   })
 
   test('POST create with invalid name', async () => {
@@ -59,9 +56,20 @@ describe('POST api/v1/categorias', () => {
       }),
     })
 
-    let respbody = await response.json()
-    expect(typeof respbody).toBe('object')
+    const respbody = await response.json()
     expect(response.status).toBe(400)
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'nome',
+            message: 'Name contains invalid characters.',
+          },
+        ],
+      },
+    })
   })
 
   test('POST with user token', async () => {
@@ -76,11 +84,20 @@ describe('POST api/v1/categorias', () => {
       }),
     })
 
-    let respbody = await response.json()
-    expect(typeof respbody).toBe('object')
+    const respbody = await response.json()
     expect(response.status).toBe(403)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('User does not have permission to create')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'FORBIDDEN_ERROR',
+        details: [
+          {
+            field: 'role',
+            message: 'User does not have permission to create',
+          },
+        ],
+      },
+    })
   })
 
   test('POST category with invalid token', async () => {
@@ -92,12 +109,20 @@ describe('POST api/v1/categorias', () => {
       },
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [
+          {
+            field: 'token',
+            message: 'invalid token',
+          },
+        ],
+      },
+    })
   })
 
   test('POST category whithout token', async () => {
@@ -111,12 +136,20 @@ describe('POST api/v1/categorias', () => {
       }),
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [
+          {
+            field: 'token',
+            message: 'token is missing',
+          },
+        ],
+      },
+    })
   })
 })
 
@@ -131,9 +164,8 @@ describe('GET api/v1/categorias', () => {
     })
 
     let respbody = await response.json()
-    expect(typeof respbody).toBe('object')
     expect(response.status).toBe(200)
-    expect(respbody.length).toBeGreaterThanOrEqual(0)
+    expect(respbody.data.length).toBeGreaterThanOrEqual(0)
   })
 
   test('GET all categories whithout token', async () => {
@@ -144,12 +176,20 @@ describe('GET api/v1/categorias', () => {
       },
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [
+          {
+            field: 'token',
+            message: 'token is missing',
+          },
+        ],
+      },
+    })
   })
 
   test('GET all categories with invalid token', async () => {
@@ -161,14 +201,23 @@ describe('GET api/v1/categorias', () => {
       },
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [
+          {
+            field: 'token',
+            message: 'invalid token',
+          },
+        ],
+      },
+    })
   })
 })
+
 let createdName = ''
 let createdId = ''
 describe('GET api/v1/categorias by id or nome', () => {
@@ -194,7 +243,7 @@ describe('GET api/v1/categorias by id or nome', () => {
       }
     )
     const body = await response.json()
-    createdId = body[0].id
+    createdId = body.data[0].id
   })
 
   test('GET category by nome happy path', async () => {
@@ -212,8 +261,7 @@ describe('GET api/v1/categorias by id or nome', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(200)
-    expect(Array.isArray(respbody)).toBe(true)
-    expect(respbody[0].nome).toEqual(createdName)
+    expect(respbody.data[0].nome).toEqual(createdName)
   })
 
   test('GET category by nome that does not exist', async () => {
@@ -228,10 +276,21 @@ describe('GET api/v1/categorias by id or nome', () => {
       }
     )
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        details: [
+          {
+            field: 'category',
+            message: 'Category not found!',
+          },
+        ],
+      },
+    })
   })
 
   test('GET category by id happy path', async () => {
@@ -249,8 +308,7 @@ describe('GET api/v1/categorias by id or nome', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(200)
-    expect(Array.isArray(respbody)).toBe(true)
-    expect(respbody[0].id).toEqual(createdId)
+    expect(respbody.data[0].id).toEqual(createdId)
   })
 
   test('GET category by id that does not exist', async () => {
@@ -265,10 +323,21 @@ describe('GET api/v1/categorias by id or nome', () => {
       }
     )
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        details: [
+          {
+            field: 'category',
+            message: 'Category not found!',
+          },
+        ],
+      },
+    })
   })
 
   test('GET category by id/nome without token', async () => {
@@ -283,13 +352,21 @@ describe('GET api/v1/categorias by id or nome', () => {
       }
     )
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [
+          {
+            field: 'token',
+            message: 'token is missing',
+          },
+        ],
+      },
+    })
   })
 
   test('GET category by id with invalid format', async () => {
@@ -304,10 +381,20 @@ describe('GET api/v1/categorias by id or nome', () => {
       }
     )
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Invalid id format')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'id',
+            message: 'Invalid input: expected number, received NaN',
+          },
+        ],
+      },
+    })
   })
 })
 
@@ -328,12 +415,12 @@ describe('PUT api/v1/categorias', () => {
     })
 
     namecategory = nameupdated
-    let respbody = await response.json()
-
-    expect(typeof respbody).toBe('object')
+    const respbody = await response.json()
     expect(response.status).toBe(200)
-    expect(respbody.success).toBe(true)
-    expect(respbody.message).toEqual('Category sucessfully updated')
+    expect(respbody).toEqual({
+      success: true,
+      message: 'Category updated successfully',
+    })
   })
 
   test('PUT with invalid token', async () => {
@@ -349,13 +436,21 @@ describe('PUT api/v1/categorias', () => {
       }),
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [
+          {
+            field: 'token',
+            message: 'invalid token',
+          },
+        ],
+      },
+    })
   })
 
   test('PUT without token', async () => {
@@ -371,13 +466,21 @@ describe('PUT api/v1/categorias', () => {
       }),
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [
+          {
+            field: 'token',
+            message: 'token is missing',
+          },
+        ],
+      },
+    })
   })
 
   test('PUT with user token (forbidden)', async () => {
@@ -393,11 +496,21 @@ describe('PUT api/v1/categorias', () => {
       }),
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(403)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('User does not have permission to update')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'FORBIDDEN_ERROR',
+        details: [
+          {
+            field: 'role',
+            message: 'User does not have permission to update',
+          },
+        ],
+      },
+    })
   })
 
   test('PUT with invalid novonome (regex)', async () => {
@@ -413,10 +526,21 @@ describe('PUT api/v1/categorias', () => {
       }),
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'novonome',
+            message: 'Name contains invalid characters.',
+          },
+        ],
+      },
+    })
   })
 
   test('PUT to a name that already exists', async () => {
@@ -442,8 +566,7 @@ describe('PUT api/v1/categorias', () => {
       }
     )
     const getb = await get.json()
-    console.log('teste do teste', getb[0].id)
-    const id = getb[0].id
+    const id = getb.data[0].id
 
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'PUT',
@@ -458,13 +581,20 @@ describe('PUT api/v1/categorias', () => {
     })
 
     let respbody = await response.json()
-    if (respbody.error) {
-      console.error(respbody)
-    }
 
-    expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Category already exists')
+    expect(response.status).toBe(409)
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'ALREADY_EXISTS',
+        details: [
+          {
+            field: 'nome',
+            message: 'Category already exists',
+          },
+        ],
+      },
+    })
   })
 
   test('PUT category that does not exist', async () => {
@@ -483,7 +613,18 @@ describe('PUT api/v1/categorias', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        details: [
+          {
+            field: 'category',
+            message: 'Category not found!',
+          },
+        ],
+      },
+    })
   })
 
   test('PUT without id or novonome in body', async () => {
@@ -499,7 +640,22 @@ describe('PUT api/v1/categorias', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'id',
+            message: 'Invalid input: expected number, received NaN',
+          },
+          {
+            field: 'novonome',
+            message: 'Invalid input: expected string, received undefined',
+          },
+        ],
+      },
+    })
   })
 })
 
@@ -525,10 +681,9 @@ describe('DELETE api/v1/categorias', () => {
       }
     )
     const s = await searchResponse.json()
-    console.log(s)
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/categorias?id=${s[0].id}`,
+      `http://localhost:3000/api/v1/categorias?id=${s.data[0].id}`,
       {
         method: 'DELETE',
         headers: {
@@ -538,15 +693,12 @@ describe('DELETE api/v1/categorias', () => {
       }
     )
 
-    let respbody = await response.json()
-    if (respbody.error) {
-      console.error(respbody)
-    }
-
-    expect(typeof respbody).toBe('object')
+    const respbody = await response.json()
     expect(response.status).toBe(200)
-    expect(respbody.success).toBe(true)
-    expect(respbody.message).toEqual('Category deleted')
+    expect(respbody).toEqual({
+      success: true,
+      message: 'Category deleted successfully',
+    })
   })
 
   test('DELETE category that does not exist', async () => {
@@ -564,7 +716,18 @@ describe('DELETE api/v1/categorias', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        details: [
+          {
+            field: 'category',
+            message: 'Category not found!',
+          },
+        ],
+      },
+    })
   })
 
   test('DELETE with user token (forbidden)', async () => {
@@ -584,7 +747,7 @@ describe('DELETE api/v1/categorias', () => {
     const s = await searchResponse.json()
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/categorias?id=${s[0].id}`,
+      `http://localhost:3000/api/v1/categorias?id=${s.data[0].id}`,
       {
         method: 'DELETE',
         headers: {
@@ -597,8 +760,18 @@ describe('DELETE api/v1/categorias', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(403)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('User does not have permission to remove')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'FORBIDDEN_ERROR',
+        details: [
+          {
+            field: 'role',
+            message: 'User does not have permission to remove',
+          },
+        ],
+      },
+    })
   })
 
   test('DELETE with invalid token', async () => {
@@ -613,13 +786,16 @@ describe('DELETE api/v1/categorias', () => {
       }
     )
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'invalid token' }],
+      },
+    })
   })
 
   test('DELETE without token', async () => {
@@ -633,13 +809,16 @@ describe('DELETE api/v1/categorias', () => {
       }
     )
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'token is missing' }],
+      },
+    })
   })
 
   test('DELETE without id in query', async () => {
@@ -654,6 +833,17 @@ describe('DELETE api/v1/categorias', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'id',
+            message: 'Invalid input: expected number, received NaN',
+          },
+        ],
+      },
+    })
   })
 })

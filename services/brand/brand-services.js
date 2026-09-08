@@ -6,16 +6,14 @@ import {
   updatebrand,
   deletebrand,
 } from "models/marcas/marcas";
-import { ValidationError } from "utils/errors/error";
+import alreadyExist from "utils/helper/alreadyExist";
 import assertFound from "utils/helper/assertFound";
 import verifyuserRole from "utils/validators/verifyuserRole";
 
 export async function getallbrands() {
-  try {
-    return await FindAllBrands();
-  } catch (error) {
-    throw new Error("Error fetching brands: " + error.message);
-  }
+  const brands = await FindAllBrands();
+  assertFound(brands, "Brands");
+  return brands;
 }
 
 export async function getbrandbyid(id) {
@@ -38,9 +36,7 @@ export async function createbrand(name, role) {
 
 async function createabrandvalidation(name) {
   const existingBrand = await FindBrandByName(name);
-  if (existingBrand.length > 0) {
-    throw new ValidationError("Brand already exists", "Brand");
-  }
+  alreadyExist(existingBrand, "Brand");
   return null;
 }
 export async function renameBrand(brandname, newname, role) {

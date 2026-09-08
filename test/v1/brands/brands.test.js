@@ -14,7 +14,7 @@ beforeAll(async () => {
     `teste2${Date.now()}@gmail.com`,
     'AdminPass!23'
   )
-  tokenUser = user[1].token
+  tokenUser = user[1].data[0].token
   tokenAdmin = admin
 })
 describe('POST api/v1/marcas', () => {
@@ -32,14 +32,12 @@ describe('POST api/v1/marcas', () => {
       }),
     })
 
-    let respbody = await response.json()
-    if (respbody.error) {
-      console.log(respbody)
-    }
-    expect(typeof respbody).toBe('object')
+    const respbody = await response.json()
     expect(response.status).toBe(201)
-    expect(respbody.success).toBe(true)
-    expect(respbody.message).toEqual('Brand sucessfully created')
+    expect(respbody).toEqual({
+      success: true,
+      message: 'Brand sucessfully created',
+    })
   })
   test('POST create with invalid name', async () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
@@ -53,9 +51,20 @@ describe('POST api/v1/marcas', () => {
       }),
     })
 
-    let respbody = await response.json()
-    expect(typeof respbody).toBe('object')
+    const respbody = await response.json()
     expect(response.status).toBe(400)
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'nome',
+            message: 'Name contains invalid characters.',
+          },
+        ],
+      },
+    })
   })
   test('POST with user token', async () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
@@ -69,11 +78,20 @@ describe('POST api/v1/marcas', () => {
       }),
     })
 
-    let respbody = await response.json()
-    expect(typeof respbody).toBe('object')
+    const respbody = await response.json()
     expect(response.status).toBe(403)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('User does not have permission to create')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'FORBIDDEN_ERROR',
+        details: [
+          {
+            field: 'role',
+            message: 'User does not have permission to create',
+          },
+        ],
+      },
+    })
   })
   test('POST brand with invalid token', async () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
@@ -85,12 +103,15 @@ describe('POST api/v1/marcas', () => {
       },
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'invalid token' }],
+      },
+    })
   })
 
   test('POST brand whithout token', async () => {
@@ -104,12 +125,15 @@ describe('POST api/v1/marcas', () => {
       }),
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'token is missing' }],
+      },
+    })
   })
 })
 
@@ -126,7 +150,8 @@ describe('GET api/v1/marcas', () => {
     let respbody = await response.json()
     expect(typeof respbody).toBe('object')
     expect(response.status).toBe(200)
-    expect(respbody.length).toBeGreaterThanOrEqual(0)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data.length).toBeGreaterThanOrEqual(0)
   })
   test('GET all brand whithout token', async () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
@@ -136,12 +161,15 @@ describe('GET api/v1/marcas', () => {
       },
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'token is missing' }],
+      },
+    })
   })
 
   test('GET all brand with invalid token', async () => {
@@ -154,12 +182,15 @@ describe('GET api/v1/marcas', () => {
       },
     })
 
-    let respbody = await response.json()
+    const respbody = await response.json()
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'invalid token' }],
+      },
+    })
   })
 })
 describe('GET api/v1/marcas by id or nome', () => {
@@ -188,7 +219,7 @@ describe('GET api/v1/marcas by id or nome', () => {
       }
     )
     const body = await response.json()
-    createdId = body[0].id
+    createdId = body.data[0].id
   })
 
   test('GET brand by nome happy path', async () => {
@@ -206,8 +237,8 @@ describe('GET api/v1/marcas by id or nome', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(200)
-    expect(Array.isArray(respbody)).toBe(true)
-    expect(respbody[0].nome).toEqual(createdName)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data[0].nome).toEqual(createdName)
   })
 
   test('GET brand by nome that does not exist', async () => {
@@ -225,7 +256,18 @@ describe('GET api/v1/marcas by id or nome', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        details: [
+          {
+            field: 'brand',
+            message: 'Brand not found!',
+          },
+        ],
+      },
+    })
   })
 
   test('GET brand by id happy path', async () => {
@@ -243,8 +285,8 @@ describe('GET api/v1/marcas by id or nome', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(200)
-    expect(Array.isArray(respbody)).toBe(true)
-    expect(respbody[0].id).toEqual(createdId)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data[0].id).toEqual(createdId)
   })
 
   test('GET brand by id that does not exist', async () => {
@@ -262,7 +304,18 @@ describe('GET api/v1/marcas by id or nome', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        details: [
+          {
+            field: 'brand',
+            message: 'Brand not found!',
+          },
+        ],
+      },
+    })
   })
 
   test('GET brand by id/nome without token', async () => {
@@ -276,13 +329,16 @@ describe('GET api/v1/marcas by id or nome', () => {
       }
     )
 
-    let respbody = await response.json()
+    const respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'token is missing' }],
+      },
+    })
   })
   test('GET brand by id with invalid format', async () => {
     const response = await fetch(
@@ -297,10 +353,19 @@ describe('GET api/v1/marcas by id or nome', () => {
     )
 
     let respbody = await response.json()
-    console.log(respbody)
     expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Invalid id format')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'id',
+            message: 'Invalid input: expected number, received NaN',
+          },
+        ],
+      },
+    })
   })
 })
 describe('PATCH api/v1/marcas', () => {
@@ -321,10 +386,11 @@ describe('PATCH api/v1/marcas', () => {
     namebrand = nameupdated
     let respbody = await response.json()
 
-    expect(typeof respbody).toBe('object')
     expect(response.status).toBe(200)
-    expect(respbody.success).toBe(true)
-    expect(respbody.message).toEqual('Brand sucessfully updated')
+    expect(respbody).toEqual({
+      success: true,
+      message: 'brand successfully updated',
+    })
   })
   test('PATCH with invalid token', async () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
@@ -338,14 +404,16 @@ describe('PATCH api/v1/marcas', () => {
         newname: `test${Date.now()}`,
       }),
     })
-    console.log(await response)
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'invalid token' }],
+      },
+    })
   })
   test('PATCH without token', async () => {
     nameupdated = `teste${Date.now()}`
@@ -359,14 +427,16 @@ describe('PATCH api/v1/marcas', () => {
         newname: `${nameupdated}`,
       }),
     })
-    console.log(await response)
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'token is missing' }],
+      },
+    })
   })
   test('PATCH with user token (forbidden)', async () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
@@ -384,8 +454,18 @@ describe('PATCH api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(403)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('User does not have permission to rename')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'FORBIDDEN_ERROR',
+        details: [
+          {
+            field: 'role',
+            message: 'User does not have permission to rename',
+          },
+        ],
+      },
+    })
   })
 
   test('PATCH with invalid newname (regex)', async () => {
@@ -404,7 +484,18 @@ describe('PATCH api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'newname',
+            message: 'Name contains invalid characters.',
+          },
+        ],
+      },
+    })
   })
 
   test('PATCH to a name that already exists', async () => {
@@ -433,9 +524,19 @@ describe('PATCH api/v1/marcas', () => {
 
     let respbody = await response.json()
 
-    expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Brand already exists')
+    expect(response.status).toBe(409)
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'ALREADY_EXISTS',
+        details: [
+          {
+            field: 'brand',
+            message: 'Brand already exists!',
+          },
+        ],
+      },
+    })
   })
 
   test('PATCH brand that does not exist', async () => {
@@ -454,7 +555,18 @@ describe('PATCH api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        details: [
+          {
+            field: 'brand',
+            message: 'Brand not found!',
+          },
+        ],
+      },
+    })
   })
 
   test('PATCH without brandname or newname in body', async () => {
@@ -470,7 +582,22 @@ describe('PATCH api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'brandname',
+            message: 'Invalid input: expected string, received undefined',
+          },
+          {
+            field: 'newname',
+            message: 'Invalid input: expected string, received undefined',
+          },
+        ],
+      },
+    })
   })
 })
 describe('DELETE api/v1/marcas', () => {
@@ -488,10 +615,11 @@ describe('DELETE api/v1/marcas', () => {
 
     let respbody = await response.json()
 
-    expect(typeof respbody).toBe('object')
     expect(response.status).toBe(200)
-    expect(respbody.success).toBe(true)
-    expect(respbody.message).toEqual('Brand sucessfully deleted')
+    expect(respbody).toEqual({
+      success: true,
+      message: 'brand successfully deleted',
+    })
   })
 
   test('DELETE brand that does not exist', async () => {
@@ -509,7 +637,18 @@ describe('DELETE api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(404)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        details: [
+          {
+            field: 'brand',
+            message: 'Brand not found!',
+          },
+        ],
+      },
+    })
   })
 
   test('DELETE with user token (forbidden)', async () => {
@@ -527,8 +666,18 @@ describe('DELETE api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(403)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('User does not have permission to remove')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'FORBIDDEN_ERROR',
+        details: [
+          {
+            field: 'role',
+            message: 'User does not have permission to remove',
+          },
+        ],
+      },
+    })
   })
 
   test('DELETE with invalid token', async () => {
@@ -546,10 +695,13 @@ describe('DELETE api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Invalid token')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'invalid token' }],
+      },
+    })
   })
 
   test('DELETE without token', async () => {
@@ -566,10 +718,13 @@ describe('DELETE api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(401)
-    expect(respbody.error).toBeDefined()
-    expect(respbody.error).toEqual('Unauthorized')
-    expect(respbody.message).toBeDefined()
-    expect(respbody.message).toEqual('Token is missing')
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'token is missing' }],
+      },
+    })
   })
 
   test('DELETE without name in body', async () => {
@@ -585,6 +740,17 @@ describe('DELETE api/v1/marcas', () => {
     let respbody = await response.json()
 
     expect(response.status).toBe(400)
-    expect(respbody.error).toBeDefined()
+    expect(respbody).toEqual({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [
+          {
+            field: 'name',
+            message: 'Invalid input: expected string, received undefined',
+          },
+        ],
+      },
+    })
   })
 })

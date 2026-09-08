@@ -151,7 +151,12 @@ export async function Insertorder(user_id, itens) {
     const itenswithprice = ordenadeditens.map((item) => {
       const produto = productPerId.get(item.produto_id)
       if (!produto) {
-        throw new NotFoundError(`Product ${item.produto_id} not found`)
+        throw new NotFoundError([
+          {
+            field: 'produto_id',
+            message: `Product ${item.produto_id} not found`,
+          },
+        ])
       }
       return { ...item, preco: produto.preco }
     })
@@ -197,7 +202,12 @@ export async function DeleteOrder(user_id, order_id) {
     await client.query('BEGIN')
     const order = await FindOrderPerId(order_id, user_id, client)
     if (order.length === 0) {
-      throw new NotFoundError('Order not found!')
+      throw new NotFoundError([
+        {
+          field: 'order_id',
+          message: 'Order not found!',
+        },
+      ])
     }
     await Promise.all(
       order.map((item) =>
@@ -235,7 +245,12 @@ export async function DeleteorderAdmin(order_id) {
     await client.query('BEGIN')
     const order = await FindOrderPerIdAdmin(order_id, client)
     if (order.length === 0) {
-      throw new NotFoundError('Order not found!')
+      throw new NotFoundError([
+        {
+          field: 'order_id',
+          message: 'Order not found!',
+        },
+      ])
     }
     await Promise.all(
       order.map((item) =>

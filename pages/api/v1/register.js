@@ -1,8 +1,8 @@
-import { registeruser } from "services/auth/authservices";
 import { validateSchemaregister } from "schemas/register/register.schema";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
-import { methodNotAllowedError, RegisterError } from "utils/errors/error";
+import { methodNotAllowedError } from "utils/errors/error";
 import responseabstration from "utils/response/responseAbstration";
+import { registeruser } from "services/auth/register/register-services";
 
 export async function handler(req) {
   if (req.method === "POST") {
@@ -15,13 +15,7 @@ export async function handler(req) {
     });
     const token = await registeruser(data.name, data.email, data.password);
 
-    if (token.success == false) {
-      throw new RegisterError([
-        { field: undefined, message: "error on register user" },
-      ]);
-    } else {
-      return responseabstration(201, "successfully registered", [{ token }]);
-    }
+    return responseabstration(201, "successfully registered", [{ token }]);
   } else {
     throw new methodNotAllowedError([
       {

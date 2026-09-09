@@ -3,7 +3,6 @@ import {
   AuthError,
   NetworkError,
   SendEmailError,
-  EmailAlreadyExistsError,
   UnauthorizedError,
 } from "utils/errors/error";
 import jwt from "jsonwebtoken";
@@ -13,7 +12,6 @@ import { updatepassindb } from "models/users/resetpassword";
 import { expiringResetToken } from "models/users/resetpassword";
 import { sendLoginNotification } from "utils/mail/sendEmail";
 import { validationresettoken } from "models/users/resetpassword";
-import { registerUserInDB } from "models/users/users";
 
 export async function login(email, senha) {
   let emailtolower = email.toLowerCase();
@@ -105,29 +103,6 @@ export async function updatepassword(key, newpassword) {
     }
   } catch (error) {
     console.error("Error resetting password:", error);
-    throw error;
-  }
-}
-
-export async function registeruser(nome, email, senha) {
-  try {
-    const hashedPassword = await bcrypt.hash(senha, 10);
-    const result = await registerUserInDB(nome, email, hashedPassword);
-    if (result) {
-      const token = await jwt.sign(
-        { email, nome, role: "USER", id: result.id },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1h",
-        },
-      );
-      return token;
-    }
-  } catch (error) {
-    if (error.code === "23505") {
-      throw new EmailAlreadyExistsError(email);
-    }
-    console.error("Error registering user:", error);
     throw error;
   }
 }

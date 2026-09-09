@@ -1,5 +1,5 @@
 import pool from 'infra/database/db'
-import { ValidationError } from 'utils/errors/error'
+import { EmailAlreadyExistsError, ValidationError } from 'utils/errors/error'
 
 export async function finduserbyemail(email) {
   let emailtolower = email.toLowerCase()
@@ -40,7 +40,9 @@ export async function registerUserInDB(nome, email, hashedpassword) {
     )
     return result.rows[0]
   } catch (error) {
-    console.error('erro no db ', error)
+    if (error.code === '23505') {
+      throw new EmailAlreadyExistsError(email)
+    }
     throw error
   }
 }

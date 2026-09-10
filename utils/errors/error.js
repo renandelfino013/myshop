@@ -13,8 +13,9 @@ export class NotFoundError extends AppError {
   }
 }
 export class UnauthorizedError extends AppError {
-  constructor(message = "Invalid or missing authentication token") {
-    super(message, 401, "UNAUTHORIZED");
+  constructor(details) {
+    super("UNATHORIZED ERROR", 401, "UNAUTHORIZED");
+    this.details = details;
   }
 }
 export class alreadyExistsError extends AppError {

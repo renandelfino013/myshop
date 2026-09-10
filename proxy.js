@@ -9,7 +9,7 @@ const redis = Redis.fromEnv()
 const environment = process.env.VERCEL_ENV || 'development'
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(10, '10 s'),
+  limiter: Ratelimit.slidingWindow(10000, '10 s'),
   prefix: `@upstash/ratelimit:${environment}`,
   analytics: true,
 })
@@ -47,6 +47,7 @@ function checkauthorization(request) {
       requestHeaders.set('x-token', token)
       requestHeaders.set('x-user-email', decoded.email)
       requestHeaders.set('x-user-role', decoded.role)
+      requestHeaders.set('x-user-session_version', decoded.session_version)
 
       return NextResponse.next({
         request: {

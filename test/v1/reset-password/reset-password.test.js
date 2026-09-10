@@ -5,6 +5,7 @@ import {
   getResetKey,
   resetPassword,
 } from 'test/hooks/reset-password-helper.js'
+import jwt from 'jsonwebtoken'
 
 const RESET_PASSWORD_URL = 'http://localhost:3000/api/v1/rede-password'
 const VALID_PASSWORD = 'NewPassword123!'
@@ -158,6 +159,98 @@ describe('PATCH /reset-password (update password)', () => {
           ],
         },
       })
+    })
+  })
+})
+
+describe('session invalidation after password change', () => {
+  test('should invalidate the previous session after password reset', async () => {
+    // Arrange: create a user and store the initial session token
+    const email = `teste${Date.now()}@gmail.com`
+
+    const registerResponse = await createuser.fakeuser.user(
+      email,
+      'renan',
+      'Abcdef12!@dfd'
+    )
+
+    const oldToken = registerResponse[1].data[0].token
+
+    const decodedOldToken = jwt.verify(oldToken, process.env.JWT_SECRET)
+
+    const oldSessionVersion = decodedOldToken.session_version
+
+    // Act: request a password reset
+    const resetRequestResponse = await requestResetPassword(email)
+    const resetRequestBody = await resetRequestResponse.json()
+
+    expect(resetRequestResponse.status).toBe(200)
+    expect(resetRequestBody).toMatchObject({
+      success: true,
+      message: expect.any(String),
+    })
+
+    const resetKey = await getResetKey(email)
+
+    // Act: change the user's password
+    const resetResponse = await resetPassword(resetKey, VALID_PASSWORD)
+
+    const resetBody = await resetResponse.json()
+
+    expect(resetResponse.status).toBe(200)
+    expect(resetBody).toEqual({
+      success: true,
+      message: 'password updated successfully',
+    })
+
+    // Act: login again to create a new session
+    const loginResponse = await fetch('http://localhost:3000/api/v1/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        senha: 'NewPassword123!',
+      }),
+    })
+
+    const loginBody = await loginResponse.json()
+
+    expect(loginResponse.status).toBe(200)
+
+    const newToken = loginBody.data[0].token
+
+    const decodedNewToken = jwt.verify(newToken, process.env.JWT_SECRET)
+
+    const newSessionVersion = decodedNewToken.session_version
+
+    // Assert: the new session must have a different version
+    expect(newSessionVersion).not.toBe(oldSessionVersion)
+
+    // Act: try to access a protected route using the old session
+    const categoryName = `Categoria ${Date.now()}`
+
+    const categoryResponse = await fetch(
+      'http://localhost:3000/api/v1/categorias',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${oldToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nome: categoryName,
+        }),
+      }
+    )
+
+    const categoryBody = await categoryResponse.json()
+
+    // Assert: the old session must no longer be valid
+    expect(categoryResponse.status).toBe(401)
+    expect(categoryBody).toMatchObject({
+      success: false,
     })
   })
 })

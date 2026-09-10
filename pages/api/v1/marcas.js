@@ -7,7 +7,7 @@ import {
   createbrand,
   removebrand,
 } from "services/brand/brand-services";
-import validationtoken from "services/auth/validationtoken";
+import validationtoken from "utils/validators/validationtoken";
 import {
   validateSchemaDeleteBrand,
   validateSchemaGetperIdBrand,

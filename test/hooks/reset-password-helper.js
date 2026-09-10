@@ -8,7 +8,6 @@ export async function requestResetPassword(email) {
     },
     body: JSON.stringify({ email }),
   })
-
   return response
 }
 

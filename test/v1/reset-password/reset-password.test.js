@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import orchestrator from 'test/orchestrator.js'
-
 import createuser from 'test/hooks/userfortests.js'
 import {
   requestResetPassword,
@@ -8,78 +6,158 @@ import {
   resetPassword,
 } from 'test/hooks/reset-password-helper.js'
 
+const RESET_PASSWORD_URL = 'http://localhost:3000/api/v1/rede-password'
+const VALID_PASSWORD = 'NewPassword123!'
+
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
 })
-let twotimeskey = ''
 
-test('reset password happy path', async () => {
-  const email = `teste${Date.now()}@gmail.com`
-  await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
+describe('POST /reset-password (request reset key)', () => {
+  test('creates a reset key for an existing user', async () => {
+    const email = `teste${Date.now()}@gmail.com`
+    await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
 
-  const request = await requestResetPassword(email)
+    const response = await requestResetPassword(email)
+    const body = await response.json()
 
-  expect(request.status).toBe(200)
+    expect(response.status).toBe(200)
+    expect(body).toMatchObject({ success: true, message: expect.any(String) })
+  })
 
-  const key = await getResetKey(email)
-  twotimeskey = key
+  describe('response is identical regardless of whether the email exists (no user enumeration)', () => {
+    test.each([
+      [
+        'existing email',
+        async () => {
+          const email = `teste${Date.now()}@gmail.com`
+          await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
+          return email
+        },
+      ],
+      ['non-existent email', async () => 'doesnotexist@gmail.com'],
+    ])('%s returns 200 with a generic message', async (_desc, getEmail) => {
+      const email = await getEmail()
+      const response = await requestResetPassword(email)
+      const body = await response.json()
 
-  const response = await resetPassword(key, 'NewPassword123!')
+      expect(response.status).toBe(200)
+      expect(body).toMatchObject({
+        success: true,
+        message: expect.any(String),
+      })
+    })
+  })
 
-  expect(response.status).toBe(200)
+  test('returns 400 for a malformed email', async () => {
+    const response = await requestResetPassword('not-an-email')
+    const body = await response.json()
 
-  expect(await response.json()).toEqual({
-    message: 'password updated successfully',
-    success: true,
+    expect(response.status).toBe(400)
+    expect(body).toHaveProperty('error')
+  })
+
+  test('returns 405 for methods other than POST/PATCH', async () => {
+    const response = await fetch(RESET_PASSWORD_URL, { method: 'DELETE' })
+    expect(response.status).toBe(405)
   })
 })
-test('reset password with invalid key', async () => {
-  const email = `teste${Date.now()}@gmail.com`
-  await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
 
-  const request = await requestResetPassword(email)
+describe('PATCH /reset-password (update password)', () => {
+  test('updates the password with a valid key', async () => {
+    const email = `teste${Date.now()}@gmail.com`
+    await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
+    await requestResetPassword(email)
+    const key = await getResetKey(email)
 
-  expect(request.status).toBe(200)
+    const response = await resetPassword(key, VALID_PASSWORD)
+    const body = await response.json()
 
-  const key = 'invalidkey'
+    expect(response.status).toBe(200)
+    expect(body).toEqual({
+      success: true,
+      message: 'password updated successfully',
+    })
+  })
 
-  const response = await resetPassword(key, 'NewPassword123!')
-  let body = await response.json()
+  test('the new password actually works for a subsequent login', async () => {
+    const email = `teste${Date.now()}@gmail.com`
+    await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
+    await requestResetPassword(email)
+    const key = await getResetKey(email)
+    await resetPassword(key, VALID_PASSWORD)
 
-  expect(body.error).toBeDefined()
-  expect(response.status).toBe(401)
-  expect(body.error.code).toBe('UNAUTHORIZED')
-})
+    const loginResponse = await fetch('http://localhost:3000/api/v1/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha: VALID_PASSWORD }),
+    })
 
-test('reset password with incorrect password', async () => {
-  const email = `teste${Date.now()}@gmail.com`
-  await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
+    expect(loginResponse.status).toBe(200)
+  })
 
-  const request = await requestResetPassword(email)
-  const ckey = await getResetKey(email)
+  describe('unauthorized key — same status/code for every invalid case (401)', () => {
+    test.each([
+      ['malformed / non-existent key', async () => 'invalidkey'],
+      [
+        'already used key',
+        async () => {
+          const email = `teste${Date.now()}@gmail.com`
+          await createuser.fakeuser.user(email, 'renan', 'Abcdef12!@dfd')
+          await requestResetPassword(email)
+          const key = await getResetKey(email)
+          await resetPassword(key, VALID_PASSWORD) // consumes the key
+          return key
+        },
+      ],
+    ])('%s', async (_desc, getKey) => {
+      const key = await getKey()
+      const response = await resetPassword(key, 'AnotherPass123!')
+      const body = await response.json()
 
-  expect(request.status).toBe(200)
+      expect(response.status).toBe(401)
+      expect(body.error.code).toBe('UNAUTHORIZED')
+    })
+  })
 
-  const key = ckey
+  describe('invalid input (400)', () => {
+    test.each([
+      ['empty key', { key: '', newpassword: VALID_PASSWORD }],
+      [
+        'password missing uppercase letter',
+        { key: 'anykey', newpassword: 'password123!' },
+      ],
+      [
+        'password missing lowercase letter',
+        { key: 'anykey', newpassword: 'PASSWORD123!' },
+      ],
+      [
+        'password missing number',
+        { key: 'anykey', newpassword: 'Passwordddd!' },
+      ],
+      [
+        'password missing special character',
+        { key: 'anykey', newpassword: 'Password1234' },
+      ],
+      ['password too short', { key: 'anykey', newpassword: 'Sh1!' }],
+    ])('%s', async (_desc, { key, newpassword }) => {
+      const response = await resetPassword(key, newpassword)
+      const body = await response.json()
 
-  const response = await resetPassword(key, 'N12')
-  let body = await response.json()
-
-  expect(body.error).toBeDefined()
-  expect(response.status).toBe(400)
-  expect(body.error.details).toEqual(
-    expect.arrayContaining([
-      {
-        field: 'newpassword',
-        message: 'A senha deve ter pelo menos 8 caracteres.',
-      },
-    ])
-  )
-})
-test('used reset key', async () => {
-  const response = await resetPassword(twotimeskey, 'AnotherPass123!')
-  let body = await response.json()
-
-  expect(response.status).toBe(401)
-  expect(body.error.code).toBe('UNAUTHORIZED')
+      expect(response.status).toBe(400)
+      expect(body).toHaveProperty('error')
+      expect(body).toMatchObject({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          details: [
+            {
+              field: expect.any(String),
+              message: expect.any(String),
+            },
+          ],
+        },
+      })
+    })
+  })
 })

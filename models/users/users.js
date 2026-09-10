@@ -1,5 +1,5 @@
 import pool from 'infra/database/db'
-import { EmailAlreadyExistsError, ValidationError } from 'utils/errors/error'
+import { EmailAlreadyExistsError } from 'utils/errors/error'
 
 export async function finduserbyemail(email) {
   let emailtolower = email.toLowerCase()
@@ -18,18 +18,20 @@ export async function findEmailUserbyId(userid) {
     )
     return emailuser.rows
   } catch (error) {
-    throw new ValidationError('error on find email user', error)
+    console.error('error on find email by user id ', error)
+    throw error
   }
 }
 export async function insertkey(userid, resetkey) {
-  let key = await pool.query(
-    'INSERT INTO password_reset_keys (usuariosid, key) VALUES ($1, $2)  ON CONFLICT (usuariosid) DO UPDATE SET key = EXCLUDED.key, expirado = FALSE',
-    [userid, resetkey]
-  )
-  if (key) {
-    return true
-  } else {
-    throw new ValidationError('key n setada no banco')
+  try {
+    const result = await pool.query(
+      'INSERT INTO password_reset_keys (usuariosid, key) VALUES ($1, $2)  ON CONFLICT (usuariosid) DO UPDATE SET key = EXCLUDED.key, expirado = FALSE RETURNING key',
+      [userid, resetkey]
+    )
+    return result.rows
+  } catch (error) {
+    console.error('error on insertKey', error)
+    throw error
   }
 }
 export async function registerUserInDB(nome, email, hashedpassword) {

@@ -2,7 +2,7 @@ import {
   validateProductSchema,
   validateProductsPerIdSchema,
 } from "schemas/products/products.schema";
-import validationtoken from "services/auth/validationtoken";
+import validationtoken from "utils/validators/validationtoken";
 import {
   GetAllproducts,
   GetProductPerId,

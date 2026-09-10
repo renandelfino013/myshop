@@ -4,7 +4,7 @@ import { EmailAlreadyExistsError } from 'utils/errors/error'
 export async function finduserbyemail(email) {
   let emailtolower = email.toLowerCase()
   let user = await pool.query(
-    'SELECT id, nome, email, role, senha FROM usuarios WHERE email = $1',
+    'SELECT id, nome, email, role, senha ,session_version FROM usuarios WHERE email = $1',
     [emailtolower]
   )
   return user.rows
@@ -37,9 +37,10 @@ export async function insertkey(userid, resetkey) {
 export async function registerUserInDB(nome, email, hashedpassword) {
   try {
     let result = await pool.query(
-      'INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3) RETURNING id',
+      'INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3) RETURNING id ,session_version',
       [nome, email, hashedpassword]
     )
+
     return result.rows[0]
   } catch (error) {
     if (error.code === '23505') {
@@ -58,7 +59,7 @@ export async function findresetkey(email) {
 export async function registerAdminInDB(nome, email, hashedpassword) {
   try {
     let result = await pool.query(
-      'INSERT INTO usuarios (nome, email, senha, role) VALUES ($1, $2, $3,$4) RETURNING id',
+      'INSERT INTO usuarios (nome, email, senha, role) VALUES ($1, $2, $3,$4) RETURNING id,session_version',
       [nome, email, hashedpassword, 'ADMIN']
     )
     return result.rows[0]

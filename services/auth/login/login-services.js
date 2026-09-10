@@ -10,7 +10,12 @@ export async function login(email, senha) {
   const user = result[0];
   await comparePassword(senha, user.senha);
   const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      session_version: user.session_version,
+    },
     process.env.JWT_SECRET,
     { expiresIn: "1h" },
   );

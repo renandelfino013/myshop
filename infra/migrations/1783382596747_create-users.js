@@ -15,6 +15,11 @@ export const up = (pgm) => {
     email: { type: 'VARCHAR (255)', unique: true, notNull: true },
     senha: { type: 'VARCHAR (255)', notNull: true },
     role: { type: 'VARCHAR (50)', notNull: true, default: 'user' },
+    session_version: {
+      type: 'INTEGER',
+      notNull: true,
+      default: 0,
+    },
   })
 }
 

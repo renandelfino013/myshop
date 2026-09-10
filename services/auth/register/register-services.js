@@ -6,7 +6,13 @@ export async function registeruser(nome, email, senha) {
   const result = await registerUserInDB(nome, email, hashedPassword);
   if (result) {
     const token = await jwt.sign(
-      { email, nome, role: "USER", id: result.id },
+      {
+        email,
+        nome,
+        role: "USER",
+        id: result.id,
+        session_version: result.session_version,
+      },
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",

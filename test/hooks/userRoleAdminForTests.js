@@ -7,7 +7,13 @@ export default async function userRoleAdmin(nome, email, senha) {
     const hashedpassword = await bcrypt.hash(senha, 10)
     const userAdmin = await registerAdminInDB(nome, email, hashedpassword)
     const token = await jwt.sign(
-      { email, nome, role: 'ADMIN', id: userAdmin.id },
+      {
+        email,
+        nome,
+        role: 'ADMIN',
+        id: userAdmin.id,
+        session_version: userAdmin.session_version,
+      },
       process.env.JWT_SECRET,
       {
         expiresIn: '1h',

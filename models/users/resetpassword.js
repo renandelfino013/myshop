@@ -15,7 +15,7 @@ export async function FindResetToken(key) {
 export async function updatepassindb(hashedpassword, userid) {
   try {
     const updateResult = await pool.query(
-      'UPDATE usuarios SET senha = $1 WHERE id = $2 RETURNING id',
+      'UPDATE usuarios SET senha = $1 ,session_version = session_version + 1 WHERE id = $2 RETURNING id , session_version',
       [hashedpassword, userid]
     )
 

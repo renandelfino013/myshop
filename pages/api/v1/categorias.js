@@ -19,10 +19,12 @@ import { methodNotAllowedError } from "utils/errors/error";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
 
 export async function handler(req) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const userId = req.headers["x-user-id"];
   const email = req.headers["x-user-email"];
   const role = req.headers["x-user-role"];
-  await validationtoken(userId, email, role);
+  const session_version = req.headers["x-user-session_version"];
+  await validationtoken(email, session_version);
 
   if (req.method === "GET" && Object.keys(req.query).length === 0) {
     const categorys = await GetAllCategorys();

@@ -15,7 +15,7 @@ export async function handler(req) {
     });
     const token = await registeruser(data.name, data.email, data.password);
 
-    return responseabstration(201, "successfully registered", [{ token }]);
+    return responseabstration(201, "successfully registered", token);
   } else {
     throw new methodNotAllowedError([
       {

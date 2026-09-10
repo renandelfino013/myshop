@@ -1,19 +1,22 @@
 import nodemailer from "nodemailer";
-
-async function sendLoginNotification(to, subject, html) {
-  if (process.env.APP_EMAIL === "test") {
+import { NetworkError } from "utils/errors/error";
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USE,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+async function sendEmailNotification(to, subject, html) {
+  if (
+    process.env.APP_EMAIL === "test" ||
+    process.env.NODE_ENV === "test" ||
+    process.env.NODE_ENV === "development"
+  ) {
     return true;
   }
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USE,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
 
   try {
     let info = await transporter.sendMail({
@@ -24,11 +27,16 @@ async function sendLoginNotification(to, subject, html) {
     });
 
     console.log("Email enviado:", info.response);
-    return true;
+    return null;
   } catch (error) {
     console.error("Erro ao enviar email:", error);
-    return false;
+    throw new NetworkError([
+      {
+        field: "sendEmail",
+        message: "failed to send email to user",
+      },
+    ]);
   }
 }
 
-export { sendLoginNotification };
+export { sendEmailNotification };

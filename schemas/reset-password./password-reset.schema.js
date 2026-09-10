@@ -2,6 +2,7 @@ import { z } from 'zod'
 import {
   emailschema,
   passwordschema,
+  resetkeyschema,
 } from 'schemas/variables/auth/auth.variables'
 import { validateSchema } from 'schemas/validator/validationschema'
 
@@ -11,6 +12,7 @@ export const passwordResetSchema = z.object({
 
 export const Schemapassword = z.object({
   newpassword: passwordschema,
+  key: resetkeyschema,
 })
 
 export const validatePasswordResetSchema = (data) =>

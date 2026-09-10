@@ -4,7 +4,7 @@ import {
   validateorderDelete,
   validateorderPost,
 } from "schemas/orders/orders.schemas";
-import validationtoken from "services/auth/validationtoken";
+import validationtoken from "utils/validators/validationtoken";
 import {
   Get_All_orders_Admin,
   Get_All_Orders_Of_User,

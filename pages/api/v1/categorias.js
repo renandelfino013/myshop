@@ -5,7 +5,7 @@ import {
   validateSchemaPost,
   validateSchemaPutcategory,
 } from "schemas/categorys/category.schema";
-import validationtoken from "services/auth/validationtoken";
+import validationtoken from "utils/validators/validationtoken";
 import {
   GetAllCategorys,
   GetCategoryPerId,

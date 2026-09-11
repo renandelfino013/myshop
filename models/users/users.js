@@ -2,10 +2,9 @@ import pool from 'infra/database/db'
 import { EmailAlreadyExistsError } from 'utils/errors/error'
 
 export async function finduserbyemail(email) {
-  let emailtolower = email.toLowerCase()
   let user = await pool.query(
     'SELECT id, nome, email, role, senha ,session_version FROM usuarios WHERE email = $1',
-    [emailtolower]
+    [email]
   )
   return user.rows
 }

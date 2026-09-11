@@ -87,13 +87,12 @@ beforeAll(async () => {
 
 describe('GET api/v1/produtos', () => {
   test('GET all products', async () => {
-    const response = await fetch(`${apiUrl}/produtos`, {
-      headers: headers(tokenUser),
-    })
+    const response = await fetch(`${apiUrl}/produtos`)
     const body = await response.json()
 
     expect(response.status).toBe(200)
     expect(Array.isArray(body.data)).toBe(true)
+    expect(body.data.length).toBeGreaterThanOrEqual(1)
   })
 
   test('GET product by id', async () => {
@@ -121,11 +120,9 @@ describe('GET api/v1/produtos', () => {
     const response = await fetch(`${apiUrl}/produtos`)
     const body = await response.json()
 
-    expect(response.status).toBe(401)
-    expect(body.error).toBeDefined()
-    expect(body.error.code).toBe('UNAUTHORIZED')
-    expect(body.error.details[0].field).toBe('token')
-    expect(body.error.details[0].message).toBe('token is missing')
+    expect(response.status).toBe(200)
+    expect(Array.isArray(body.data)).toBe(true)
+    expect(body.data.length).toBeGreaterThanOrEqual(1)
   })
 
   test('GET with invalid token', async () => {
@@ -144,11 +141,9 @@ describe('GET api/v1/produtos', () => {
   test('GET by id without token', async () => {
     const response = await fetch(`${apiUrl}/produtos?id=${productId}`)
     const body = await response.json()
-    expect(response.status).toBe(401)
-    expect(body.error).toBeDefined()
-    expect(body.error.code).toBe('UNAUTHORIZED')
-    expect(body.error.details[0].field).toBe('token')
-    expect(body.error.details[0].message).toBe('token is missing')
+    expect(response.status).toBe(200)
+    expect(Array.isArray(body.data)).toBe(true)
+    expect(body.data.length).toBeGreaterThanOrEqual(1)
   })
 })
 

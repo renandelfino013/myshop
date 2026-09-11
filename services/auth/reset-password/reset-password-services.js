@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 import { updatepassindb } from "models/users/resetpassword";
 import { expiringResetToken } from "models/users/resetpassword";
 import { sendEmailNotification } from "utils/mail/sendEmail";
-import { validationResetTokenByKey } from "utils/validators/reset-token/validation-Reset-token";
+import { validationResetTokenByKey } from "utils/validators/auth/reset-token/validation-Reset-token";
 import jwt from "jsonwebtoken";
 export async function updatepassword(key, newpassword) {
   try {

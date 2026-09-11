@@ -7,7 +7,6 @@ import {
   createbrand,
   removebrand,
 } from "services/brand/brand-services";
-import validationtoken from "utils/validators/validationtoken";
 import {
   validateSchemaDeleteBrand,
   validateSchemaGetperIdBrand,
@@ -18,6 +17,7 @@ import {
 import { withErrorHandler } from "utils/errors/withErrorHandler";
 import { methodNotAllowedError } from "utils/errors/error";
 import responseAbstration from "utils/response/responseAbstration";
+import { reqValidation } from "utils/validators/auth/reqValidation/req-validation";
 dotenv.config();
 export async function handler(req) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -25,7 +25,7 @@ export async function handler(req) {
   const email = req.headers["x-user-email"];
   const role = req.headers["x-user-role"];
   const session_version = req.headers["x-user-session_version"];
-  await validationtoken(email, session_version);
+  await reqValidation(email, session_version, Boolean(role));
 
   if (req.method === "GET" && !req.query.id && !req.query.nome) {
     const getbrands = await getallbrands();

@@ -5,7 +5,6 @@ import {
   validateSchemaPost,
   validateSchemaPutcategory,
 } from "schemas/categorys/category.schema";
-import validationtoken from "utils/validators/validationtoken";
 import {
   GetAllCategorys,
   GetCategoryPerId,
@@ -17,6 +16,7 @@ import {
 import responseabstration from "utils/response/responseAbstration";
 import { methodNotAllowedError } from "utils/errors/error";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
+import { reqValidation } from "utils/validators/auth/reqValidation/req-validation";
 
 export async function handler(req) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -24,7 +24,7 @@ export async function handler(req) {
   const email = req.headers["x-user-email"];
   const role = req.headers["x-user-role"];
   const session_version = req.headers["x-user-session_version"];
-  await validationtoken(email, session_version);
+  await reqValidation(email, session_version, Boolean(role));
 
   if (req.method === "GET" && Object.keys(req.query).length === 0) {
     const categorys = await GetAllCategorys();

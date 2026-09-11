@@ -4,7 +4,6 @@ import {
   validateorderDelete,
   validateorderPost,
 } from "schemas/orders/orders.schemas";
-import validationtoken from "utils/validators/validationtoken";
 import {
   Get_All_orders_Admin,
   Get_All_Orders_Of_User,
@@ -18,12 +17,14 @@ import { methodNotAllowedError } from "utils/errors/error";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
 import resposeAbstration from "utils/response/responseAbstration";
 import responseAbstration from "utils/response/responseAbstration";
+import { reqValidation } from "utils/validators/auth/reqValidation/req-validation";
 export async function handler(req) {
   const userId = req.headers["x-user-id"];
   const email = req.headers["x-user-email"];
   const role = req.headers["x-user-role"];
   const session_version = req.headers["x-user-session_version"];
-  await validationtoken(email, session_version);
+  await reqValidation(email, session_version, Boolean(role));
+
   if (
     req.method === "GET" &&
     Object.keys(req.query).length === 0 &&

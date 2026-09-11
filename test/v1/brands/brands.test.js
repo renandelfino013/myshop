@@ -162,14 +162,9 @@ describe('GET api/v1/marcas', () => {
     })
 
     const respbody = await response.json()
-    expect(response.status).toBe(401)
-    expect(respbody).toEqual({
-      success: false,
-      error: {
-        code: 'UNAUTHORIZED',
-        details: [{ field: 'token', message: 'token is missing' }],
-      },
-    })
+    expect(response.status).toBe(200)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data.length).toBeGreaterThanOrEqual(1)
   })
 
   test('GET all brand with invalid token', async () => {
@@ -331,14 +326,9 @@ describe('GET api/v1/marcas by id or nome', () => {
 
     const respbody = await response.json()
 
-    expect(response.status).toBe(401)
-    expect(respbody).toEqual({
-      success: false,
-      error: {
-        code: 'UNAUTHORIZED',
-        details: [{ field: 'token', message: 'token is missing' }],
-      },
-    })
+    expect(response.status).toBe(200)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data.length).toBeGreaterThanOrEqual(1)
   })
   test('GET brand by id with invalid format', async () => {
     const response = await fetch(

@@ -24,7 +24,16 @@ function checkauthorization(request) {
   ) {
     const authHeader = request.headers.get('authorization')
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (
+      !authHeader &&
+      request.method === 'GET' &&
+      !path.startsWith('/api/v1/pedidos')
+    ) {
+      return NextResponse.next()
+    } else if (
+      (authHeader && !authHeader.startsWith('Bearer ')) ||
+      !authHeader
+    ) {
       return new NextResponse(
         JSON.stringify({
           success: false,
@@ -39,6 +48,7 @@ function checkauthorization(request) {
         }
       )
     }
+
     const token = authHeader.split(' ')[1]
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET)

@@ -1,4 +1,5 @@
 import { dbversion, dbmaxconec, dbsActivec } from "models/status/status";
+import { methodNotAllowedError } from "utils/errors/error";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -16,6 +17,11 @@ export default async function handler(req, res) {
       },
     });
   } else {
-    res.status(405).json({ error: "Method not allowed" });
+    throw new methodNotAllowedError([
+      {
+        field: "method",
+        message: "Method not allowed",
+      },
+    ]);
   }
 }

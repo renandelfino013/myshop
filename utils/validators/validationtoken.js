@@ -11,5 +11,5 @@ export default async function validationtoken(email, session_version) {
     throw new UnauthorizedError([{ field: "token", message: "invalid token" }]);
   }
 
-  return true;
+  return null;
 }

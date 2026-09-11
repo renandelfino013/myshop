@@ -177,19 +177,9 @@ describe('GET api/v1/categorias', () => {
     })
 
     const respbody = await response.json()
-    expect(response.status).toBe(401)
-    expect(respbody).toEqual({
-      success: false,
-      error: {
-        code: 'UNAUTHORIZED',
-        details: [
-          {
-            field: 'token',
-            message: 'token is missing',
-          },
-        ],
-      },
-    })
+    expect(response.status).toBe(200)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data.length).toBeGreaterThanOrEqual(1)
   })
 
   test('GET all categories with invalid token', async () => {
@@ -354,19 +344,9 @@ describe('GET api/v1/categorias by id or nome', () => {
 
     const respbody = await response.json()
 
-    expect(response.status).toBe(401)
-    expect(respbody).toEqual({
-      success: false,
-      error: {
-        code: 'UNAUTHORIZED',
-        details: [
-          {
-            field: 'token',
-            message: 'token is missing',
-          },
-        ],
-      },
-    })
+    expect(response.status).toBe(200)
+    expect(Array.isArray(respbody.data)).toBe(true)
+    expect(respbody.data.length).toBeGreaterThanOrEqual(1)
   })
 
   test('GET category by id with invalid format', async () => {

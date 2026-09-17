@@ -23,6 +23,7 @@ jobs:
       EMAIL_USE: ${{ secrets.EMAIL_USE }}
       UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
       UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+      CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL}}
       JWT_SECRET: teste-apenas-para-ci-nao-usar-em-producao
       APP_EMAIL: test
       APP_ENV: test

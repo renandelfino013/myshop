@@ -28,12 +28,13 @@ export async function Insertproduct(
   stock,
   categoryId,
   markId,
-  desc
+  desc,
+  image_url
 ) {
   try {
     const result = await pool.query(
-      'INSERT INTO produtos (nome, preco, estoque, categoria_id, marca_id, descricao) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [name, price, stock, categoryId, markId, desc]
+      'INSERT INTO produtos (nome, preco, estoque, categoria_id, marca_id, descricao,image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [name, price, stock, categoryId, markId, desc, image_url]
     )
     return result.rows
   } catch (err) {
@@ -66,13 +67,20 @@ export async function Updateproduct(
   categoryId,
   markId,
   desc,
-  productId
+  productId,
+  image_url
 ) {
   try {
-    const result = await pool.query(
-      'UPDATE produtos SET nome = $1, preco = $2, estoque = $3, categoria_id = $4, marca_id = $5, descricao = $6 WHERE id = $7 RETURNING *',
-      [name, price, stock, categoryId, markId, desc, productId]
-    )
+    const query =
+      image_url !== undefined
+        ? 'UPDATE produtos SET nome = $1, preco = $2, estoque = $3, categoria_id = $4, marca_id = $5, descricao = $6 , image = $7 WHERE id = $8 RETURNING *'
+        : 'UPDATE produtos SET nome = $1, preco = $2, estoque = $3, categoria_id = $4, marca_id = $5, descricao = $6 WHERE id = $7 RETURNING *'
+    const params =
+      image_url !== undefined
+        ? [name, price, stock, categoryId, markId, desc, image_url, productId]
+        : [name, price, stock, categoryId, markId, desc, productId]
+
+    const result = await pool.query(query, params)
     return result.rows
   } catch (err) {
     if (err.code === '23505')

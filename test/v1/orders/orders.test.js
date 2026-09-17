@@ -1,7 +1,18 @@
 import createuser from 'test/hooks/userfortests.js'
 import orchestrator from 'test/orchestrator.js'
 import userRoleAdmin from 'test/hooks/userRoleAdminForTests'
+import path from 'path'
+import fs from 'fs'
+import { generateTestKey } from 'test/hooks/file/testkey/generateTestKey'
 
+const imagePath = path.join(
+  __dirname,
+  '..',
+  'products',
+  'image-upload-test',
+  'files',
+  'foto.jpg'
+)
 let tokenUser = 0
 let tokenAdmin = 0
 let categoryId = ''
@@ -71,22 +82,29 @@ beforeAll(async () => {
     )
   }
   markId = markBody.data[0].id
-
+  const fakeproviderToken = await generateTestKey('fake')
   const productName = `produto${Date.now()}`
   const productCreate = await fetch('http://localhost:3000/api/v1/produtos', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${tokenAdmin}`,
-      'Content-Type': 'application/json',
+      'x-test-provider': fakeproviderToken, // se esse arquivo também usa esse header — confirma se você já tem essa variável aqui
     },
-    body: JSON.stringify({
-      name: productName,
-      price: 50,
-      stock: 100,
-      categoryId,
-      markId,
-      desc: 'produto pra teste de pedido',
-    }),
+    body: (() => {
+      const formData = new FormData()
+      formData.append('name', productName)
+      formData.append('price', '50')
+      formData.append('stock', '100')
+      formData.append('categoryId', String(categoryId))
+      formData.append('markId', String(markId))
+      formData.append('desc', 'produto pra teste de pedido')
+      formData.append(
+        'image',
+        new Blob([fs.readFileSync(imagePath)], { type: 'image/jpeg' }),
+        'foto.jpg'
+      )
+      return formData
+    })(),
   })
   if (productCreate.status !== 201) {
     const body = await productCreate.json()
@@ -110,16 +128,23 @@ beforeAll(async () => {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${tokenAdmin}`,
-      'Content-Type': 'application/json',
+      'x-test-provider': fakeproviderToken, // se esse arquivo também usa esse header — confirma se você já tem essa variável aqui
     },
-    body: JSON.stringify({
-      name: lowStockName,
-      price: 20,
-      stock: 1,
-      categoryId,
-      markId,
-      desc: 'produto com pouco estoque',
-    }),
+    body: (() => {
+      const formData = new FormData()
+      formData.append('name', lowStockName)
+      formData.append('price', '50')
+      formData.append('stock', '1')
+      formData.append('categoryId', String(categoryId))
+      formData.append('markId', String(markId))
+      formData.append('desc', 'produto pra teste de pedido')
+      formData.append(
+        'image',
+        new Blob([fs.readFileSync(imagePath)], { type: 'image/jpeg' }),
+        'foto.jpg'
+      )
+      return formData
+    })(),
   })
   if (lowStockCreate.status !== 201) {
     const body = await lowStockCreate.json()

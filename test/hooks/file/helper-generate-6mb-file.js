@@ -15,4 +15,3 @@ fs.writeFileSync(
   ),
   largeFile
 )
-console.log('Arquivo gerado:', largeFile.length, 'bytes')

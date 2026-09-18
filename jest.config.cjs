@@ -6,10 +6,12 @@ const createJestConfig = nextJest({ dir: '.' })
 
 const jestConfig = createJestConfig({
   moduleDirectories: ['node_modules', '<rootDir>/'],
-  testTimeout: 60000,
   moduleNameMapper: {
-    '^/utils/(.*)$': '<rootDir>/utils/$1',
+    '^@/(.*)$': '<rootDir>/$1',
+    '^services/(.*)$': '<rootDir>/services/$1',
   },
+
+  testTimeout: 60000,
 })
 
 module.exports = jestConfig

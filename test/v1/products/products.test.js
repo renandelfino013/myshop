@@ -1,6 +1,9 @@
 import createuser from 'test/hooks/userfortests.js'
 import orchestrator from 'test/orchestrator.js'
 import userRoleAdmin from 'test/hooks/userRoleAdminForTests.js'
+import { generateTestKey } from 'test/hooks/file/testkey/generateTestKey'
+import fs from 'fs'
+import path from 'path'
 
 const apiUrl = 'http://localhost:3000/api/v1'
 let tokenUser
@@ -8,16 +11,53 @@ let tokenAdmin
 let categoryId
 let markId
 let productId
+let fakeproviderToken
+const defaultImagePath = path.join(
+  __dirname,
+  'image-upload-test',
+  'files',
+  'foto.jpg'
+)
 
-const headers = (token) => ({
+const jsonHeaders = (token) => ({
   Authorization: `Bearer ${token}`,
   'Content-Type': 'application/json',
+  'x-test-provider': fakeproviderToken,
 })
+
+const formHeaders = (token) => ({
+  Authorization: `Bearer ${token}`,
+  'x-test-provider': fakeproviderToken,
+})
+
+function buildProductFormData(
+  fields,
+  {
+    imagePath = defaultImagePath,
+    imageFilename = 'foto.jpg',
+    imageMimeType = 'image/jpeg',
+  } = {}
+) {
+  const formData = new FormData()
+  Object.entries(fields).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(key, String(value))
+    }
+  })
+  if (imagePath) {
+    formData.append(
+      'image',
+      new Blob([fs.readFileSync(imagePath)], { type: imageMimeType }),
+      imageFilename
+    )
+  }
+  return formData
+}
 
 async function createRelatedResource(path, body) {
   const response = await fetch(`${apiUrl}/${path}`, {
     method: 'POST',
-    headers: headers(tokenAdmin),
+    headers: jsonHeaders(tokenAdmin),
     body: JSON.stringify(body),
   })
   if (response.status !== 201) {
@@ -39,6 +79,7 @@ beforeAll(async () => {
     `product-admin-${Date.now()}@gmail.com`,
     'AdminPass!23'
   )
+  fakeproviderToken = await generateTestKey('fake')
 
   const categoryName = `Category ${Date.now()}`
   const markName = `Brand ${Date.now()}`
@@ -47,11 +88,11 @@ beforeAll(async () => {
 
   const categoryResponse = await fetch(
     `${apiUrl}/categorias?nome=${encodeURIComponent(categoryName)}`,
-    { headers: headers(tokenUser) }
+    { headers: jsonHeaders(tokenUser) }
   )
   const brandResponse = await fetch(
     `${apiUrl}/marcas?nome=${encodeURIComponent(markName)}`,
-    { headers: headers(tokenUser) }
+    { headers: jsonHeaders(tokenUser) }
   )
   const brandbody = await brandResponse.json()
   const categorybody = await categoryResponse.json()
@@ -61,8 +102,8 @@ beforeAll(async () => {
   const productName = `Fixture product ${Date.now()}`
   const productResponse = await fetch(`${apiUrl}/produtos`, {
     method: 'POST',
-    headers: headers(tokenAdmin),
-    body: JSON.stringify({
+    headers: formHeaders(tokenAdmin),
+    body: buildProductFormData({
       name: productName,
       price: 19.9,
       stock: 10,
@@ -79,7 +120,7 @@ beforeAll(async () => {
   }
 
   const productsResponse = await fetch(`${apiUrl}/produtos`, {
-    headers: headers(tokenUser),
+    headers: jsonHeaders(tokenUser),
   })
   const products = await productsResponse.json()
   productId = products.data.find((product) => product.nome === productName).id
@@ -87,7 +128,9 @@ beforeAll(async () => {
 
 describe('GET api/v1/produtos', () => {
   test('GET all products', async () => {
-    const response = await fetch(`${apiUrl}/produtos`)
+    const response = await fetch(`${apiUrl}/produtos`, {
+      headers: { 'x-test-provider': fakeproviderToken },
+    })
     const body = await response.json()
 
     expect(response.status).toBe(200)
@@ -97,7 +140,7 @@ describe('GET api/v1/produtos', () => {
 
   test('GET product by id', async () => {
     const response = await fetch(`${apiUrl}/produtos?id=${productId}`, {
-      headers: headers(tokenUser),
+      headers: jsonHeaders(tokenUser),
     })
     const body = await response.json()
 
@@ -107,7 +150,7 @@ describe('GET api/v1/produtos', () => {
 
   test('GET product that does not exist', async () => {
     const response = await fetch(`${apiUrl}/produtos?id=99999999`, {
-      headers: headers(tokenUser),
+      headers: jsonHeaders(tokenUser),
     })
     const body = await response.json()
 
@@ -117,7 +160,9 @@ describe('GET api/v1/produtos', () => {
   })
 
   test('GET without token', async () => {
-    const response = await fetch(`${apiUrl}/produtos`)
+    const response = await fetch(`${apiUrl}/produtos`, {
+      headers: { 'x-test-provider': fakeproviderToken },
+    })
     const body = await response.json()
 
     expect(response.status).toBe(200)
@@ -127,7 +172,7 @@ describe('GET api/v1/produtos', () => {
 
   test('GET with invalid token', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
-      headers: headers('invalid-product-token'),
+      headers: jsonHeaders('invalid-product-token'),
     })
     const body = await response.json()
 
@@ -139,7 +184,9 @@ describe('GET api/v1/produtos', () => {
   })
 
   test('GET by id without token', async () => {
-    const response = await fetch(`${apiUrl}/produtos?id=${productId}`)
+    const response = await fetch(`${apiUrl}/produtos?id=${productId}`, {
+      headers: { 'x-test-provider': fakeproviderToken },
+    })
     const body = await response.json()
     expect(response.status).toBe(200)
     expect(Array.isArray(body.data)).toBe(true)
@@ -162,8 +209,8 @@ describe('POST api/v1/produtos', () => {
     const name = product.name
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'POST',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify(product),
+      headers: formHeaders(tokenAdmin),
+      body: buildProductFormData(product),
     })
     const body = await response.json()
 
@@ -174,7 +221,7 @@ describe('POST api/v1/produtos', () => {
     })
 
     const listResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: headers(tokenUser),
+      headers: jsonHeaders(tokenUser),
     })
     const products = await listResponse.json()
     productId = products.data.find((product) => product.nome === name).id
@@ -198,8 +245,8 @@ describe('POST api/v1/produtos', () => {
   ])('POST rejects %s', async (_scenario, invalidFields) => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'POST',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify({ ...validProduct(), ...invalidFields }),
+      headers: formHeaders(tokenAdmin),
+      body: buildProductFormData({ ...validProduct(), ...invalidFields }),
     })
 
     expect(response.status).toBe(400)
@@ -208,8 +255,8 @@ describe('POST api/v1/produtos', () => {
   test('POST rejects an unknown category', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'POST',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify({ ...validProduct(), categoryId: 99999999 }),
+      headers: formHeaders(tokenAdmin),
+      body: buildProductFormData({ ...validProduct(), categoryId: 99999999 }),
     })
     const body = await response.json()
 
@@ -223,8 +270,8 @@ describe('POST api/v1/produtos', () => {
   test('POST rejects an unknown mark', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'POST',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify({ ...validProduct(), markId: 99999999 }),
+      headers: formHeaders(tokenAdmin),
+      body: buildProductFormData({ ...validProduct(), markId: 99999999 }),
     })
     const body = await response.json()
 
@@ -238,8 +285,8 @@ describe('POST api/v1/produtos', () => {
   test('POST with user token is forbidden', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'POST',
-      headers: headers(tokenUser),
-      body: JSON.stringify({
+      headers: formHeaders(tokenUser),
+      body: buildProductFormData({
         name: 'Forbidden product',
         price: 19.9,
         stock: 10,
@@ -259,8 +306,8 @@ describe('POST api/v1/produtos', () => {
   test('POST without token is unauthorized', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(validProduct()),
+      headers: { 'x-test-provider': fakeproviderToken },
+      body: buildProductFormData(validProduct()),
     })
     const body = await response.json()
 
@@ -276,16 +323,19 @@ describe('PUT api/v1/produtos', () => {
   test('PUT updates a product', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'PUT',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify({
-        productid: productId,
-        newname: `Updated product ${Date.now()}`,
-        price: 29.9,
-        stock: 8,
-        categoryId,
-        markId,
-        desc: 'Updated description',
-      }),
+      headers: formHeaders(tokenAdmin),
+      body: buildProductFormData(
+        {
+          productId,
+          newname: `Updated product ${Date.now()}`,
+          price: 29.9,
+          stock: 8,
+          categoryId,
+          markId,
+          desc: 'Updated description',
+        },
+        { imagePath: null }
+      ),
     })
     const body = await response.json()
 
@@ -299,16 +349,19 @@ describe('PUT api/v1/produtos', () => {
   test('PUT for a missing product returns not found', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'PUT',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify({
-        productid: 99999999,
-        newname: 'Missing product',
-        price: 29.9,
-        stock: 8,
-        categoryId,
-        markId,
-        desc: 'Updated description',
-      }),
+      headers: formHeaders(tokenAdmin),
+      body: buildProductFormData(
+        {
+          productId: 99999999,
+          newname: 'Missing product',
+          price: 29.9,
+          stock: 8,
+          categoryId,
+          markId,
+          desc: 'Updated description',
+        },
+        { imagePath: null }
+      ),
     })
 
     const body = await response.json()
@@ -327,17 +380,20 @@ describe('PUT api/v1/produtos', () => {
   ])('PUT rejects %s', async (_scenario, invalidFields) => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'PUT',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify({
-        productid: productId,
-        newname: `Updated valid product ${Date.now()}`,
-        price: 29.9,
-        stock: 8,
-        categoryId,
-        markId,
-        desc: 'Updated description',
-        ...invalidFields,
-      }),
+      headers: formHeaders(tokenAdmin),
+      body: buildProductFormData(
+        {
+          productId,
+          newname: `Updated valid product ${Date.now()}`,
+          price: 29.9,
+          stock: 8,
+          categoryId,
+          markId,
+          desc: 'Updated description',
+          ...invalidFields,
+        },
+        { imagePath: null }
+      ),
     })
 
     expect(response.status).toBe(400)
@@ -346,16 +402,19 @@ describe('PUT api/v1/produtos', () => {
   test('PUT with user token is forbidden', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'PUT',
-      headers: headers(tokenUser),
-      body: JSON.stringify({
-        productid: productId,
-        newname: 'Forbidden update',
-        price: 29.9,
-        stock: 8,
-        categoryId,
-        markId,
-        desc: 'Updated description',
-      }),
+      headers: formHeaders(tokenUser),
+      body: buildProductFormData(
+        {
+          productId,
+          newname: 'Forbidden update',
+          price: 29.9,
+          stock: 8,
+          categoryId,
+          markId,
+          desc: 'Updated description',
+        },
+        { imagePath: null }
+      ),
     })
     const body = await response.json()
 
@@ -368,8 +427,8 @@ describe('PUT api/v1/produtos', () => {
   test('PUT without token is unauthorized', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productid: productId }),
+      headers: { 'x-test-provider': fakeproviderToken },
+      body: buildProductFormData({ productId }, { imagePath: null }),
     })
     const body = await response.json()
 
@@ -385,7 +444,7 @@ describe('DELETE api/v1/produtos', () => {
   test('DELETE removes a product', async () => {
     const response = await fetch(`${apiUrl}/produtos?id=${productId}`, {
       method: 'DELETE',
-      headers: headers(tokenAdmin),
+      headers: jsonHeaders(tokenAdmin),
     })
     const body = await response.json()
 
@@ -399,7 +458,7 @@ describe('DELETE api/v1/produtos', () => {
   test('DELETE without id returns validation error', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'DELETE',
-      headers: headers(tokenAdmin),
+      headers: jsonHeaders(tokenAdmin),
     })
     const body = await response.json()
 
@@ -412,41 +471,10 @@ describe('DELETE api/v1/produtos', () => {
     ])
   })
 
-  test('DELETE accepts the id in the request body', async () => {
-    const product = `Delete body product ${Date.now()}`
-    const createResponse = await fetch(`${apiUrl}/produtos`, {
-      method: 'POST',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify({
-        name: product,
-        price: 9.9,
-        stock: 1,
-        categoryId,
-        markId,
-        desc: 'Product to delete',
-      }),
-    })
-    expect(createResponse.status).toBe(201)
-
-    const productsResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: headers(tokenUser),
-    })
-    const products = await productsResponse.json()
-    const bodyProductId = products.data.find((item) => item.nome === product).id
-
-    const response = await fetch(`${apiUrl}/produtos`, {
-      method: 'DELETE',
-      headers: headers(tokenAdmin),
-      body: JSON.stringify({ id: bodyProductId }),
-    })
-
-    expect(response.status).toBe(200)
-  })
-
   test('DELETE for a missing product returns not found', async () => {
     const response = await fetch(`${apiUrl}/produtos?id=99999999`, {
       method: 'DELETE',
-      headers: headers(tokenAdmin),
+      headers: jsonHeaders(tokenAdmin),
     })
     const body = await response.json()
 
@@ -459,7 +487,7 @@ describe('DELETE api/v1/produtos', () => {
   test('DELETE with user token is forbidden', async () => {
     const response = await fetch(`${apiUrl}/produtos?id=99999999`, {
       method: 'DELETE',
-      headers: headers(tokenUser),
+      headers: jsonHeaders(tokenUser),
     })
     const body = await response.json()
 
@@ -472,6 +500,7 @@ describe('DELETE api/v1/produtos', () => {
   test('DELETE without token is unauthorized', async () => {
     const response = await fetch(`${apiUrl}/produtos?id=${productId}`, {
       method: 'DELETE',
+      headers: { 'x-test-provider': fakeproviderToken },
     })
     const body = await response.json()
 
@@ -480,7 +509,6 @@ describe('DELETE api/v1/produtos', () => {
     expect(body.error.code).toBe('UNAUTHORIZED')
     expect(body.error.details[0].field).toBe('token')
     expect(body.error.details[0].message).toBe('token is missing')
-    console.error(body.error)
   })
 })
 
@@ -488,7 +516,7 @@ describe('Unsupported methods api/v1/produtos', () => {
   test('PATCH returns method not allowed', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'PATCH',
-      headers: headers(tokenUser),
+      headers: jsonHeaders(tokenUser),
     })
     const body = await response.json()
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import retry from 'async-retry'
 
 async function waitForAllServices() {

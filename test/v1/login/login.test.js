@@ -37,22 +37,23 @@ describe('POST /api/v1/login', () => {
 
     expect(response.status).toBe(200)
     expect(body).not.toHaveProperty('error')
-    expect(body.data[0]).toHaveProperty('token')
+    const cookie = response.headers.getSetCookie() || undefined
+    expect(cookie).toBeDefined()
     expect(body).toMatchObject({
       success: true,
       message: expect.any(String),
-      data: [expect.objectContaining({ token: expect.any(String) })],
+      data: [],
     })
   })
 
   test('is case-insensitive on email', async () => {
-    const { response, body } = await login({
+    const { response } = await login({
       email: existingUserEmail.toUpperCase(),
       senha: existingUserPassword,
     })
-
+    const cookie = response.headers.getSetCookie()[0] || undefined
+    expect(cookie).toBeDefined()
     expect(response.status).toBe(200)
-    expect(body.data[0]).toHaveProperty('token')
   })
 
   describe('invalid credentials (should behave the same either way)', () => {

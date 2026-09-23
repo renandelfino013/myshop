@@ -12,7 +12,7 @@ const redis = Redis.fromEnv()
 const environment = process.env.VERCEL_ENV || 'development'
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(10, '10 s'),
+  limiter: Ratelimit.slidingWindow(1000, '10 s'),
   prefix: `@upstash/ratelimit:${environment}`,
   analytics: true,
 })
@@ -22,10 +22,9 @@ async function checkauthorization(request) {
     path.startsWith('/api/v1/marcas') ||
     path.startsWith('/api/v1/produtos') ||
     path.startsWith('/api/v1/pedidos') ||
-    path.startsWith('/rprodutosssword.jsx') ||
     path.startsWith('/api/v1/categorias')
   ) {
-    const authHeader = request.headers.get('authorization')
+    const authHeader = request.headers.get('cookie')
 
     if (
       !authHeader &&
@@ -33,10 +32,7 @@ async function checkauthorization(request) {
       !path.startsWith('/api/v1/pedidos')
     ) {
       return NextResponse.next()
-    } else if (
-      (authHeader && !authHeader.startsWith('Bearer ')) ||
-      !authHeader
-    ) {
+    } else if (!authHeader) {
       return new NextResponse(
         JSON.stringify({
           success: false,
@@ -52,7 +48,8 @@ async function checkauthorization(request) {
       )
     }
 
-    const token = authHeader.split(' ')[1]
+    const token = authHeader.replace(/^.*?=|;/g, '').split(' ')[0]
+
     const tokenTestProvider = request.headers.get('x-test-provider')
 
     try {

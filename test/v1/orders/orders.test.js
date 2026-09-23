@@ -24,13 +24,24 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `teste${Date.now()}@gmail.com`
   const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
-  const admin = await userRoleAdmin(
-    'renanadmin',
-    `teste2${Date.now()}@gmail.com`,
-    'AdminPass!23'
-  )
-  tokenUser = user[1].data[0].token
-  tokenAdmin = admin
+
+  const emailadmin = `testadmin${Date.now()}@gmail.com`
+  await userRoleAdmin('renanadmin', emailadmin, 'AdminPass!23')
+  const setcookieadmin = await fetch('http://localhost:3000/api/v1/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: `${emailadmin}`,
+      senha: 'AdminPass!23',
+    }),
+  })
+  const cookieuser = user[2].headers.getSetCookie()
+  tokenUser = cookieuser[0]
+
+  const cookieadmin = setcookieadmin.headers.getSetCookie()
+  tokenAdmin = cookieadmin[0]
 
   const categoryName = `catego${Date.now()}`
   const categoryCreate = await fetch(
@@ -38,7 +49,7 @@ beforeAll(async () => {
     {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ nome: categoryName }),
@@ -49,7 +60,7 @@ beforeAll(async () => {
   }
   const categoryResp = await fetch(
     `http://localhost:3000/api/v1/categorias?nome=${encodeURIComponent(categoryName)}`,
-    { headers: { Authorization: `Bearer ${tokenAdmin}` } }
+    { headers: { cookie: `${tokenAdmin}` } }
   )
   const categoryBody = await categoryResp.json()
   if (categoryBody.data.length === 0) {
@@ -63,7 +74,7 @@ beforeAll(async () => {
   const markCreate = await fetch('http://localhost:3000/api/v1/marcas', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${tokenAdmin}`,
+      cookie: `${tokenAdmin}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ nome: markName }),
@@ -73,7 +84,7 @@ beforeAll(async () => {
   }
   const markResp = await fetch(
     `http://localhost:3000/api/v1/marcas?nome=${encodeURIComponent(markName)}`,
-    { headers: { Authorization: `Bearer ${tokenAdmin}` } }
+    { headers: { cookie: `${tokenAdmin}` } }
   )
   const markBody = await markResp.json()
   if (markBody.data[0].length === 0) {
@@ -87,7 +98,7 @@ beforeAll(async () => {
   const productCreate = await fetch('http://localhost:3000/api/v1/produtos', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${tokenAdmin}`,
+      cookie: `${tokenAdmin}`,
       'x-test-provider': fakeproviderToken, // se esse arquivo também usa esse header — confirma se você já tem essa variável aqui
     },
     body: (() => {
@@ -114,7 +125,7 @@ beforeAll(async () => {
   }
   const allProducts = await (
     await fetch('http://localhost:3000/api/v1/produtos', {
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
   ).json()
   const foundProduct = allProducts.data.find((p) => p.nome === productName)
@@ -127,7 +138,7 @@ beforeAll(async () => {
   const lowStockCreate = await fetch('http://localhost:3000/api/v1/produtos', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${tokenAdmin}`,
+      cookie: `${tokenAdmin}`,
       'x-test-provider': fakeproviderToken, // se esse arquivo também usa esse header — confirma se você já tem essa variável aqui
     },
     body: (() => {
@@ -154,7 +165,7 @@ beforeAll(async () => {
   }
   const allProducts2 = await (
     await fetch('http://localhost:3000/api/v1/produtos', {
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
   ).json()
   const foundLowStock = allProducts2.data.find((p) => p.nome === lowStockName)
@@ -168,7 +179,7 @@ async function createOrder(token, produtoId, quantidade = 1) {
   const response = await fetch('http://localhost:3000/api/v1/pedidos', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token}`,
+      cookie: `${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -189,7 +200,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -207,7 +218,7 @@ describe('POST /api/v1/pedidos', () => {
 
     const orderResponse = await fetch(
       `http://localhost:3000/api/v1/pedidos?order_id=${respbody.data[0].order_id}`,
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
     const order = await orderResponse.json()
 
@@ -218,7 +229,7 @@ describe('POST /api/v1/pedidos', () => {
   test('POST create order actually decreases stock', async () => {
     const productBefore = await (
       await fetch(`http://localhost:3000/api/v1/produtos?id=${productId}`, {
-        headers: { Authorization: `Bearer ${tokenUser}` },
+        headers: { cookie: `${tokenUser}` },
       })
     ).json()
     const stockBefore = productBefore.data[0].estoque
@@ -226,7 +237,7 @@ describe('POST /api/v1/pedidos', () => {
     const orderResponse = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -240,7 +251,7 @@ describe('POST /api/v1/pedidos', () => {
 
     const productAfter = await (
       await fetch(`http://localhost:3000/api/v1/produtos?id=${productId}`, {
-        headers: { Authorization: `Bearer ${tokenUser}` },
+        headers: { cookie: `${tokenUser}` },
       })
     ).json()
     const stockAfter = productAfter.data[0].estoque
@@ -252,7 +263,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({}),
@@ -271,7 +282,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ items: [] }),
@@ -290,7 +301,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -314,7 +325,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -338,7 +349,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -362,7 +373,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -386,7 +397,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -410,7 +421,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -428,7 +439,7 @@ describe('POST /api/v1/pedidos', () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer teste145322`,
+        cookie: `token=teste145322`,
         'Content-Type': 'application/json',
       },
     })
@@ -463,7 +474,7 @@ describe('POST /api/v1/pedidos', () => {
 describe('GET /api/v1/pedidos', () => {
   test('GET all orders of the logged user', async () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
-      headers: { Authorization: `Bearer ${tokenUser}` },
+      headers: { cookie: `${tokenUser}` },
     })
 
     let respbody = await response.json()
@@ -475,7 +486,7 @@ describe('GET /api/v1/pedidos', () => {
 
   test('GET all orders as admin returns orders from all users', async () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
 
     let respbody = await response.json()
@@ -498,7 +509,7 @@ describe('GET /api/v1/pedidos', () => {
 
   test('GET all orders with invalid token', async () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
-      headers: { Authorization: `Bearer teste145322` },
+      headers: { cookie: `token=teste145322` },
     })
 
     let respbody = await response.json()
@@ -515,7 +526,7 @@ describe('GET /api/v1/pedidos', () => {
 
     const response = await fetch(
       `http://localhost:3000/api/v1/pedidos?order_id=${orderId}`,
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
 
     let respbody = await response.json()
@@ -528,7 +539,7 @@ describe('GET /api/v1/pedidos', () => {
   test('GET order by id that does not exist', async () => {
     const response = await fetch(
       'http://localhost:3000/api/v1/pedidos?order_id=99999999',
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
 
     let respbody = await response.json()
@@ -541,7 +552,7 @@ describe('GET /api/v1/pedidos', () => {
     const orderId = await createOrder(tokenUser, productId)
     const response = await fetch(
       `http://localhost:3000/api/v1/pedidos?order_id=${encodeURIComponent(orderId)}`,
-      { headers: { Authorization: `Bearer ${tokenAdmin}` } }
+      { headers: { cookie: `${tokenAdmin}` } }
     )
 
     const respbody = await response.json()
@@ -558,12 +569,13 @@ describe('GET /api/v1/pedidos', () => {
       'outrorenan',
       'Abcdef12!'
     )
-    const tokenUser2 = user2[1].data[0].token
+    const cookieuser = user2[2].headers.getSetCookie()
+    const tokenUser2 = cookieuser[0]
 
     const createResp = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser2}`,
+        cookie: `${tokenUser2}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -575,7 +587,7 @@ describe('GET /api/v1/pedidos', () => {
 
     const response = await fetch(
       `http://localhost:3000/api/v1/pedidos?order_id=${created.data[0].order_id}`,
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
 
     let respbody = await response.json()
@@ -588,7 +600,7 @@ describe('GET /api/v1/pedidos', () => {
     const createResp = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -600,7 +612,7 @@ describe('GET /api/v1/pedidos', () => {
 
     const response = await fetch(
       `http://localhost:3000/api/v1/pedidos?order_id=${created.data[0].order_id}`,
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
 
     let respbody = await response.json()
@@ -612,7 +624,7 @@ describe('GET /api/v1/pedidos', () => {
   test('GET order by id with invalid format', async () => {
     const response = await fetch(
       'http://localhost:3000/api/v1/pedidos?order_id=abc123',
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
 
     let respbody = await response.json()
@@ -639,7 +651,7 @@ describe('DELETE /api/v1/pedidos', () => {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -653,7 +665,7 @@ describe('DELETE /api/v1/pedidos', () => {
 
     const productBefore = await (
       await fetch(`http://localhost:3000/api/v1/produtos?id=${productId}`, {
-        headers: { Authorization: `Bearer ${tokenUser}` },
+        headers: { cookie: `${tokenUser}` },
       })
     ).json()
     const stockBefore = Number(productBefore.data[0].estoque)
@@ -663,7 +675,7 @@ describe('DELETE /api/v1/pedidos', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -677,7 +689,7 @@ describe('DELETE /api/v1/pedidos', () => {
 
     const productAfter = await (
       await fetch(`http://localhost:3000/api/v1/produtos?id=${productId}`, {
-        headers: { Authorization: `Bearer ${tokenUser}` },
+        headers: { cookie: `${tokenUser}` },
       })
     ).json()
     const stockAfter = Number(productAfter.data[0].estoque)
@@ -686,7 +698,7 @@ describe('DELETE /api/v1/pedidos', () => {
 
     const deletedOrderResponse = await fetch(
       `http://localhost:3000/api/v1/pedidos?order_id=${createorder.data[0].order_id}`,
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
 
     expect(deletedOrderResponse.status).toBe(404)
@@ -699,7 +711,7 @@ describe('DELETE /api/v1/pedidos', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -717,12 +729,13 @@ describe('DELETE /api/v1/pedidos', () => {
       'usuario para exclusao',
       'Abcdef12!'
     )
-    const tokenUser2 = user2[1].data[0].token
+    const cookieuser = user2[2].headers.getSetCookie()
+    const tokenUser2 = cookieuser[0]
 
     const createResponse = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser2}`,
+        cookie: `${tokenUser2}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -737,7 +750,7 @@ describe('DELETE /api/v1/pedidos', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -753,7 +766,7 @@ describe('DELETE /api/v1/pedidos', () => {
     const createResponse = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -765,7 +778,7 @@ describe('DELETE /api/v1/pedidos', () => {
 
     const productBefore = await (
       await fetch(`http://localhost:3000/api/v1/produtos?id=${productId}`, {
-        headers: { Authorization: `Bearer ${tokenAdmin}` },
+        headers: { cookie: `${tokenAdmin}` },
       })
     ).json()
     const stockBefore = Number(productBefore.data[0].estoque)
@@ -775,7 +788,7 @@ describe('DELETE /api/v1/pedidos', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
+          cookie: `${tokenAdmin}`,
           'Content-Type': 'application/json',
         },
       }
@@ -789,7 +802,7 @@ describe('DELETE /api/v1/pedidos', () => {
 
     const productAfter = await (
       await fetch(`http://localhost:3000/api/v1/produtos?id=${productId}`, {
-        headers: { Authorization: `Bearer ${tokenAdmin}` },
+        headers: { cookie: `${tokenAdmin}` },
       })
     ).json()
     const stockAfter = Number(productAfter.data[0].estoque)
@@ -798,7 +811,7 @@ describe('DELETE /api/v1/pedidos', () => {
 
     const deletedOrderResponse = await fetch(
       `http://localhost:3000/api/v1/pedidos?order_id=${created.data[0].order_id}`,
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
 
     expect(deletedOrderResponse.status).toBe(404)
@@ -810,7 +823,7 @@ describe('DELETE /api/v1/pedidos', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
+          cookie: `${tokenAdmin}`,
           'Content-Type': 'application/json',
         },
       }
@@ -827,7 +840,7 @@ describe('DELETE /api/v1/pedidos', () => {
       'http://localhost:3000/api/v1/pedidos?order_id=1',
       {
         method: 'DELETE',
-        headers: { Authorization: `Bearer tiktok` },
+        headers: { cookie: `token=tiktok` },
       }
     )
 
@@ -857,7 +870,7 @@ describe('DELETE /api/v1/pedidos', () => {
   test('DELETE order without an order_id query parameter', async () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${tokenUser}` },
+      headers: { cookie: `${tokenUser}` },
     })
 
     let respbody = await response.json()
@@ -877,7 +890,7 @@ describe('Unsupported methods', () => {
   test('returns 405 for the PATCH method', async () => {
     const response = await fetch('http://localhost:3000/api/v1/pedidos', {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
 
     expect(response.status).toBe(405)

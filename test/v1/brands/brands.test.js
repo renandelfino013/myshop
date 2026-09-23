@@ -9,14 +9,26 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `teste${Date.now()}@gmail.com`
   const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
-  const admin = await userRoleAdmin(
-    'renanadmin',
-    `teste2${Date.now()}@gmail.com`,
-    'AdminPass!23'
-  )
-  tokenUser = user[1].data[0].token
-  tokenAdmin = admin
+
+  const emailadmin = `testadmin${Date.now()}@gmail.com`
+  await userRoleAdmin('renanadmin', emailadmin, 'AdminPass!23')
+  const setcookieadmin = await fetch('http://localhost:3000/api/v1/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: `${emailadmin}`,
+      senha: 'AdminPass!23',
+    }),
+  })
+  const cookieuser = user[2].headers.getSetCookie()
+  tokenUser = cookieuser[0]
+
+  const cookieadmin = setcookieadmin.headers.getSetCookie()
+  tokenAdmin = cookieadmin[0]
 })
+
 describe('POST api/v1/marcas', () => {
   test('POST create brand happy path', async () => {
     let name = `Bránd ${Date.now()}`
@@ -24,8 +36,8 @@ describe('POST api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
         'Content-Type': 'application/json',
+        cookie: `${tokenAdmin}`,
       },
       body: JSON.stringify({
         nome: `${name}`,
@@ -33,6 +45,7 @@ describe('POST api/v1/marcas', () => {
     })
 
     const respbody = await response.json()
+
     expect(response.status).toBe(201)
     expect(respbody).toEqual({
       success: true,
@@ -43,7 +56,7 @@ describe('POST api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -70,7 +83,7 @@ describe('POST api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -97,13 +110,14 @@ describe('POST api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer teste145322`,
+        cookie: `token=invalidcookie/token`,
 
         'Content-Type': 'application/json',
       },
     })
 
     const respbody = await response.json()
+    console.dir(respbody, { depth: null })
     expect(response.status).toBe(401)
     expect(respbody).toEqual({
       success: false,
@@ -142,7 +156,6 @@ describe('GET api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
         'Content-Type': 'application/json',
       },
     })
@@ -171,7 +184,7 @@ describe('GET api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'GET',
       headers: {
-        Authorization: `Bearer teste145322`,
+        cookie: `invalidtoken`,
 
         'Content-Type': 'application/json',
       },
@@ -197,7 +210,7 @@ describe('GET api/v1/marcas by id or nome', () => {
     await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ nome: createdName }),
@@ -208,7 +221,6 @@ describe('GET api/v1/marcas by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -223,7 +235,6 @@ describe('GET api/v1/marcas by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -242,7 +253,6 @@ describe('GET api/v1/marcas by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -271,7 +281,6 @@ describe('GET api/v1/marcas by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -290,7 +299,6 @@ describe('GET api/v1/marcas by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -313,7 +321,7 @@ describe('GET api/v1/marcas by id or nome', () => {
     })
   })
 
-  test('GET brand by id/nome without token', async () => {
+  test('GET brand by id without token', async () => {
     const response = await fetch(
       `http://localhost:3000/api/v1/marcas?id=${createdId}`,
       {
@@ -336,7 +344,6 @@ describe('GET api/v1/marcas by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -364,7 +371,7 @@ describe('PATCH api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -386,7 +393,7 @@ describe('PATCH api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer tiktok`,
+        cookie: `token=tiktok`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -432,7 +439,7 @@ describe('PATCH api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -462,7 +469,7 @@ describe('PATCH api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -494,7 +501,7 @@ describe('PATCH api/v1/marcas', () => {
     await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ nome: existingName }),
@@ -503,7 +510,7 @@ describe('PATCH api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -533,7 +540,7 @@ describe('PATCH api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -563,7 +570,7 @@ describe('PATCH api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({}),
@@ -595,7 +602,7 @@ describe('DELETE api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -616,7 +623,7 @@ describe('DELETE api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -645,7 +652,7 @@ describe('DELETE api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -674,7 +681,7 @@ describe('DELETE api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer tiktok`,
+        cookie: `token=tiktok`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -721,7 +728,7 @@ describe('DELETE api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({}),

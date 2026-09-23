@@ -39,12 +39,13 @@ describe('POST /api/v1/register', () => {
 
     expect(response.status).toBe(201)
     expect(body).not.toHaveProperty('error')
-    expect(body.data[0]).toHaveProperty('token')
+    const cookie = response.headers.getSetCookie()[0] || undefined
+    expect(cookie).toBeDefined()
 
     expect(body).toMatchObject({
       success: true,
       message: expect.any(String),
-      data: [expect.any(Object)],
+      data: [],
     })
     await cleanUser(email)
   })
@@ -58,6 +59,8 @@ describe('POST /api/v1/register', () => {
 
     expect(response.status).toBe(409)
     expect(body).toHaveProperty('error')
+    const cookie = response.headers.getSetCookie()[0] || undefined
+    expect(cookie).not.toBeDefined()
   })
 
   describe('invalid cases (400)', () => {

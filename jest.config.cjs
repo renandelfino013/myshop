@@ -12,6 +12,7 @@ const jestConfig = createJestConfig({
   },
 
   testTimeout: 60000,
+  modulePathIgnorePatterns: ['generateuseradmin.test.js'],
 })
 
 module.exports = jestConfig

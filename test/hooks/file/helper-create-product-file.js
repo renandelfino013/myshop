@@ -32,7 +32,7 @@ export async function createProduct({
 
   const response = await fetch(`${apiUrl}/produtos`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { cookie: `${token}` },
     body: formData,
   })
 

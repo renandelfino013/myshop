@@ -12,7 +12,7 @@ async function user(email, nome, senha) {
   })
   const body = await usuario.json()
   if ((await usuario.status) == 201) {
-    return [true, await body]
+    return [true, await body, usuario]
   } else {
     return [false, await body]
   }

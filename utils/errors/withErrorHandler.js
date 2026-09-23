@@ -8,7 +8,6 @@ export function withErrorHandler(handler) {
     try {
       return await requestContext.run({ storageProvider }, async () => {
         const response = await handler(req, res);
-
         return await responseReq(
           res,
           response.statusCode,

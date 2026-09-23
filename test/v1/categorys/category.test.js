@@ -12,13 +12,24 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `teste${Date.now()}@gmail.com`
   const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
-  const admin = await userRoleAdmin(
-    'renanadmin',
-    `teste2${Date.now()}@gmail.com`,
-    'AdminPass!23'
-  )
-  tokenUser = user[1].data[0].token
-  tokenAdmin = admin
+
+  const emailadmin = `testadmin${Date.now()}@gmail.com`
+  await userRoleAdmin('renanadmin', emailadmin, 'AdminPass!23')
+  const setcookieadmin = await fetch('http://localhost:3000/api/v1/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: `${emailadmin}`,
+      senha: 'AdminPass!23',
+    }),
+  })
+  const cookieuser = user[2].headers.getSetCookie()
+  tokenUser = cookieuser[0]
+
+  const cookieadmin = setcookieadmin.headers.getSetCookie()
+  tokenAdmin = cookieadmin[0]
 })
 
 describe('POST api/v1/categorias', () => {
@@ -28,7 +39,7 @@ describe('POST api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -48,7 +59,7 @@ describe('POST api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -76,7 +87,7 @@ describe('POST api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -104,7 +115,7 @@ describe('POST api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer teste145322`,
+        cookie: `token=teste145322`,
         'Content-Type': 'application/json',
       },
     })
@@ -158,14 +169,14 @@ describe('GET api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
     })
 
     let respbody = await response.json()
     expect(response.status).toBe(200)
-    expect(respbody.data.length).toBeGreaterThanOrEqual(0)
+    expect(respbody.data.length).toBeGreaterThanOrEqual(1)
   })
 
   test('GET all categories whithout token', async () => {
@@ -186,7 +197,7 @@ describe('GET api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'GET',
       headers: {
-        Authorization: `Bearer teste145322`,
+        cookie: `token=teste145322`,
         'Content-Type': 'application/json',
       },
     })
@@ -216,7 +227,7 @@ describe('GET api/v1/categorias by id or nome', () => {
     await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ nome: createdName }),
@@ -227,7 +238,7 @@ describe('GET api/v1/categorias by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -242,7 +253,7 @@ describe('GET api/v1/categorias by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -260,7 +271,7 @@ describe('GET api/v1/categorias by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -289,7 +300,7 @@ describe('GET api/v1/categorias by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -307,7 +318,7 @@ describe('GET api/v1/categorias by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -355,7 +366,7 @@ describe('GET api/v1/categorias by id or nome', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -385,7 +396,7 @@ describe('PUT api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'PUT',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -407,7 +418,7 @@ describe('PUT api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'PUT',
       headers: {
-        Authorization: `Bearer tiktok`,
+        cookie: `token=tiktok`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -467,7 +478,7 @@ describe('PUT api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'PUT',
       headers: {
-        Authorization: `Bearer ${tokenUser}`,
+        cookie: `${tokenUser}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -497,7 +508,7 @@ describe('PUT api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'PUT',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -528,7 +539,7 @@ describe('PUT api/v1/categorias', () => {
     await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -540,7 +551,7 @@ describe('PUT api/v1/categorias', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
+          cookie: `${tokenAdmin}`,
           'Content-Type': 'application/json',
         },
       }
@@ -551,7 +562,7 @@ describe('PUT api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'PUT',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -581,7 +592,7 @@ describe('PUT api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'PUT',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -611,7 +622,7 @@ describe('PUT api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'PUT',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({}),
@@ -645,7 +656,7 @@ describe('DELETE api/v1/categorias', () => {
     await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ nome }),
@@ -655,7 +666,7 @@ describe('DELETE api/v1/categorias', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
+          cookie: `${tokenAdmin}`,
           'Content-Type': 'application/json',
         },
       }
@@ -667,7 +678,7 @@ describe('DELETE api/v1/categorias', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
+          cookie: `${tokenAdmin}`,
           'Content-Type': 'application/json',
         },
       }
@@ -687,7 +698,7 @@ describe('DELETE api/v1/categorias', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenAdmin}`,
+          cookie: `${tokenAdmin}`,
           'Content-Type': 'application/json',
         },
       }
@@ -715,14 +726,14 @@ describe('DELETE api/v1/categorias', () => {
     await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ nome }),
     })
     const searchResponse = await fetch(
       `http://localhost:3000/api/v1/categorias?nome=${encodeURIComponent(nome)}`,
-      { headers: { Authorization: `Bearer ${tokenUser}` } }
+      { headers: { cookie: `${tokenUser}` } }
     )
     const s = await searchResponse.json()
 
@@ -731,7 +742,7 @@ describe('DELETE api/v1/categorias', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenUser}`,
+          cookie: `${tokenUser}`,
           'Content-Type': 'application/json',
         },
       }
@@ -760,7 +771,7 @@ describe('DELETE api/v1/categorias', () => {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer tiktok`,
+          cookie: `token=tiktok`,
           'Content-Type': 'application/json',
         },
       }
@@ -805,7 +816,7 @@ describe('DELETE api/v1/categorias', () => {
     const response = await fetch('http://localhost:3000/api/v1/categorias', {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
         'Content-Type': 'application/json',
       },
     })

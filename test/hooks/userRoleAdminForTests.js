@@ -1,7 +1,7 @@
 import { registerAdminInDB } from 'models/users/users'
 import { ValidationError } from 'utils/errors/error'
-import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 export default async function userRoleAdmin(nome, email, senha) {
   try {
     const hashedpassword = await bcrypt.hash(senha, 10)

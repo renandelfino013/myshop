@@ -20,13 +20,13 @@ const defaultImagePath = path.join(
 )
 
 const jsonHeaders = (token) => ({
-  Authorization: `Bearer ${token}`,
+  cookie: `${token}`,
   'Content-Type': 'application/json',
   'x-test-provider': fakeproviderToken,
 })
 
 const formHeaders = (token) => ({
-  Authorization: `Bearer ${token}`,
+  cookie: `${token}`,
   'x-test-provider': fakeproviderToken,
 })
 
@@ -67,18 +67,26 @@ async function createRelatedResource(path, body) {
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
+  const email = `teste${Date.now()}@gmail.com`
+  const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
 
-  const user = await createuser.fakeuser.user(
-    `product-user-${Date.now()}@gmail.com`,
-    'product user',
-    'Abcdef12!'
-  )
-  tokenUser = user[1].data[0].token
-  tokenAdmin = await userRoleAdmin(
-    'product admin',
-    `product-admin-${Date.now()}@gmail.com`,
-    'AdminPass!23'
-  )
+  const emailadmin = `testadmin${Date.now()}@gmail.com`
+  await userRoleAdmin('renanadmin', emailadmin, 'AdminPass!23')
+  const setcookieadmin = await fetch('http://localhost:3000/api/v1/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: `${emailadmin}`,
+      senha: 'AdminPass!23',
+    }),
+  })
+  const cookieuser = user[2].headers.getSetCookie()
+  tokenUser = cookieuser[0]
+
+  const cookieadmin = setcookieadmin.headers.getSetCookie()
+  tokenAdmin = cookieadmin[0]
   fakeproviderToken = await generateTestKey('fake')
 
   const categoryName = `Category ${Date.now()}`
@@ -172,7 +180,7 @@ describe('GET api/v1/produtos', () => {
 
   test('GET with invalid token', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
-      headers: jsonHeaders('invalid-product-token'),
+      headers: jsonHeaders('token=invalid-product-token'),
     })
     const body = await response.json()
 

@@ -6,6 +6,7 @@ import {
   resetPassword,
 } from 'test/hooks/reset-password-helper.js'
 import jwt from 'jsonwebtoken'
+import { extractCookieFromHeaders } from '../helper/cookie/extractCookieFromHeaders'
 
 const RESET_PASSWORD_URL = 'http://localhost:3000/api/v1/rede-password'
 const VALID_PASSWORD = 'NewPassword123!'
@@ -168,13 +169,14 @@ describe('session invalidation after password change', () => {
     // Arrange: create a user and store the initial session token
     const email = `teste${Date.now()}@gmail.com`
 
-    const registerResponse = await createuser.fakeuser.user(
+    const response = await createuser.fakeuser.user(
       email,
       'renan',
       'Abcdef12!@dfd'
     )
+    const responseHeaders = response[2].headers
 
-    const oldToken = registerResponse[1].data[0].token
+    const oldToken = await extractCookieFromHeaders(responseHeaders)
 
     const decodedOldToken = jwt.verify(oldToken, process.env.JWT_SECRET)
 
@@ -215,11 +217,8 @@ describe('session invalidation after password change', () => {
       }),
     })
 
-    const loginBody = await loginResponse.json()
-
     expect(loginResponse.status).toBe(200)
-
-    const newToken = loginBody.data[0].token
+    const newToken = await extractCookieFromHeaders(loginResponse.headers)
 
     const decodedNewToken = jwt.verify(newToken, process.env.JWT_SECRET)
 

@@ -16,14 +16,15 @@ let markId
 let productId = 0
 
 const headers = (token) => ({
-  Authorization: `Bearer ${token}`,
+  cookie: `${token}`,
 })
 
 async function createRelatedResource(path, body) {
   const response = await fetch(`${apiUrl}/${path}`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${tokenAdmin}`,
+      cookie: `${tokenAdmin}`,
+
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
@@ -35,18 +36,26 @@ async function createRelatedResource(path, body) {
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
+  const email = `teste${Date.now()}@gmail.com`
+  const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
 
-  const user = await createuser.fakeuser.user(
-    `product-user-${Date.now()}@gmail.com`,
-    'product user',
-    'Abcdef12!'
-  )
-  tokenUser = user[1].data[0].token
-  tokenAdmin = await userRoleAdmin(
-    'product admin',
-    `product-admin-${Date.now()}@gmail.com`,
-    'AdminPass!23'
-  )
+  const emailadmin = `testadmin${Date.now()}@gmail.com`
+  await userRoleAdmin('renanadmin', emailadmin, 'AdminPass!23')
+  const setcookieadmin = await fetch('http://localhost:3000/api/v1/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: `${emailadmin}`,
+      senha: 'AdminPass!23',
+    }),
+  })
+  const cookieuser = user[2].headers.getSetCookie()
+  tokenUser = cookieuser[0]
+
+  const cookieadmin = setcookieadmin.headers.getSetCookie()
+  tokenAdmin = cookieadmin[0]
 
   const categoryName = `Category ${Date.now()}`
   const markName = `Brand ${Date.now()}`
@@ -84,7 +93,7 @@ beforeAll(async () => {
   const productResponse = await fetch(`${apiUrl}/produtos`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${tokenAdmin}`,
+      cookie: `${tokenAdmin}`,
     },
     body: formData,
   })
@@ -120,7 +129,7 @@ describe('PUT and POST Happy path', () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
       },
       body: formData,
     })
@@ -132,7 +141,7 @@ describe('PUT and POST Happy path', () => {
   })
 
   test('PUT without new image keep the old', async () => {
-    const productName = `Produto imagem ${Date.now()}`
+    const productName = `product img ${Date.now()}`
 
     const created = await createProduct({
       token: tokenAdmin,
@@ -144,7 +153,7 @@ describe('PUT and POST Happy path', () => {
     expect(created.status).toBe(201)
 
     const listResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
     const list = await listResponse.json()
     const product = list.data.find((p) => p.nome === productName)
@@ -163,13 +172,13 @@ describe('PUT and POST Happy path', () => {
 
     const putResponse = await fetch(`${apiUrl}/produtos`, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
       body: formData,
     })
     const body = await putResponse.json()
     if (putResponse.status !== 200) console.dir(body, { depth: null })
     const afterResponse = await fetch(`${apiUrl}/produtos?id=${product.id}`, {
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
     expect(putResponse.status).toBe(200)
     const after = await afterResponse.json()
@@ -188,7 +197,7 @@ describe('PUT and POST Happy path', () => {
     expect(created.status).toBe(201)
 
     const listResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
     const list = await listResponse.json()
     const product = list.data.find((p) => p.nome === productName)
@@ -214,13 +223,13 @@ describe('PUT and POST Happy path', () => {
 
     const putResponse = await fetch(`${apiUrl}/produtos`, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
       body: formData,
     })
     const body = await putResponse.json()
     if (putResponse.status !== 200) console.dir(body, { depth: null })
     const afterResponse = await fetch(`${apiUrl}/produtos?id=${product.id}`, {
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
     expect(putResponse.status).toBe(200)
     const after = await afterResponse.json()
@@ -260,7 +269,7 @@ describe('PUT and POST invalid files', () => {
     expect(created.status).toBe(201)
 
     const listResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
     })
     const list = await listResponse.json()
     const product = list.data.find((p) => p.nome === productName)
@@ -282,7 +291,7 @@ describe('PUT and POST invalid files', () => {
     )
     const putResponse = await fetch(`${apiUrl}/produtos`, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${tokenAdmin}` },
+      headers: { cookie: `${tokenAdmin}` },
       body: formData,
     })
     const body = await putResponse.json()
@@ -324,7 +333,7 @@ describe('POST with file bigger than 5mb', () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenAdmin}`,
+        cookie: `${tokenAdmin}`,
       },
       body: formData,
     })

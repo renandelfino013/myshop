@@ -14,6 +14,7 @@ export function withErrorHandler(handler) {
           response.success,
           response.message,
           response.data,
+          response.cookie,
         );
       });
     } catch (error) {

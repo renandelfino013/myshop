@@ -33,5 +33,5 @@ export async function login(email, senha) {
           `,
   );
 
-  return [{ token }];
+  return token;
 }

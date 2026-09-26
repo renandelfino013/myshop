@@ -18,6 +18,6 @@ export async function registeruser(nome, email, senha) {
         expiresIn: "4h",
       },
     );
-    return [{ token }];
+    return token;
   }
 }

@@ -3,7 +3,7 @@ import { EmailAlreadyExistsError } from 'utils/errors/error'
 
 export async function finduserbyemail(email) {
   let user = await pool.query(
-    'SELECT id, nome, email, role, senha ,session_version FROM usuarios WHERE email = $1',
+    "SELECT id, nome, email, role, senha ,session_version,status,created_at FROM usuarios WHERE email = $1 AND status = 'active'",
     [email]
   )
   return user.rows
@@ -21,6 +21,23 @@ export async function findEmailUserbyId(userid) {
     throw error
   }
 }
+export async function findUserbyId(id) {
+  const user = await pool.query(
+    'SELECT id, nome, email, role,  session_version,created_at FROM usuarios WHERE id= $1',
+    [id]
+  )
+  return user.rows
+}
+export async function findAllUsers(limit, page) {
+  const offset = (page - 1) * limit
+
+  const user = await pool.query(
+    'SELECT id, nome, email, role,status,  session_version,created_at FROM usuarios ORDER BY id OFFSET $1 LIMIT $2',
+    [offset, limit]
+  )
+  return user.rows
+}
+
 export async function insertkey(userid, resetkey) {
   try {
     const result = await pool.query(
@@ -66,4 +83,11 @@ export async function registerAdminInDB(nome, email, hashedpassword) {
     console.error('erro no db ', error)
     throw error
   }
+}
+export async function softDeleteUser(user_id) {
+  const deleted = await pool.query(
+    "UPDATE usuarios SET status = 'deleted',session_version = session_version + 1 WHERE id = $1 RETURNING email",
+    [user_id]
+  )
+  return deleted.rows
 }

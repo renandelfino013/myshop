@@ -1,3 +1,14 @@
+/**
+ * @param {import("next").NextApiResponse} res
+ * @param {number} statusCode
+ * @param {boolean} success
+ * @param {string} message
+ * @param {any[]} data
+ * @param {{
+ *   action: "set" | "clear",
+ *   value?: string
+ * }} cookie
+ */
 import { createacookie } from "utils/helper/auth/cookie/createacookie";
 
 export default async function responseReq(
@@ -6,16 +17,25 @@ export default async function responseReq(
   success,
   message,
   data,
+  cookie,
 ) {
-  if (data && data[0].token) {
-    await createacookie(res, "token", data[0].token, {
+  if (cookie && cookie.action === "set") {
+    await createacookie(res, "token", cookie.value, {
       secure: true,
       path: "/api/v1",
       httpOnly: true,
       maxAge: 14400,
       sameSite: "strict",
     });
-    data.pop();
+  }
+  if (cookie && cookie.action === "clear") {
+    await createacookie(res, "token", "", {
+      secure: true,
+      path: "/api/v1",
+      httpOnly: true,
+      maxAge: 0,
+      sameSite: "strict",
+    });
   }
   return res.status(statusCode).json({
     success: success,

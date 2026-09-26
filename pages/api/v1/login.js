@@ -11,7 +11,10 @@ export async function handler(req) {
     const { email, senha } = req.body;
     const data = validateSchemaLogin({ email, senha });
     const token = await login(data.email, data.senha);
-    return responseabstration(200, "successfully logged in", token);
+    return responseabstration(200, "successfully logged in", [], {
+      action: "set",
+      value: token,
+    });
   } else {
     throw new methodNotAllowedError([
       {

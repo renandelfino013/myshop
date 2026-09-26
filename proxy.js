@@ -6,13 +6,12 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import jwt from 'jsonwebtoken'
 import { ValidateAndExtractDatafile } from 'utils/helper/proxy/extractDatafile'
-import { requestContext } from 'infra/request-context/request-context'
 
 const redis = Redis.fromEnv()
 const environment = process.env.VERCEL_ENV || 'development'
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(1000, '10 s'),
+  limiter: Ratelimit.slidingWindow(10, '10 s'),
   prefix: `@upstash/ratelimit:${environment}`,
   analytics: true,
 })
@@ -22,14 +21,15 @@ async function checkauthorization(request) {
     path.startsWith('/api/v1/marcas') ||
     path.startsWith('/api/v1/produtos') ||
     path.startsWith('/api/v1/pedidos') ||
-    path.startsWith('/api/v1/categorias')
+    path.startsWith('/api/v1/categorias') ||
+    path.startsWith('/api/v1/users')
   ) {
     const authHeader = request.headers.get('cookie')
-
     if (
       !authHeader &&
       request.method === 'GET' &&
-      !path.startsWith('/api/v1/pedidos')
+      !path.startsWith('/api/v1/pedidos') &&
+      !path.startsWith('/api/v1/users')
     ) {
       return NextResponse.next()
     } else if (!authHeader) {

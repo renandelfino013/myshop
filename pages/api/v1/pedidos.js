@@ -15,7 +15,6 @@ import {
 } from "services/orders/order-services";
 import { methodNotAllowedError } from "utils/errors/error";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
-import resposeAbstration from "utils/response/responseAbstration";
 import responseAbstration from "utils/response/responseAbstration";
 import { reqValidation } from "utils/validators/auth/reqValidation/req-validation";
 export async function handler(req) {
@@ -58,14 +57,14 @@ export async function handler(req) {
     const orderId = data.orderId;
 
     await RemoveorderAdmin(orderId, role);
-    return resposeAbstration(200, "order deleted successfully!");
+    return responseAbstration(200, "order deleted successfully!");
   } else if (req.method === "DELETE") {
     const { order_id } = req.query;
     const data = validateorderDelete({ orderId: order_id });
     const orderId = data.orderId;
 
     await Removeorder(userId, orderId);
-    return resposeAbstration(200, "order deleted successfully!");
+    return responseAbstration(200, "order deleted successfully!");
   } else {
     throw new methodNotAllowedError([
       {

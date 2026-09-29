@@ -1,8 +1,4 @@
-import { validatefileSchema } from "schemas/files/files.schemas";
-import {
-  validateProductSchema,
-  validateProductsPerIdSchema,
-} from "schemas/products/products.schema";
+import { validateProductsPerIdSchema } from "schemas/products/products.schema";
 import {
   GetAllproducts,
   GetProductPerId,
@@ -16,6 +12,7 @@ import { parseMultipart } from "utils/helper/file/searchFile";
 
 import responseabstration from "utils/response/responseAbstration";
 import { reqValidation } from "utils/validators/auth/reqValidation/req-validation";
+import { proccessProductInput } from "utils/validators/products/proccessProductInput";
 /**
  * @param {Request} req
  */
@@ -43,30 +40,7 @@ export async function handler(req) {
   } else if (req.method === "POST") {
     const { fields, files } = await parseMultipart(req);
 
-    const name = fields.name?.[0];
-    const price = fields.price?.[0];
-    const stock = fields.stock?.[0];
-    const categoryId = fields.categoryId?.[0];
-    const markId = fields.markId?.[0];
-    const desc = fields.desc?.[0];
-
-    const image = files.image?.[0] ?? null;
-
-    if (image) {
-      const namefile = image.originalFilename;
-      const filesize = image.size;
-      const mimetype = image.mimetype;
-
-      await validatefileSchema({ namefile, filesize, mimetype });
-    }
-    const data = validateProductSchema({
-      name,
-      price,
-      stock,
-      categoryId,
-      markId,
-      desc,
-    });
+    const { data, image } = await proccessProductInput(fields, files);
 
     await Postproduct(
       data.name,
@@ -83,32 +57,8 @@ export async function handler(req) {
   } else if (req.method === "PUT") {
     const { fields, files } = await parseMultipart(req);
 
-    const newname = fields.newname?.[0];
-    const price = fields.price?.[0];
-    const stock = fields.stock?.[0];
-    const categoryId = fields.categoryId?.[0];
-    const markId = fields.markId?.[0];
-    const desc = fields.desc?.[0];
-    const productId = fields.productId?.[0];
+    const { data, image } = await proccessProductInput(fields, files);
 
-    const image = files.image?.[0] ?? undefined;
-
-    if (image) {
-      const namefile = image.originalFilename;
-      const filesize = image.size;
-      const mimetype = image.mimetype;
-
-      await validatefileSchema({ namefile, filesize, mimetype });
-    }
-    const data = validateProductSchema({
-      name: newname,
-      price,
-      stock,
-      categoryId,
-      markId,
-      desc,
-      productId,
-    });
     await Putproduct(
       data.productId,
       data.name,

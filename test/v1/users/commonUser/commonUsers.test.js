@@ -36,7 +36,6 @@ describe('USER route (/users/me)', () => {
           },
         })
         const body = await response.json()
-        console.dir(body, { depth: null })
         expect(body.data[0].id).toBe(usersetup.commonUser.decoded_token.id)
         expect(Array.isArray(body.data)).toBe(true)
         expect(body.data.length).toBeGreaterThanOrEqual(1)
@@ -53,7 +52,6 @@ describe('USER route (/users/me)', () => {
           },
         })
         const body = await response.json()
-        console.dir(body, { depth: null })
         expect(body).toEqual({
           success: false,
           error: {
@@ -73,7 +71,6 @@ describe('USER route (/users/me)', () => {
           },
         })
         const body = await response.json()
-        console.dir(body, { depth: null })
         expect(body).toEqual({
           success: false,
           error: {
@@ -99,7 +96,6 @@ describe('USER route (/users/me)', () => {
           },
         })
         const body = await response.json()
-        console.dir(body, { depth: null })
         expect(Array.isArray(body.data)).toBe(true)
         expect(body.data.length).toEqual(0)
         expect(body.message).toEqual('user removed')
@@ -115,8 +111,6 @@ describe('USER route (/users/me)', () => {
             'Content-Type': 'application/json',
           },
         })
-        const body = await response.json()
-        console.dir(body, { depth: null })
         expect(response.status).toBe(200)
       })
 
@@ -130,7 +124,6 @@ describe('USER route (/users/me)', () => {
             },
           })
           const body = await response.json()
-          console.dir(body, { depth: null })
           expect(body).toEqual({
             success: false,
             error: {
@@ -149,7 +142,6 @@ describe('USER route (/users/me)', () => {
             },
           })
           const body = await response.json()
-          console.dir(body, { depth: null })
           expect(body).toEqual({
             success: false,
             error: {
@@ -168,7 +160,6 @@ describe('USER route (/users/me)', () => {
             },
           })
           const body = await response.json()
-          console.dir(body, { depth: null })
           expect(body).toEqual({
             success: false,
             error: {
@@ -187,7 +178,6 @@ describe('USER route (/users/me)', () => {
             },
           })
           const body = await response.json()
-          console.dir(body, { depth: null })
           expect(body).toEqual({
             success: false,
             error: {
@@ -206,7 +196,6 @@ describe('USER route (/users/me)', () => {
             },
           })
           const body = await response.json()
-          console.dir(body, { depth: null })
           expect(body).toEqual({
             success: false,
             error: {
@@ -225,7 +214,6 @@ describe('USER route (/users/me)', () => {
             },
           })
           const body = await response.json()
-          console.dir(body, { depth: null })
           expect(body).toEqual({
             success: false,
             error: {
@@ -247,7 +235,6 @@ describe('USER route (/users/me)', () => {
           },
         })
         const body = await response.json()
-        console.dir(body, { depth: null })
         expect(body).toEqual({
           success: false,
           error: {
@@ -267,7 +254,6 @@ describe('USER route (/users/me)', () => {
           },
         })
         const body = await response.json()
-        console.dir(body, { depth: null })
         expect(body).toEqual({
           success: false,
           error: {
@@ -328,7 +314,6 @@ describe('ADMIN route (/users)', () => {
             ],
           },
         })
-        console.dir(body, { depth: null })
       })
       test('get user by id', async () => {
         usersetup = await generates_Users_And_catch_Their_Cookies()
@@ -352,7 +337,6 @@ describe('ADMIN route (/users)', () => {
             ],
           },
         })
-        console.dir(body, { depth: null })
       })
     })
   })

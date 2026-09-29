@@ -19,7 +19,6 @@ describe('ADMIN route (/users)', () => {
           },
         })
         const body = await response.json()
-        console.dir(body.data, { depth: null })
         expect(Array.isArray(body.data)).toBe(true)
         expect(body.data.length).toBeGreaterThanOrEqual(1)
         expect(body.data[0].users.length).toBeGreaterThanOrEqual(2)
@@ -359,7 +358,6 @@ describe('ADMIN accessing own user (/users/me)', () => {
         },
       })
       const body = await response.json()
-      console.dir(body, { depth: null })
       expect(body.data[0].id).toBe(usersetup.userAdmin.decoded_token.id)
       expect(Array.isArray(body.data)).toBe(true)
       expect(body.data.length).toBeGreaterThanOrEqual(1)
@@ -379,7 +377,6 @@ describe('ADMIN accessing own user (/users/me)', () => {
         },
       })
       const body = await response.json()
-      console.dir(body, { depth: null })
       expect(Array.isArray(body.data)).toBe(true)
       expect(body.data.length).toEqual(0)
       expect(body.message).toEqual('user removed')
@@ -395,7 +392,6 @@ describe('ADMIN accessing own user (/users/me)', () => {
         },
       })
       const body = await response.json()
-      console.dir(body, { depth: null })
       expect(body).toEqual({
         success: false,
         error: {

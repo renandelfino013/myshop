@@ -23,7 +23,7 @@ export async function findEmailUserbyId(userid) {
 }
 export async function findUserbyId(id) {
   const user = await pool.query(
-    'SELECT id, nome, email, role,  session_version,created_at FROM usuarios WHERE id= $1',
+    'SELECT id, nome, email, role,  session_version,created_at,image FROM usuarios WHERE id= $1',
     [id]
   )
   return user.rows
@@ -90,4 +90,12 @@ export async function softDeleteUser(user_id) {
     [user_id]
   )
   return deleted.rows
+}
+
+export async function InsertImageOnUser(url, user_id) {
+  const user = await pool.query(
+    'UPDATE usuarios SET image =$1 WHERE id =$2 RETURNING email',
+    [url, user_id]
+  )
+  return user.rows
 }

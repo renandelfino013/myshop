@@ -296,7 +296,7 @@ describe('PUT and POST invalid files', () => {
     })
     const body = await putResponse.json()
     expect(putResponse.status).toBe(415)
-    if (putResponse.status !== 200) console.dir(body, { depth: null })
+    if (putResponse.status !== 415) console.dir(body, { depth: null })
   })
 })
 describe('POST without file', () => {
@@ -338,7 +338,7 @@ describe('POST with file bigger than 5mb', () => {
       body: formData,
     })
     const body = await response.json()
-    if (response.status !== 200) console.dir(body, { depth: null })
+    if (response.status !== 400) console.dir(body, { depth: null })
     expect(response.status).toBe(400)
     expect(body.success).toBe(false)
   })

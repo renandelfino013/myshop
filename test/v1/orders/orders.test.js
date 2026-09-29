@@ -637,10 +637,15 @@ describe('GET /api/v1/pedidos', () => {
     const response = await fetch(
       'http://localhost:3000/api/v1/pedidos?order_id=1'
     )
-
-    let respbody = await response.json()
-
-    console.dir(respbody, { depth: null })
+    expect(response.status).toBe(401)
+    const body = await response.json()
+    expect(body).toEqual({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        details: [{ field: 'token', message: 'token is missing' }],
+      },
+    })
   })
 })
 

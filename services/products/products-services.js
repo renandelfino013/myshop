@@ -8,6 +8,7 @@ import {
 } from "models/products/modelProducts";
 import { deleteFromStorage, uploadFile } from "services/file/file-services";
 import assertFound from "utils/helper/assertFound";
+import { removeTempfile } from "utils/helper/file/removeTempFiles";
 import verifyuserRole from "utils/validators/verifyuserRole";
 
 export async function GetAllproducts() {
@@ -37,9 +38,13 @@ export async function Postproduct(
   role,
 ) {
   const context = "create";
-  await verifyuserRole(role, context);
-  const result = await uploadFile(image_file.filepath);
+  let result;
+
   try {
+    await verifyuserRole(role, context);
+
+    result = await uploadFile(image_file.filepath);
+
     await Insertproduct(
       name,
       price,
@@ -50,8 +55,10 @@ export async function Postproduct(
       result.secure_url ?? null,
     );
   } catch (error) {
-    await deleteFromStorage(result.public_id);
+    if (result) await deleteFromStorage(result.public_id);
     throw error;
+  } finally {
+    removeTempfile(image_file.filepath);
   }
 }
 
@@ -67,12 +74,14 @@ export async function Putproduct(
   image_file,
 ) {
   const context = "modify";
-  await verifyuserRole(role, context);
   let result = 0;
-  if (image_file !== undefined) {
-    result = await uploadFile(image_file.filepath);
-  }
+
   try {
+    await verifyuserRole(role, context);
+
+    if (image_file !== undefined) {
+      result = await uploadFile(image_file.filepath);
+    }
     const rows = await Updateproduct(
       newname,
       price,
@@ -87,6 +96,10 @@ export async function Putproduct(
   } catch (error) {
     if (result) await deleteFromStorage(result.public_id);
     throw error;
+  } finally {
+    if (image_file !== undefined) {
+      await removeTempfile(image_file.filepath);
+    }
   }
 }
 export async function removeproduct(id, role) {

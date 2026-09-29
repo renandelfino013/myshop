@@ -1,6 +1,12 @@
-import { findAllUsers, findUserbyId, softDeleteUser } from "models/users/users";
+import {
+  findAllUsers,
+  findUserbyId,
+  InsertImageOnUser,
+  softDeleteUser,
+} from "models/users/users";
+import { deleteFromStorage, uploadFile } from "services/file/file-services";
 import assertFound from "utils/helper/assertFound";
-import { dateconversion } from "utils/helper/users/dateconversion";
+import { removeTempfile } from "utils/helper/file/removeTempFiles";
 import verifyuserRole from "utils/validators/verifyuserRole";
 
 export async function getAllUsersAdmin(limit, page, role) {
@@ -13,12 +19,8 @@ export async function getAllUsersAdmin(limit, page, role) {
   }
 
   const users = await findAllUsers(limit, page);
-  const users_formated = users.map((user) => ({
-    ...user,
-    created_at: dateconversion(user.created_at),
-  }));
 
-  return [{ users: users_formated }];
+  return [{ users }];
 }
 export async function getUserbyidAdmin(user_id, role) {
   await verifyuserRole(role, "view");
@@ -28,10 +30,8 @@ export async function getUserbyidAdmin(user_id, role) {
 }
 export async function getUserbyidUser(user_id) {
   const user = await findUserbyId(user_id);
-  const users_formated = user.map((user) => ({
-    ...user,
-    created_at: dateconversion(user.created_at),
-  }));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+  const users_formated = user.map(({ session_version, ...rest }) => rest);
 
   assertFound(user, "user");
   return users_formated;
@@ -47,4 +47,21 @@ export async function softRemoveMyUser(user_id) {
   const deleted = await softDeleteUser(user_id);
   await assertFound(deleted, "user");
   return true;
+}
+export async function PostUserImage(image, user_id) {
+  let upload;
+  try {
+    upload = await uploadFile(image.filepath);
+
+    const result = await InsertImageOnUser(upload.secure_url, user_id);
+    assertFound(result, "user");
+    return null;
+  } catch (error) {
+    if (upload) {
+      await deleteFromStorage(upload.public_id);
+    }
+    throw error;
+  } finally {
+    removeTempfile(image.filepath);
+  }
 }

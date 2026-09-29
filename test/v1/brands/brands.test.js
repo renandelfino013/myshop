@@ -117,7 +117,6 @@ describe('POST api/v1/marcas', () => {
     })
 
     const respbody = await response.json()
-    console.dir(respbody, { depth: null })
     expect(response.status).toBe(401)
     expect(respbody).toEqual({
       success: false,

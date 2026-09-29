@@ -1,3 +1,4 @@
+/* eslint-disable jest/expect-expect */
 /* eslint-disable no-console */
 import userRoleAdmin from 'test/hooks/userRoleAdminForTests'
 test('admin', async () => {

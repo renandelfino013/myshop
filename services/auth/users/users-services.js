@@ -1,3 +1,4 @@
+import { SearchUsers } from "models/search/search-models";
 import {
   findAllUsers,
   findUserbyId,
@@ -7,20 +8,17 @@ import {
 import { deleteFromStorage, uploadFile } from "services/file/file-services";
 import assertFound from "utils/helper/assertFound";
 import { removeTempfile } from "utils/helper/file/removeTempFiles";
+import { offsetAndPageProccess } from "utils/helper/search/offsetAndPageProccess";
 import verifyuserRole from "utils/validators/verifyuserRole";
 
 export async function getAllUsersAdmin(limit, page, role) {
   await verifyuserRole(role, "view");
-  if (!page || page === 0) {
-    page = 1;
-  }
-  if (!limit) {
-    limit = 30;
-  }
 
-  const users = await findAllUsers(limit, page);
+  const processed = await offsetAndPageProccess(page, limit);
 
-  return [{ users }];
+  const users = await findAllUsers(processed.offset, processed.limit);
+
+  return users;
 }
 export async function getUserbyidAdmin(user_id, role) {
   await verifyuserRole(role, "view");
@@ -64,4 +62,9 @@ export async function PostUserImage(image, user_id) {
   } finally {
     removeTempfile(image.filepath);
   }
+}
+export async function GetSearchUsers(search, limit, offset, role) {
+  await verifyuserRole(role, "view");
+  const rows = await SearchUsers(search, limit, offset);
+  return rows;
 }

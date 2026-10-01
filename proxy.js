@@ -51,6 +51,7 @@ async function checkauthorization(request) {
     const token = authHeader.replace(/^.*?=|;/g, '').split(' ')[0]
 
     const tokenTestProvider = request.headers.get('x-test-provider')
+    const tokenNopagination = request.headers.get('x-no-pagination')
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -107,6 +108,13 @@ async function checkauthorization(request) {
             decodedTokenTest.storageProvider
           )
         }
+      }
+      if (tokenNopagination) {
+        const decodedTokenTest = jwt.verify(
+          tokenNopagination,
+          process.env.JWT_SECRET
+        )
+        requestHeaders.set('x-no-pagination', decodedTokenTest.noPagination)
       }
 
       return NextResponse.next({

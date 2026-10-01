@@ -3,8 +3,8 @@ import { z } from 'zod'
 export const nameproductschema = z
   .string()
   .regex(
-    /^[a-zA-Z0-9áéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ\s\-/.%"'&]{5,100}$/u,
-    'Product name must be between 5 and 100 characters and contain only letters, numbers, and standard symbols (like -, /, %, &, and '
+    /^[a-zA-Z0-9áéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ\s\-/.%"'&+,]{5,300}$/u,
+    'Product name must be between 5 and 300 characters and contain only letters, numbers, and standard symbols. (like -, /, %, &, and'
   )
 
 export const nameuserschema = z

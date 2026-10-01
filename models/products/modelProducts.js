@@ -1,8 +1,64 @@
 import pool from 'infra/database/db'
 import { alreadyExistsError, ValidationError } from 'utils/errors/error'
+import { requestContext } from 'infra/request-context/request-context'
 
-export async function FindAllProducts() {
-  const result = await pool.query('SELECT * FROM produtos')
+export async function FindAllProducts(limit, offset) {
+  const { Nopagination } = requestContext.getStore()
+
+  const query = !Nopagination
+    ? `
+  SELECT p.id,
+  p.nome,
+  p.preco,
+  p.categoria_id,
+  p.marca_id,
+  p.descricao,
+  p.image,
+  m.nome 
+  AS marca_nome ,
+  c.nome 
+  AS categoria_nome
+   FROM produtos 
+   AS p  
+   INNER JOIN marcas 
+   AS m
+    ON p.marca_id = m.id 
+   INNER JOIN categorias
+    AS c 
+    ON c.id= p.categoria_id
+    ORDER BY p.id 
+     OFFSET $1 
+     LIMIT $2
+  
+     
+     `
+    : `
+  SELECT p.id,
+  p.nome,
+  p.preco,
+  p.categoria_id,
+  p.marca_id,
+  p.descricao,
+  p.image,
+  m.nome 
+  AS marca_nome ,
+  c.nome 
+  AS categoria_nome
+   FROM produtos 
+   AS p  
+   INNER JOIN marcas 
+   AS m
+    ON p.marca_id = m.id 
+   INNER JOIN categorias
+    AS c 
+    ON c.id= p.categoria_id
+    ORDER BY p.id 
+    
+     
+     `
+  const params = !Nopagination ? [offset, limit] : []
+  const result = await pool.query(query, params)
+
   return result.rows
 }
 

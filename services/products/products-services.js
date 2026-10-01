@@ -6,13 +6,16 @@ import {
   Insertproduct,
   Updateproduct,
 } from "models/products/modelProducts";
+import { SearchProducts } from "models/search/search-models";
 import { deleteFromStorage, uploadFile } from "services/file/file-services";
 import assertFound from "utils/helper/assertFound";
 import { removeTempfile } from "utils/helper/file/removeTempFiles";
 import verifyuserRole from "utils/validators/verifyuserRole";
 
-export async function GetAllproducts() {
-  return await FindAllProducts();
+export async function GetAllproducts(offset, limit) {
+  const rows = await FindAllProducts(limit, offset);
+  const products_formated = processproduct(rows);
+  return products_formated;
 }
 
 export async function GetProductPerId(id) {
@@ -26,7 +29,13 @@ export async function GetProductPerName(name) {
   assertFound(rows, "Product");
   return rows;
 }
+export async function GetsearchProduct(search, limit, offset) {
+  const arraysearch = search.split(" ");
 
+  const rows = await SearchProducts(arraysearch, limit, offset);
+  const products_formated = processproduct(rows);
+  return products_formated;
+}
 export async function Postproduct(
   name,
   price,
@@ -109,4 +118,20 @@ export async function removeproduct(id, role) {
   const rows = await Deleteproduct(id);
   assertFound(rows, "Product");
   return true;
+}
+function processproduct(array) {
+  const product_formated = array.map(
+    ({ marca_id, marca_nome, categoria_nome, categoria_id, ...product }) => ({
+      ...product,
+      categoria: {
+        id: categoria_id,
+        nome: categoria_nome,
+      },
+      marca: {
+        id: marca_id,
+        nome: marca_nome,
+      },
+    }),
+  );
+  return product_formated;
 }

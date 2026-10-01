@@ -113,6 +113,25 @@ beforeAll(async () => {
   markId = brandbody.data[0].id
 
   const productName = `Fixture product ${Date.now()}`
+  const productps5Response = await fetch(`${apiUrl}/produtos`, {
+    method: 'POST',
+    headers: formHeaders(tokenAdmin),
+    body: buildProductFormData({
+      name: 'Sony PlayStation 5 Console, 825GB SSD, DualSense Wireless Controller + 2 Digital Games, Digital Edition',
+      price: 19.9,
+      stock: 10,
+      categoryId,
+      markId,
+      desc: 'Sony next-generation video game console, featuring an 825GB SSD, a DualSense wireless controller, and two included digital games. Enjoy stunning graphics and fast performance for an immersive gaming experience. PS5',
+    }),
+  })
+  if (productps5Response.status !== 201) {
+    const errorBody = await productps5Response.json().catch(() => null)
+    throw new Error(
+      `Failed to create product: ${productps5Response.status} - ${JSON.stringify(errorBody)}`
+    )
+  }
+
   const productResponse = await fetch(`${apiUrl}/produtos`, {
     method: 'POST',
     headers: formHeaders(tokenAdmin),

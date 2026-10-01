@@ -10,6 +10,57 @@ beforeAll(async () => {
 describe('ADMIN route (/users)', () => {
   describe('GET, admin route /users', () => {
     describe('Get, happy path (admin)', () => {
+      describe('Get search users (admin)', () => {
+        test('Get search user does not exist (admin)', async () => {
+          const response = await fetch(
+            `${apiurl}/users?search=${encodeURIComponent('zéquinha')}`,
+            {
+              method: 'GET',
+              headers: {
+                cookie: `${usersetup.userAdmin.cookie}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          )
+          const body = await response.json()
+          expect(Array.isArray(body.data)).toBe(true)
+          expect(body.data.length).toBe(0)
+          expect(body.message).toEqual('users found')
+          expect(response.status).toBe(200)
+        })
+        test.each([['limit=100000'], ['limit=31']])(
+          'limite acima do teto: %s',
+          async (qs) => {
+            const res = await fetch(`${apiurl}/users?${qs}`, {
+              headers: {
+                cookie: `${usersetup.userAdmin.cookie}`,
+                'Content-Type': 'application/json',
+              },
+            })
+            const body = await res.json()
+            expect(res.status).toBe(200)
+            expect(body.data.length).toBeLessThanOrEqual(30)
+          }
+        )
+        test('Get search users (admin)', async () => {
+          const response = await fetch(
+            `${apiurl}/users?search=${encodeURIComponent('renan')}`,
+            {
+              method: 'GET',
+              headers: {
+                cookie: `${usersetup.userAdmin.cookie}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          )
+          const body = await response.json()
+          expect(Array.isArray(body.data)).toBe(true)
+          expect(body.data.length).toBeGreaterThanOrEqual(1)
+          expect(body.message).toEqual('users found')
+          expect(response.status).toBe(200)
+        })
+      })
+
       test('Get all users (no query)', async () => {
         const response = await fetch(`${apiurl}/users`, {
           method: 'GET',
@@ -21,7 +72,7 @@ describe('ADMIN route (/users)', () => {
         const body = await response.json()
         expect(Array.isArray(body.data)).toBe(true)
         expect(body.data.length).toBeGreaterThanOrEqual(1)
-        expect(body.data[0].users.length).toBeGreaterThanOrEqual(2)
+        expect(body.data.length).toBeGreaterThanOrEqual(2)
         expect(body.message).toEqual('users found')
         expect(response.status).toBe(200)
       })
@@ -36,8 +87,37 @@ describe('ADMIN route (/users)', () => {
         })
         const body = await response.json()
         expect(Array.isArray(body.data)).toBe(true)
-        expect(body.data[0].users.length).toBe(10)
+        expect(body.data.length).toBe(10)
         expect(response.status).toBe(200)
+      })
+
+      test('GET users returns different pages', async () => {
+        const responsePage1 = await fetch(`${apiurl}/users?limit=1&page=1`, {
+          method: 'GET',
+          headers: {
+            cookie: `${usersetup.userAdmin.cookie}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        const responsePage2 = await fetch(`${apiurl}/users?limit=1&page=2`, {
+          method: 'GET',
+          headers: {
+            cookie: `${usersetup.userAdmin.cookie}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        const bodyPage1 = await responsePage1.json()
+        const bodyPage2 = await responsePage2.json()
+
+        expect(responsePage1.status).toBe(200)
+        expect(responsePage2.status).toBe(200)
+
+        expect(bodyPage1.data).toHaveLength(1)
+        expect(bodyPage2.data).toHaveLength(1)
+
+        expect(bodyPage1.data[0].id).not.toBe(bodyPage2.data[0].id)
       })
 
       test('Get user by id', async () => {

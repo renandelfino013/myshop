@@ -5,15 +5,18 @@ import userRoleAdmin from 'test/hooks/userRoleAdminForTests.js'
 import path from 'path'
 
 import { createProduct } from 'test/hooks/file/helper-create-product-file'
+import { generateNoPaginationTestKey } from 'test/hooks/file/testkey/generateNoPaginationTestKey'
 
 const apiUrl = 'http://localhost:3000/api/v1'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let tokenUser
 let tokenAdmin
 let categoryId
 let markId
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let productId = 0
+let nopaginationtoken
 
 const headers = (token) => ({
   cookie: `${token}`,
@@ -38,6 +41,7 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `teste${Date.now()}@gmail.com`
   const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
+  nopaginationtoken = await generateNoPaginationTestKey()
 
   const emailadmin = `testadmin${Date.now()}@gmail.com`
   await userRoleAdmin('renanadmin', emailadmin, 'AdminPass!23')
@@ -105,7 +109,12 @@ beforeAll(async () => {
   }
 
   const productsResponse = await fetch(`${apiUrl}/produtos`, {
-    headers: headers(tokenUser),
+    headers: {
+      cookie: `${tokenAdmin}`,
+      'x-no-pagination': nopaginationtoken,
+
+      'Content-Type': 'application/json',
+    },
   })
   const products = await productsResponse.json()
   productId = products.data.find((product) => product.nome === productName).id
@@ -153,9 +162,13 @@ describe('PUT and POST Happy path', () => {
     expect(created.status).toBe(201)
 
     const listResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: { cookie: `${tokenAdmin}` },
+      headers: {
+        cookie: `${tokenAdmin}`,
+        'x-no-pagination': nopaginationtoken,
+      },
     })
     const list = await listResponse.json()
+
     const product = list.data.find((p) => p.nome === productName)
 
     expect(product).toBeDefined()
@@ -197,7 +210,12 @@ describe('PUT and POST Happy path', () => {
     expect(created.status).toBe(201)
 
     const listResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: { cookie: `${tokenAdmin}` },
+      headers: {
+        cookie: `${tokenAdmin}`,
+        'x-no-pagination': nopaginationtoken,
+
+        'Content-Type': 'application/json',
+      },
     })
     const list = await listResponse.json()
     const product = list.data.find((p) => p.nome === productName)
@@ -269,7 +287,10 @@ describe('PUT and POST invalid files', () => {
     expect(created.status).toBe(201)
 
     const listResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: { cookie: `${tokenAdmin}` },
+      headers: {
+        cookie: `${tokenAdmin}`,
+        'x-no-pagination': nopaginationtoken,
+      },
     })
     const list = await listResponse.json()
     const product = list.data.find((p) => p.nome === productName)

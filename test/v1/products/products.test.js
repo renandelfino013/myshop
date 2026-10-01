@@ -4,6 +4,7 @@ import userRoleAdmin from 'test/hooks/userRoleAdminForTests.js'
 import { generateTestKey } from 'test/hooks/file/testkey/generateTestKey'
 import fs from 'fs'
 import path from 'path'
+import { generateNoPaginationTestKey } from 'test/hooks/file/testkey/generateNoPaginationTestKey'
 
 const apiUrl = 'http://localhost:3000/api/v1'
 let tokenUser
@@ -12,6 +13,9 @@ let categoryId
 let markId
 let productId
 let fakeproviderToken
+let nopaginationtoken
+let categoryname
+let productDescription
 const defaultImagePath = path.join(
   __dirname,
   'image-upload-test',
@@ -69,7 +73,7 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `teste${Date.now()}@gmail.com`
   const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
-
+  nopaginationtoken = await generateNoPaginationTestKey()
   const emailadmin = `testadmin${Date.now()}@gmail.com`
   await userRoleAdmin('renanadmin', emailadmin, 'AdminPass!23')
   const setcookieadmin = await fetch('http://localhost:3000/api/v1/login', {
@@ -104,6 +108,7 @@ beforeAll(async () => {
   )
   const brandbody = await brandResponse.json()
   const categorybody = await categoryResponse.json()
+  categoryname = categorybody.data[0].nome
   categoryId = categorybody.data[0].id
   markId = brandbody.data[0].id
 
@@ -128,13 +133,113 @@ beforeAll(async () => {
   }
 
   const productsResponse = await fetch(`${apiUrl}/produtos`, {
-    headers: jsonHeaders(tokenUser),
+    headers: {
+      cookie: `${tokenAdmin}`,
+      'x-test-provider': fakeproviderToken,
+      'x-no-pagination': nopaginationtoken,
+
+      'Content-Type': 'application/json',
+    },
   })
   const products = await productsResponse.json()
   productId = products.data.find((product) => product.nome === productName).id
+  productDescription = products.data.find(
+    (product) => product.nome === productName
+  ).descricao
 })
 
 describe('GET api/v1/produtos', () => {
+  describe('GET search', () => {
+    test('GET search returns products matching the search term (term: name)', async () => {
+      const searchTerm = 'playstation 5'
+      const response = await fetch(
+        `${apiUrl}/produtos?search=${encodeURIComponent(searchTerm)}`,
+        {
+          headers: jsonHeaders(tokenUser),
+        }
+      )
+      const body = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(Array.isArray(body.data)).toBe(true)
+      expect(body.data.length).toBeGreaterThanOrEqual(1)
+      expect(
+        body.data.some((product) =>
+          product.nome.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      ).toBe(true)
+    })
+
+    test('GET search with multiple terms', async () => {
+      const searchTerm = 'playstation sony 5'
+
+      const response = await fetch(
+        `${apiUrl}/produtos?search=${encodeURIComponent(searchTerm)}`,
+        {
+          headers: jsonHeaders(tokenUser),
+        }
+      )
+
+      const body = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(Array.isArray(body.data)).toBe(true)
+      expect(body.data.length).toBeGreaterThanOrEqual(1)
+    })
+    test.each([['limit=100000'], ['limit=31']])(
+      'limite acima do teto: %s',
+      async (qs) => {
+        const res = await fetch(`${apiUrl}/produtos?${qs}`, {
+          headers: jsonHeaders(tokenUser),
+        })
+        const body = await res.json()
+        expect(res.status).toBe(200)
+        expect(body.data.length).toBeLessThanOrEqual(30)
+      }
+    )
+    test('GET search returns products matching the search term (term: category)', async () => {
+      const searchTerm = categoryname
+      const response = await fetch(
+        `${apiUrl}/produtos?search=${encodeURIComponent(searchTerm)}`,
+        {
+          headers: {
+            cookie: `${tokenAdmin}`,
+            'x-test-provider': fakeproviderToken,
+            'x-no-pagination': nopaginationtoken,
+          },
+        }
+      )
+      const body = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(Array.isArray(body.data)).toBe(true)
+      expect(body.data.length).toBeGreaterThanOrEqual(1)
+      expect(
+        body.data.some((product) => product.categoria.nome === categoryname)
+      ).toBe(true)
+    })
+    test('GET search returns products matching the search term (term: description)', async () => {
+      const searchTerm = productDescription
+      const response = await fetch(
+        `${apiUrl}/produtos?search=${encodeURIComponent(searchTerm)}`,
+        {
+          headers: {
+            cookie: `${tokenAdmin}`,
+            'x-test-provider': fakeproviderToken,
+            'x-no-pagination': nopaginationtoken,
+          },
+        }
+      )
+      const body = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(Array.isArray(body.data)).toBe(true)
+      expect(body.data.length).toBeGreaterThanOrEqual(1)
+      expect(
+        body.data.some((product) => product.descricao === productDescription)
+      ).toBe(true)
+    })
+  })
   test('GET all products', async () => {
     const response = await fetch(`${apiUrl}/produtos`, {
       headers: { 'x-test-provider': fakeproviderToken },
@@ -144,6 +249,46 @@ describe('GET api/v1/produtos', () => {
     expect(response.status).toBe(200)
     expect(Array.isArray(body.data)).toBe(true)
     expect(body.data.length).toBeGreaterThanOrEqual(1)
+  })
+  describe('GET api/v1/produtos with pagination', () => {
+    test('GET all products with pagination', async () => {
+      const response = await fetch(`${apiUrl}/produtos?limit=1&page=1`, {
+        headers: jsonHeaders(tokenUser),
+      })
+      const body = await response.json()
+      expect(response.status).toBe(200)
+      expect(Array.isArray(body.data)).toBe(true)
+      expect(body.data.length).toBeLessThanOrEqual(1)
+    })
+    test('GET all products with pagination but without query parameters', async () => {
+      const response = await fetch(`${apiUrl}/produtos`, {
+        headers: jsonHeaders(tokenUser),
+      })
+      const body = await response.json()
+      expect(response.status).toBe(200)
+      expect(Array.isArray(body.data)).toBe(true)
+      expect(body.data.length).toBeLessThanOrEqual(30)
+    })
+    test('GET products returns different pages', async () => {
+      const responsePage1 = await fetch(`${apiUrl}/produtos?limit=1&page=1`, {
+        headers: jsonHeaders(tokenUser),
+      })
+
+      const responsePage2 = await fetch(`${apiUrl}/produtos?limit=1&page=2`, {
+        headers: jsonHeaders(tokenUser),
+      })
+
+      const bodyPage1 = await responsePage1.json()
+      const bodyPage2 = await responsePage2.json()
+
+      expect(responsePage1.status).toBe(200)
+      expect(responsePage2.status).toBe(200)
+
+      expect(bodyPage1.data).toHaveLength(1)
+      expect(bodyPage2.data).toHaveLength(1)
+
+      expect(bodyPage1.data[0].id).not.toBe(bodyPage2.data[0].id)
+    })
   })
 
   test('GET product by id', async () => {
@@ -229,7 +374,11 @@ describe('POST api/v1/produtos', () => {
     })
 
     const listResponse = await fetch(`${apiUrl}/produtos`, {
-      headers: jsonHeaders(tokenUser),
+      headers: {
+        cookie: `${tokenAdmin}`,
+        'x-test-provider': fakeproviderToken,
+        'x-no-pagination': nopaginationtoken,
+      },
     })
     const products = await listResponse.json()
     productId = products.data.find((product) => product.nome === name).id

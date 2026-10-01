@@ -4,19 +4,23 @@ import { requestContext } from "infra/request-context/request-context";
 export function withErrorHandler(handler) {
   return async (req, res) => {
     const storageProvider = req.headers["x-test-provider"] ?? "cloudinary";
+    const Nopagination = req.headers["x-no-pagination"];
 
     try {
-      return await requestContext.run({ storageProvider }, async () => {
-        const response = await handler(req, res);
-        return await responseReq(
-          res,
-          response.statusCode,
-          response.success,
-          response.message,
-          response.data,
-          response.cookie,
-        );
-      });
+      return await requestContext.run(
+        { storageProvider, Nopagination },
+        async () => {
+          const response = await handler(req, res);
+          return await responseReq(
+            res,
+            response.statusCode,
+            response.success,
+            response.message,
+            response.data,
+            response.cookie,
+          );
+        },
+      );
     } catch (error) {
       handleError(error, res);
     }

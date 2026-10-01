@@ -1,7 +1,9 @@
 import { validateProductsPerIdSchema } from "schemas/products/products.schema";
+import { validateSearchSchema } from "schemas/search/search.schemas";
 import {
   GetAllproducts,
   GetProductPerId,
+  GetsearchProduct,
   Postproduct,
   Putproduct,
   removeproduct,
@@ -9,6 +11,7 @@ import {
 import { methodNotAllowedError } from "utils/errors/error";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
 import { parseMultipart } from "utils/helper/file/searchFile";
+import { offsetAndPageProccess } from "utils/helper/search/offsetAndPageProccess";
 
 import responseabstration from "utils/response/responseAbstration";
 import { reqValidation } from "utils/validators/auth/reqValidation/req-validation";
@@ -29,13 +32,27 @@ export async function handler(req) {
   const session_version = req.headers["x-user-session_version"];
 
   await reqValidation(email, session_version, Boolean(role));
-  if (req.method === "GET" && !req.query.id) {
-    const products = await GetAllproducts();
+  if (req.method === "GET" && !req.query.id && !req.query.search) {
+    const { page, limit } = req.query;
+    const processed = offsetAndPageProccess(page, limit);
+
+    const products = await GetAllproducts(processed.offset, processed.limit);
     return responseabstration(200, "products found", products);
   } else if (req.method === "GET" && req.query.id) {
     const id = req.query.id;
     const data = validateProductsPerIdSchema({ id });
     const product = await GetProductPerId(data.id);
+    return responseabstration(200, "product found", product);
+  } else if (req.method === "GET" && req.query.search) {
+    const { search, page, limit } = req.query;
+    const processed = offsetAndPageProccess(page, limit);
+    const data = validateSearchSchema({ search });
+
+    const product = await GetsearchProduct(
+      data.search,
+      processed.limit,
+      processed.offset,
+    );
     return responseabstration(200, "product found", product);
   } else if (req.method === "POST") {
     const { fields, files } = await parseMultipart(req);

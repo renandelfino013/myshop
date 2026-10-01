@@ -4,6 +4,7 @@ import userRoleAdmin from 'test/hooks/userRoleAdminForTests'
 import path from 'path'
 import fs from 'fs'
 import { generateTestKey } from 'test/hooks/file/testkey/generateTestKey'
+import { generateNoPaginationTestKey } from 'test/hooks/file/testkey/generateNoPaginationTestKey'
 
 const imagePath = path.join(
   __dirname,
@@ -19,12 +20,13 @@ let categoryId = ''
 let markId = ''
 let productId = ''
 let productWithLowStockId = ''
+let nopaginationtoken
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
   const email = `teste${Date.now()}@gmail.com`
   const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
-
+  nopaginationtoken = await generateNoPaginationTestKey()
   const emailadmin = `testadmin${Date.now()}@gmail.com`
   await userRoleAdmin('renanadmin', emailadmin, 'AdminPass!23')
   const setcookieadmin = await fetch('http://localhost:3000/api/v1/login', {
@@ -125,7 +127,11 @@ beforeAll(async () => {
   }
   const allProducts = await (
     await fetch('http://localhost:3000/api/v1/produtos', {
-      headers: { cookie: `${tokenAdmin}` },
+      headers: {
+        cookie: `${tokenAdmin}`,
+        'x-test-provider': fakeproviderToken,
+        'x-no-pagination': nopaginationtoken,
+      },
     })
   ).json()
   const foundProduct = allProducts.data.find((p) => p.nome === productName)
@@ -165,7 +171,10 @@ beforeAll(async () => {
   }
   const allProducts2 = await (
     await fetch('http://localhost:3000/api/v1/produtos', {
-      headers: { cookie: `${tokenAdmin}` },
+      headers: {
+        cookie: `${tokenAdmin}`,
+        'x-no-pagination': nopaginationtoken,
+      },
     })
   ).json()
   const foundLowStock = allProducts2.data.find((p) => p.nome === lowStockName)

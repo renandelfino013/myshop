@@ -28,9 +28,7 @@ export async function findUserbyId(id) {
   )
   return user.rows
 }
-export async function findAllUsers(limit, page) {
-  const offset = (page - 1) * limit
-
+export async function findAllUsers(offset, limit) {
   const user = await pool.query(
     'SELECT id, nome, email, role,status,  session_version,created_at FROM usuarios ORDER BY id OFFSET $1 LIMIT $2',
     [offset, limit]

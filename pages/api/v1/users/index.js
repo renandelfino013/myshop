@@ -1,14 +1,17 @@
+import { validateSearchSchema } from "schemas/search/search.schemas";
 import {
   validateGetAdminSchema,
   validateIdforusersSchema,
 } from "schemas/users/users.schema";
 import {
   getAllUsersAdmin,
+  GetSearchUsers,
   getUserbyidAdmin,
   softRemoveUserAdmin,
 } from "services/auth/users/users-services";
 import { methodNotAllowedError } from "utils/errors/error";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
+import { offsetAndPageProccess } from "utils/helper/search/offsetAndPageProccess";
 import responseAbstration from "utils/response/responseAbstration";
 import resposeAbstration from "utils/response/responseAbstration";
 import validationtoken from "utils/validators/validationtoken";
@@ -20,7 +23,7 @@ export async function handler(req) {
   const role = req.headers["x-user-role"];
   const session_version = req.headers["x-user-session_version"];
   await validationtoken(email, session_version);
-  if (req.method === "GET" && !req.query.id) {
+  if (req.method === "GET" && !req.query.id && !req.query.search) {
     let { page, limit } = req.query;
     let data;
     if (limit !== undefined && page !== undefined) {
@@ -29,8 +32,26 @@ export async function handler(req) {
       limit = data.limit;
     }
 
-    const users = await getAllUsersAdmin(limit, page, role);
-    return resposeAbstration(200, "users found", users);
+    return resposeAbstration(
+      200,
+      "users found",
+      await getAllUsersAdmin(limit, page, role),
+    );
+  } else if (req.method === "GET" && req.query.search) {
+    const { search, page, limit } = req.query;
+    const processed = offsetAndPageProccess(page, limit);
+    const data = validateSearchSchema({ search });
+
+    return responseAbstration(
+      200,
+      "users found",
+      await GetSearchUsers(
+        data.search,
+        processed.limit,
+        processed.offset,
+        role,
+      ),
+    );
   } else if (req.method === "GET" && req.query.id) {
     const { id } = req.query;
     const data = validateIdforusersSchema({ id });

@@ -5,6 +5,7 @@ import path from 'path'
 import fs from 'fs'
 import { generateTestKey } from 'test/hooks/file/testkey/generateTestKey'
 import { generateNoPaginationTestKey } from 'test/hooks/file/testkey/generateNoPaginationTestKey'
+import { deleteAllOrdersAdmin } from 'models/orders/model-orders'
 
 const imagePath = path.join(
   __dirname,
@@ -21,9 +22,13 @@ let markId = ''
 let productId = ''
 let productWithLowStockId = ''
 let nopaginationtoken
-
+afterAll(async () => {
+  await deleteAllOrdersAdmin()
+})
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
+  await deleteAllOrdersAdmin()
+
   const email = `teste${Date.now()}@gmail.com`
   const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
   nopaginationtoken = await generateNoPaginationTestKey()

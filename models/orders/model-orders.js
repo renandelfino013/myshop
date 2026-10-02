@@ -273,3 +273,9 @@ export async function DeleteorderAdmin(order_id) {
     client.release()
   }
 }
+export const deleteAllOrdersAdmin = async () => {
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error('This function can only be called in test environment')
+  }
+  await pool.query('DELETE FROM pedidos RETURNING *')
+}

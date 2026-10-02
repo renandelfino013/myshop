@@ -168,3 +168,10 @@ export async function Deleteproduct(id) {
   )
   return result.rows
 }
+export async function DeleteAllProducts() {
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error('This function can only be called in test environment')
+  }
+  const result = await pool.query('DELETE FROM produtos RETURNING *')
+  return result.rows
+}

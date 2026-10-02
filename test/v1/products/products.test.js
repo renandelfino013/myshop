@@ -5,6 +5,7 @@ import { generateTestKey } from 'test/hooks/file/testkey/generateTestKey'
 import fs from 'fs'
 import path from 'path'
 import { generateNoPaginationTestKey } from 'test/hooks/file/testkey/generateNoPaginationTestKey'
+import { DeleteAllProducts } from 'models/products/modelProducts'
 
 const apiUrl = 'http://localhost:3000/api/v1'
 let tokenUser
@@ -71,6 +72,7 @@ async function createRelatedResource(path, body) {
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
+  await DeleteAllProducts()
   const email = `teste${Date.now()}@gmail.com`
   const user = await createuser.fakeuser.user(email, 'renan', 'Abcdef12!')
   nopaginationtoken = await generateNoPaginationTestKey()
@@ -165,6 +167,9 @@ beforeAll(async () => {
   productDescription = products.data.find(
     (product) => product.nome === productName
   ).descricao
+})
+afterAll(async () => {
+  await DeleteAllProducts()
 })
 
 describe('GET api/v1/produtos', () => {

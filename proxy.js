@@ -65,7 +65,9 @@ async function checkauthorization(request) {
       if (
         (path.startsWith('/api/v1/produtos') && request.method === 'POST') ||
         (path.startsWith('/api/v1/produtos') && request.method === 'PUT') ||
-        (path.startsWith('/api/v1/users/me') && request.method === 'POST')
+        (path.startsWith('/api/v1/users/me') &&
+          request.method === 'POST' &&
+          !path.startsWith('/api/v1/users/me/logout'))
       ) {
         const clonedrequest = request.clone()
         const [isvalid, file] = await ValidateAndExtractDatafile(clonedrequest)

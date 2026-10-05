@@ -9,7 +9,11 @@ export async function generates_Users_And_catch_Their_Cookies() {
     'renan',
     passwordCommonUser
   )
-
+  if (!user[2].ok) {
+    throw new Error(
+      `Failed to log in as common user. Status: ${user[2]?.status}`
+    )
+  }
   const passwordAdmin = 'AdminPass23!'
   const emailAdmin = `adminusersetup${Date.now()}@gmail.com`
   await userRoleAdmin('renanadmin', emailAdmin, passwordAdmin)
@@ -23,7 +27,12 @@ export async function generates_Users_And_catch_Their_Cookies() {
       senha: passwordAdmin,
     }),
   })
-  const getCookieUser = user[2].headers.getSetCookie()
+  if (!setcookieadmin.ok) {
+    throw new Error(
+      `Failed to log in as admin user. Status: ${setcookieadmin?.status}`
+    )
+  }
+  const getCookieUser = await user[2].headers.getSetCookie()
   const cookieCommonUser = getCookieUser[0]
 
   const getCookieAdmin = setcookieadmin.headers.getSetCookie()

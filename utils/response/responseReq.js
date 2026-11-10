@@ -22,7 +22,7 @@ export default async function responseReq(
   if (cookie && cookie.action === "set") {
     await createacookie(res, "token", cookie.value, {
       secure: true,
-      path: "/api/v1",
+      path: "/",
       httpOnly: true,
       maxAge: 14400,
       sameSite: "strict",
@@ -31,7 +31,7 @@ export default async function responseReq(
   if (cookie && cookie.action === "clear") {
     await createacookie(res, "token", "", {
       secure: true,
-      path: "/api/v1",
+      path: "/",
       httpOnly: true,
       maxAge: 0,
       sameSite: "strict",

@@ -12,9 +12,9 @@ import assertFound from "utils/helper/assertFound";
 import { removeTempfile } from "utils/helper/file/removeTempFiles";
 import verifyuserRole from "utils/validators/verifyuserRole";
 
-export async function GetAllproducts(offset, limit) {
+export async function GetAllproducts(offset, limit, role) {
   const rows = await FindAllProducts(limit, offset);
-  const products_formated = processproduct(rows);
+  const products_formated = processproduct(rows, role);
   return products_formated;
 }
 
@@ -119,9 +119,42 @@ export async function removeproduct(id, role) {
   assertFound(rows, "Product");
   return true;
 }
-function processproduct(array) {
+function processproduct(array, role) {
+  if (role !== "ADMIN") {
+    const product_formated = array.map(
+      ({
+        marca_id,
+        marca_nome,
+        categoria_nome,
+        categoria_id,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        estoque,
+        ...product
+      }) => ({
+        ...product,
+        categoria: {
+          id: categoria_id,
+          nome: categoria_nome,
+        },
+        marca: {
+          id: marca_id,
+          nome: marca_nome,
+        },
+      }),
+    );
+    return product_formated;
+  }
+
   const product_formated = array.map(
-    ({ marca_id, marca_nome, categoria_nome, categoria_id, ...product }) => ({
+    ({
+      marca_id,
+      marca_nome,
+      categoria_nome,
+      categoria_id,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+      ...product
+    }) => ({
       ...product,
       categoria: {
         id: categoria_id,

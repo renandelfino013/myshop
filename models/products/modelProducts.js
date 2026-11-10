@@ -13,6 +13,7 @@ export async function FindAllProducts(limit, offset) {
   p.categoria_id,
   p.marca_id,
   p.descricao,
+  p.estoque,
   p.image,
   m.nome 
   AS marca_nome ,
@@ -36,6 +37,7 @@ export async function FindAllProducts(limit, offset) {
   SELECT p.id,
   p.nome,
   p.preco,
+  p.estoque,
   p.categoria_id,
   p.marca_id,
   p.descricao,

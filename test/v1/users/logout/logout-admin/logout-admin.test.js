@@ -29,6 +29,6 @@ describe('ADMIN accessing own user (/users/me/logout)', () => {
     expect(cookie).toMatch(/^token=;/)
     expect(cookie).toContain('HttpOnly')
     expect(cookie).toContain('Max-Age=0')
-    expect(cookie).toContain('Path=/api/v1')
+    expect(cookie).toContain('Path=/')
   })
 })

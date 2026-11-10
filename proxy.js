@@ -6,6 +6,7 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import jwt from 'jsonwebtoken'
 import { ValidateAndExtractDatafile } from 'utils/helper/proxy/extractDatafile'
+import { decodeJWT } from 'proxy/helpers/decodeJWT'
 
 const redis = Redis.fromEnv()
 const environment = process.env.VERCEL_ENV || 'development'
@@ -25,6 +26,7 @@ async function checkauthorization(request) {
     path.startsWith('/api/v1/users')
   ) {
     const authHeader = request.headers.get('cookie')
+
     if (
       !authHeader &&
       request.method === 'GET' &&
@@ -54,7 +56,8 @@ async function checkauthorization(request) {
     const tokenNopagination = request.headers.get('x-no-pagination')
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      const decoded = decodeJWT(token)
+
       const requestHeaders = new Headers(request.headers)
       requestHeaders.set('x-user-id', decoded.id) //
       requestHeaders.set('x-token', token)
@@ -140,6 +143,16 @@ async function checkauthorization(request) {
         }
       )
     }
+  } else if (path.startsWith('/products')) {
+    const authHeader = request.headers.get('cookie')
+
+    if (authHeader) {
+      const token = authHeader.replace(/^.*?=|;/g, '').split(' ')[0]
+      const decoded = decodeJWT(token)
+      if (decoded.role !== 'ADMIN' || !decoded) {
+        return NextResponse.redirect(new URL('/homepage', request.url))
+      }
+    }
   } else {
     return null
   }
@@ -196,5 +209,7 @@ export async function proxy(request) {
   return NextResponse.next()
 }
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)',
+  ],
 }

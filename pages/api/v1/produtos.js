@@ -36,7 +36,11 @@ export async function handler(req) {
     const { page, limit } = req.query;
     const processed = offsetAndPageProccess(page, limit);
 
-    const products = await GetAllproducts(processed.offset, processed.limit);
+    const products = await GetAllproducts(
+      processed.offset,
+      processed.limit,
+      role,
+    );
     return responseabstration(200, "products found", products);
   } else if (req.method === "GET" && req.query.id) {
     const id = req.query.id;

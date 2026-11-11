@@ -1,4 +1,4 @@
-import { validateProductSchema } from "schemas/products/products.schema";
+import { validateProductSchema } from "shared/schemas/products/products.schema";
 import { handleUploadedFile } from "services/file/file-services";
 import { removeTempfile } from "utils/helper/file/removeTempFiles";
 /**

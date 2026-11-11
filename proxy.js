@@ -145,16 +145,17 @@ async function checkauthorization(request) {
     }
   } else if (path.startsWith('/products')) {
     const authHeader = request.headers.get('cookie')
-
-    if (authHeader) {
+    try {
       const token = authHeader.replace(/^.*?=|;/g, '').split(' ')[0]
       const decoded = decodeJWT(token)
-      if (decoded.role !== 'ADMIN' || !decoded) {
+
+      if (decoded.role !== 'ADMIN') {
         return NextResponse.redirect(new URL('/homepage', request.url))
       }
+      return NextResponse.next()
+    } catch {
+      return NextResponse.redirect(new URL('/homepage', request.url))
     }
-  } else {
-    return null
   }
 }
 async function checkratelimit(request) {

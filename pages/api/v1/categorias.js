@@ -4,7 +4,7 @@ import {
   validateSchemaGetcategoryPerName,
   validateSchemaPost,
   validateSchemaPutcategory,
-} from "schemas/categorys/category.schema";
+} from "shared/schemas/categorys/category.schema";
 import {
   GetAllCategorys,
   GetCategoryPerId,

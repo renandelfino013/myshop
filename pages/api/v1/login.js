@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { validateSchemaLogin } from "schemas/login/login.schema";
+import { validateSchemaLogin } from "shared/schemas/login/login.schema.js";
 import { login } from "services/auth/login/login-services";
 import { methodNotAllowedError } from "utils/errors/error";
 import { withErrorHandler } from "utils/errors/withErrorHandler";

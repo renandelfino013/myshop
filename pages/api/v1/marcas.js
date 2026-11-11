@@ -13,7 +13,7 @@ import {
   validateSchemaGetperNameBrand,
   validateSchemaPostBrand,
   validateSchemaPutBrand,
-} from "schemas/brands/brand.schema";
+} from "shared/schemas/brands/brand.schema";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
 import { methodNotAllowedError } from "utils/errors/error";
 import responseAbstration from "utils/response/responseAbstration";

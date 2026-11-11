@@ -3,7 +3,7 @@ dotenv.config();
 import {
   validatePasswordResetSchema,
   validateSchemapassword,
-} from "schemas/reset-password./password-reset.schema";
+} from "shared/schemas/reset-password./password-reset.schema";
 import {
   createresetkey,
   updatepassword,

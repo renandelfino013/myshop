@@ -1,5 +1,5 @@
-import { validateProductsPerIdSchema } from "schemas/products/products.schema";
-import { validateSearchSchema } from "schemas/search/search.schemas";
+import { validateProductsPerIdSchema } from "shared/schemas/products/products.schema";
+import { validateSearchSchema } from "shared/schemas/search/search.schemas.js";
 import {
   GetAllproducts,
   GetProductPerId,

@@ -1,8 +1,8 @@
-import { validateSearchSchema } from "schemas/search/search.schemas";
+import { validateSearchSchema } from "shared/schemas/search/search.schemas";
 import {
   validateGetAdminSchema,
   validateIdforusersSchema,
-} from "schemas/users/users.schema";
+} from "shared/schemas/users/users.schema";
 import {
   getAllUsersAdmin,
   GetSearchUsers,

@@ -1,4 +1,4 @@
-import { validateSchemaregister } from "schemas/register/register.schema";
+import { validateSchemaregister } from "shared/schemas/register/register.schema";
 import { withErrorHandler } from "utils/errors/withErrorHandler";
 import { methodNotAllowedError } from "utils/errors/error";
 import responseabstration from "utils/response/responseAbstration";

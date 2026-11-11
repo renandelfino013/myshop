@@ -3,7 +3,7 @@ import {
   validateidForOrdersUser,
   validateorderDelete,
   validateorderPost,
-} from "schemas/orders/orders.schemas";
+} from "shared/schemas/orders/orders.schemas";
 import {
   Get_All_orders_Admin,
   Get_All_Orders_Of_User,

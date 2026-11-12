@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import jwt from 'jsonwebtoken'
@@ -25,16 +25,16 @@ async function checkauthorization(request) {
     path.startsWith('/api/v1/categorias') ||
     path.startsWith('/api/v1/users')
   ) {
-    const authHeader = request.headers.get('cookie')
+    const token = request.cookies.get('token')?.value
 
     if (
-      !authHeader &&
+      !token &&
       request.method === 'GET' &&
       !path.startsWith('/api/v1/pedidos') &&
       !path.startsWith('/api/v1/users')
     ) {
       return NextResponse.next()
-    } else if (!authHeader) {
+    } else if (!token) {
       return new NextResponse(
         JSON.stringify({
           success: false,
@@ -49,8 +49,6 @@ async function checkauthorization(request) {
         }
       )
     }
-
-    const token = authHeader.replace(/^.*?=|;/g, '').split(' ')[0]
 
     const tokenTestProvider = request.headers.get('x-test-provider')
     const tokenNopagination = request.headers.get('x-no-pagination')
@@ -144,9 +142,8 @@ async function checkauthorization(request) {
       )
     }
   } else if (path.startsWith('/products')) {
-    const authHeader = request.headers.get('cookie')
+    const token = request.cookies.get('token')?.value
     try {
-      const token = authHeader.replace(/^.*?=|;/g, '').split(' ')[0]
       const decoded = decodeJWT(token)
 
       if (decoded.role !== 'ADMIN') {

@@ -1,17 +1,7 @@
-export type UserType = {
-  id: number
-  nome: string
-  email: string
-  role: string
-  image: string
-  created_at: string
-}
-export type LogoutType = {
-  success: boolean
-  message: string
-  data: Array<null>
-}
-export async function getMe(): Promise<UserType | null> {
+import { ApiResponse } from 'shared/types/api/response/ApiResponse.type'
+import { UserType } from 'shared/types/api/users/users.type'
+
+export async function getMe(): Promise<ApiResponse<UserType> | null> {
   const res = await fetch('http://localhost:3000/api/v1/users/me', {
     credentials: 'include',
   })
@@ -21,7 +11,7 @@ export async function getMe(): Promise<UserType | null> {
   return data[0] ?? null
 }
 
-export async function logoutMe(): Promise<LogoutType | null> {
+export async function logoutMe(): Promise<ApiResponse<null> | null> {
   const res = await fetch('/api/v1/users/me/logout', {
     method: 'POST',
   })

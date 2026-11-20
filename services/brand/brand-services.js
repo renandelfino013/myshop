@@ -12,7 +12,6 @@ import verifyuserRole from "utils/validators/verifyuserRole";
 
 export async function getallbrands() {
   const brands = await FindAllBrands();
-  assertFound(brands, "Brands");
   return brands;
 }
 

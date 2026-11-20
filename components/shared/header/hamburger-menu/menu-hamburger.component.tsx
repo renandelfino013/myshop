@@ -14,7 +14,13 @@ export function HamburgerMenu() {
     setOpen(false)
   }
   const { data: user } = useMyUser()
-  const admin = user?.role === 'ADMIN' ? true : undefined
+  const admin = () => {
+    if (!user?.success) return undefined
+
+    const data = user.data
+
+    return data?.role === 'ADMIN'
+  }
   return (
     <>
       <button
@@ -58,17 +64,17 @@ export function HamburgerMenu() {
           <Link href="/categorias" onClick={closeMenu}>
             Categorias
           </Link>
-          {admin && (
+          {admin() && (
             <Link href="/products" onClick={closeMenu}>
               Gerenciar Produtos
             </Link>
           )}
-          {admin && (
+          {admin() && (
             <Link href="/pedidos" onClick={closeMenu}>
               Gerenciar Pedidos
             </Link>
           )}
-          {admin && (
+          {admin() && (
             <Link href="/usuarios" onClick={closeMenu}>
               Gerenciar Usuários
             </Link>

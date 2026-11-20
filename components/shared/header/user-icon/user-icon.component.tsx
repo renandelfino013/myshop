@@ -3,13 +3,13 @@ import { useState } from 'react'
 import { UserOpen } from './user-open.component'
 import Link from 'next/link'
 import { useMyUser } from 'hooks/users/users.hooks'
-const defaultImage = '/assets/user/user-icon-white.png'
 export function Usericon() {
   const [open, setOpen] = useState(false)
+  const defaultImage = '/assets/user/user-icon-white.png'
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
-  const { data: user, isPending } = useMyUser()
-  console.log(user, isPending, user?.image)
+  const { data: user } = useMyUser()
   const foundUser = !!user
   function openMenu() {
     setOpen(true)
@@ -48,15 +48,22 @@ export function Usericon() {
   function closeMenu() {
     setOpen(false)
   }
-  const url = user?.image || defaultImage
+  const url = () => {
+    let image
+    if (user?.success) {
+      image = user.data.image
+    }
+
+    return image || defaultImage
+  }
   return (
     <>
-      {url && Action(url)}
+      {url && Action(url())}
 
       {open && (
         <div onClick={closeMenu} className="fixed inset-0 z-40 bg-black/50 " />
       )}
-      {open && foundUser && <UserOpen url={url} />}
+      {open && foundUser && <UserOpen url={url()} />}
     </>
   )
 }

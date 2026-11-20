@@ -1,6 +1,7 @@
 import { ListAllproducts } from 'hooks/products/products.hooks'
 import { AddProduct } from 'components/products/add/addProducts.component'
 import Image from 'next/image'
+
 export function Listproducts() {
   const { data: products } = ListAllproducts()
 
@@ -20,7 +21,7 @@ export function Listproducts() {
               key={product.id}
               className="flex  items-center justify-center gap-2  p-2 rounded-lg shadow-md border border-zinc-300 hover:shadow-lg transition-shadow duration-300 w-full bg-zinc-100"
             >
-              <div className="shrink-0 h-full max-w-[100px] w-full bg-zinc-300 rounded-lg">
+              <div className="h-full max-w-[100px] w-full bg-zinc-300 rounded-lg">
                 <Image
                   src={`${product.image}`}
                   alt="user"

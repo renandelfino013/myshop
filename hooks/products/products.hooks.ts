@@ -1,9 +1,8 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { getproducts } from 'front-services/products/front-products.services'
-import {
-  Product,
-  ApiResponse,
-} from 'front-services/products/front-products.services'
+import { Product } from 'shared/types/api/Products/Products.type'
+import { ApiResponse } from 'shared/types/api/response/ApiResponse.type'
+
 export function ListAllproducts() {
   return useQuery({
     queryKey: ['products'],

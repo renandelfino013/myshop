@@ -3,7 +3,7 @@ import { idschema } from 'shared/schemas/variables/common.variables'
 import { namecategoryschema } from 'shared/schemas/variables/names/names.variables'
 import { z } from 'zod'
 
-export const schemaPost = z.object({
+export const schemaPostCategory = z.object({
   nome: namecategoryschema,
 })
 
@@ -24,7 +24,8 @@ export const schemaDeletecategory = z.object({
   id: idschema(),
 })
 
-export const validateSchemaPost = (data) => validateSchema(schemaPost, data)
+export const validateSchemaPost = (data) =>
+  validateSchema(schemaPostCategory, data)
 export const validateSchemaGetcategoryPerId = (data) =>
   validateSchema(schemaGetcategoryPerId, data)
 export const validateSchemaGetcategoryPerName = (data) =>

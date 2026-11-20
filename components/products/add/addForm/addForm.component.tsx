@@ -6,15 +6,62 @@ import { AddhookProduct } from 'hooks/products/products.hooks'
 import { productSchema } from 'shared/schemas/products/products.schema'
 import z from 'zod'
 import { FieldError } from 'components/errors/form-errors/field-error'
+import { ListAllBrands, NewBrand } from 'hooks/brands/brands.hooks'
+import { Myselect } from 'components/shared/select/select.component'
+import { useState } from 'react'
+import type { Brand } from 'shared/types/api/brand/Brand.type'
+import { ListAllCategorys, NewCategory } from 'hooks/categorys/categorys.hooks'
+import type { Category } from 'shared/types/api/Category/Category.type'
+import { schemaPostBrand } from 'shared/schemas/brands/brand.schema'
+import { makeCheck } from 'schemas/validator/front-validation/front-validation'
+import { schemaPostCategory } from 'schemas/categorys/category.schema'
 
 type ProductFormInput = z.input<typeof productSchema>
 type ProductFormOutput = z.output<typeof productSchema>
+
 export function AddForm() {
+  const [openbrands, setOpenbrands] = useState(false)
+  const [opencategorys, setOpencategorys] = useState(false)
+  const [selectedbrand, setSelectedbrand] = useState<Brand | null>(null)
+  const [selectedcategory, setSelectedcategory] = useState<Brand | null>(null)
+  type prop = 'mark' | 'category'
+  const { data: brands, isError } = ListAllBrands()
+  const { data: categorys, isError: CategoryIsError } = ListAllCategorys()
+  const { mutateAsync: createbrand } = NewBrand()
+  const { mutateAsync: createcategory } = NewCategory()
+
+  function openMenu(prop: prop) {
+    if (prop === 'mark') setOpenbrands(true)
+    else setOpencategorys(true)
+  }
+
+  function closeMenu(prop: prop) {
+    if (prop === 'mark') setOpenbrands(false)
+    else setOpencategorys(false)
+  }
+  function handleSelect(item: Category | Brand, kind: 'mark' | 'category') {
+    setValue(`${kind}Id`, item.id, {
+      shouldValidate: true,
+    })
+
+    closeMenu(kind)
+  }
+
+  function handleBrandSelect(item: Brand) {
+    setSelectedbrand(item)
+    handleSelect(item, 'mark')
+  }
+
+  function handleCategorySelect(item: Category) {
+    setSelectedcategory(item)
+    handleSelect(item, 'category')
+  }
   const {
     register,
     handleSubmit,
     formState: { isSubmitting, errors },
     control,
+    setValue,
   } = useForm<ProductFormInput, undefined, ProductFormOutput>({
     resolver: zodResolver(productSchema),
     defaultValues: { price: 0 },
@@ -22,7 +69,39 @@ export function AddForm() {
 
   return (
     <>
-      <div className="w-full h-full  justify-center bg-white text-black p-1  z-60 overflow-auto scrollbar-none">
+      <div className="w-full h-full  justify-center bg-white text-black p-1  z-60 overflow-auto scrollbar-none relative rounded-lg">
+        {openbrands && !isError && brands.success && (
+          <div
+            onClick={() => closeMenu('mark')}
+            className="fixed inset-0 top-0  left-0 bg-black/50 z-10 flex justify-center  items-center "
+          >
+            <Myselect
+              items={brands?.data}
+              getKey={(b) => b.id}
+              title="Marcas"
+              getLabel={(b) => b.nome}
+              onSelect={handleBrandSelect}
+              addItem={(name) => createbrand(name)}
+              checkfn={makeCheck(schemaPostBrand)}
+            />
+          </div>
+        )}
+        {opencategorys && !CategoryIsError && categorys.success && (
+          <div
+            onClick={() => closeMenu('category')}
+            className="fixed inset-0 top-0  left-0 bg-black/50 z-10 flex justify-center  items-center "
+          >
+            <Myselect
+              items={categorys?.data}
+              getKey={(c) => c.id}
+              title="Categorias"
+              getLabel={(c) => c.nome}
+              onSelect={handleCategorySelect}
+              addItem={(name) => createcategory(name)}
+              checkfn={makeCheck(schemaPostCategory)}
+            />
+          </div>
+        )}
         <div
           onClick={useRouter().reload}
           className="bg-blue-500 hover:bg-blue-300 text-zinc-200 font-bold py-2 px-4 border-b-4 rounded-2xl flex flex-row items-center w-fit gap-2"
@@ -39,7 +118,7 @@ export function AddForm() {
           <button>Voltar</button>
         </div>
 
-        <section className="flex flex-col gap-2 w-full h-full justify-center items-center ">
+        <section className="flex flex-col gap-2 w-full h-full justify-center items-center  ">
           <span className="font-bold text-3xl">Cadastro de produto</span>
           <form
             onSubmit={handleSubmit(AddhookProduct)}
@@ -76,7 +155,7 @@ export function AddForm() {
                   Preço:
                 </label>
                 <div
-                  className="flex flex-row  items-center max-w-1/3 border border-gray-300 rounded-lg 
+                  className="flex flex-row  items-center max-w-1/4 border border-gray-300 rounded-lg 
               "
                 >
                   <span className="font-semibold  bg-zinc-500 text-white rounded-l-lg p-1 w-fit border border-r-0 border-gray-400">
@@ -89,7 +168,7 @@ export function AddForm() {
                       <input
                         type="text"
                         inputMode="numeric"
-                        className="outline-none focus:outline-none focus:ring-0 w-full"
+                        className="outline-none focus:outline-none focus:ring-0 w-full p-1"
                         value={Number(field.value).toFixed(2)}
                         onChange={(e) => {
                           const digits = e.target.value.replace(/\D/g, '')
@@ -102,27 +181,26 @@ export function AddForm() {
 
                 {/* marca , aqui vai um get pra api pra buscar as marcas*/}
 
-                <div className="flex flex-row gap-2 w-2/4 text-black items-center ">
+                <div className="flex flex-row gap-2 w-full text-black items-center ">
                   <label
                     className="font-semibold text-zinc-500 w-fit"
                     htmlFor="marcas"
                   >
                     Marca:
                   </label>
-                  <select
-                    name="marcas"
-                    id="marcas"
-                    className="border border-gray-300 rounded-lg p-1 w-full focus:outline-none"
+                  <div
+                    className="text-[12px] border border-gray-300 rounded-lg w-full h-full  pt-2 pb-2 pl-1  text-gray-400 truncate"
+                    onClick={() => openMenu('mark')}
                   >
-                    <option value="marca1">Marca 1</option>
-                    <option value="marca2">Marca 2</option>
-                    <option value="marca3">Marca 3</option>
-                  </select>
+                    {selectedbrand?.nome ?? 'selecionar marca ↓'}
+                  </div>
                 </div>
               </div>
               {errors.price && <FieldError message="preço minimo 1" />}
             </section>
-            {/* categorias , aqui vai um get pra api pra buscar as categorias*/}
+            {/* 
+            
+            categorias , aqui vai um get pra api pra buscar as categorias*/}
             <div className="flex flex-row gap-2 w-full text-black items-center ">
               <label
                 className="font-semibold text-zinc-500 w-fit"
@@ -130,15 +208,12 @@ export function AddForm() {
               >
                 Categoria:
               </label>
-              <select
-                name="categoria"
-                id="categoria"
-                className="border border-gray-300 rounded-lg p-1 w-full focus:outline-none"
+              <div
+                className="text-[12px] border border-gray-300 rounded-lg w-full h-full  pt-2 pb-2 pl-1  text-gray-400 truncate"
+                onClick={() => openMenu('category')}
               >
-                <option value="categoria1">Categoria 1</option>
-                <option value="categoria2">Categoria 2</option>
-                <option value="categoria3">Categoria 3</option>
-              </select>
+                {selectedcategory?.nome ?? 'selecionar categoria ↓'}
+              </div>
             </div>
             <div>
               <span className="font-semibold text-zinc-500 w-fit">

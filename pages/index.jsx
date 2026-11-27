@@ -1,10 +1,12 @@
 import { useState } from "react";
 import styles from "styles/login.module.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 function Login() {
   const [estado, setEstado] = useState(false);
   const [register, setRegister] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -22,6 +24,7 @@ function Login() {
 
         const data = await response.json();
         localStorage.setItem("token", data.token);
+        return router.push("/homepage");
       } catch (error) {
         console.error("Erro de rede:", error);
       }
@@ -32,7 +35,6 @@ function Login() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, senha }),
         });
-
         if (!response.ok) {
           if ([400, 401, 404].includes(response.status)) {
             setEstado(true);
@@ -45,6 +47,7 @@ function Login() {
         const data = await response.json();
         localStorage.setItem("token", data.token);
         setEstado(false);
+        return router.push("/homepage");
       } catch (error) {
         console.error("Erro de rede:", error);
         alert("Erro de rede. Tente novamente mais tarde.");

@@ -183,7 +183,7 @@ describe('GET api/v1/marcas', () => {
     const response = await fetch('http://localhost:3000/api/v1/marcas', {
       method: 'GET',
       headers: {
-        cookie: `invalidtoken`,
+        cookie: `token=invalidtoken`,
 
         'Content-Type': 'application/json',
       },

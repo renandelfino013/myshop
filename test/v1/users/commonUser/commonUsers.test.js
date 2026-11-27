@@ -66,7 +66,7 @@ describe('USER route (/users/me)', () => {
         const response = await fetch(`${apiurl}/users/me`, {
           method: 'GET',
           headers: {
-            cookie: `invalidtoken`,
+            cookie: `token=invalidtoken`,
             'Content-Type': 'application/json',
           },
         })
@@ -249,7 +249,7 @@ describe('USER route (/users/me)', () => {
         const response = await fetch(`${apiurl}/users/me`, {
           method: 'DELETE',
           headers: {
-            cookie: `invalidtoken`,
+            cookie: `token=invalidtoken`,
             'Content-Type': 'application/json',
           },
         })

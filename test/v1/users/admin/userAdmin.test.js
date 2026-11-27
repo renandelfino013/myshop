@@ -161,7 +161,7 @@ describe('ADMIN route (/users)', () => {
         const response = await fetch(`${apiurl}/users`, {
           method: 'GET',
           headers: {
-            cookie: `invalidtoken`,
+            cookie: `token=invalidtoken`,
             'Content-Type': 'application/json',
           },
         })
@@ -334,7 +334,7 @@ describe('ADMIN route (/users)', () => {
         const response = await fetch(`${apiurl}/users?id=10`, {
           method: 'DELETE',
           headers: {
-            cookie: `invalidtoken`,
+            cookie: `token=invalidtoken`,
             'Content-Type': 'application/json',
           },
         })

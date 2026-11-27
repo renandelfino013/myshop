@@ -3,33 +3,46 @@ import Image from 'next/image'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, Controller } from 'react-hook-form'
 import { AddhookProduct } from 'hooks/products/products.hooks'
-import { productSchema } from 'shared/schemas/products/products.schema'
 import z from 'zod'
 import { FieldError } from 'components/errors/form-errors/field-error'
 import { ListAllBrands, NewBrand } from 'hooks/brands/brands.hooks'
 import { Myselect } from 'components/shared/select/select.component'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Brand } from 'shared/types/api/brand/Brand.type'
 import { ListAllCategorys, NewCategory } from 'hooks/categorys/categorys.hooks'
 import type { Category } from 'shared/types/api/Category/Category.type'
 import { schemaPostBrand } from 'shared/schemas/brands/brand.schema'
 import { makeCheck } from 'schemas/validator/front-validation/front-validation'
 import { schemaPostCategory } from 'schemas/categorys/category.schema'
-
-type ProductFormInput = z.input<typeof productSchema>
-type ProductFormOutput = z.output<typeof productSchema>
+import { formProductsSchema } from 'schemas/files/front/files.chemas-extended'
+import { verifyFile } from 'front-services/files/front-files.services'
+type ProductFormInput = z.input<typeof formProductsSchema>
+type ProductFormOutput = z.output<typeof formProductsSchema>
 
 export function AddForm() {
   const [openbrands, setOpenbrands] = useState(false)
   const [opencategorys, setOpencategorys] = useState(false)
   const [selectedbrand, setSelectedbrand] = useState<Brand | null>(null)
   const [selectedcategory, setSelectedcategory] = useState<Brand | null>(null)
+  const [isvalidFile, setIsvalidFile] = useState(true)
+  const [image, setImage] = useState<File | null>(null)
   type prop = 'mark' | 'category'
   const { data: brands, isError } = ListAllBrands()
   const { data: categorys, isError: CategoryIsError } = ListAllCategorys()
   const { mutateAsync: createbrand } = NewBrand()
   const { mutateAsync: createcategory } = NewCategory()
+  const [preview, setPreview] = useState<string | null>(null)
+  useEffect(() => {
+    if (!image) {
+      setPreview(null)
+      return
+    }
 
+    const url = URL.createObjectURL(image)
+    setPreview(url)
+
+    return () => URL.revokeObjectURL(url)
+  }, [image])
   function openMenu(prop: prop) {
     if (prop === 'mark') setOpenbrands(true)
     else setOpencategorys(true)
@@ -63,7 +76,7 @@ export function AddForm() {
     control,
     setValue,
   } = useForm<ProductFormInput, undefined, ProductFormOutput>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(formProductsSchema),
     defaultValues: { price: 0 },
   })
 
@@ -223,12 +236,59 @@ export function AddForm() {
                 className="border border-gray-300 rounded-lg p-1 w-full focus:outline-none"
                 name="descricao"
                 id="descricao"
+                {...register('desc')}
                 cols={30}
                 rows={5}
                 placeholder="Digite a descrição do produto"
               ></textarea>
             </div>
-            <div className="border-2 border-dashed border-spacing-4 border-black rounded-lg w-full h-[90%]"></div>
+            <label
+              htmlFor="image"
+              className="border-2 border-dashed border-spacing-4 border-black rounded-lg w-full h-[90%] flex text-center flex-col items-center justify-center hover:bg-gray-100 hover:transition-all active:bg-gray-100  active:transition-all"
+            >
+              <Image
+                alt="Imagem do produto"
+                src={preview ?? '/assets/addimageICon/image.png'}
+                width={100}
+                height={100}
+                unoptimized={!!preview}
+                className="object-contain"
+              />
+              <p className="font-medium">
+                {image ? image.name : 'adicionar imagem do produto'}
+              </p>
+              <p className="font-normal text-gray-400">
+                {image ? 'trocar imagem' : 'Png ou Jpeg'}
+              </p>
+
+              <input
+                id="image"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (file) setImage(file)
+                  setValue('namefile', file.name, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                  setValue('filesize', file.size, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                  setValue('mimetype', file.type, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                  const verify = await verifyFile(file)
+                  if (!verify) setIsvalidFile(false)
+                  else setIsvalidFile(true)
+                }}
+              />
+            </label>
+            {!isvalidFile && <FieldError message="arquivo invalido" />}
+            {errors.filesize && <FieldError message="o tamanho maximo é 5mb" />}
             <button
               type="submit"
               disabled={isSubmitting}
